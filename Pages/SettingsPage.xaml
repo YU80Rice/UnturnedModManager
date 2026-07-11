@@ -24,7 +24,8 @@
         </StackPanel>
 
         <!-- 设置项目 -->
-        <StackPanel Grid.Row="1" MaxWidth="600">
+        <StackPanel Grid.Row="1" MaxWidth="600"
+                    PreviewMouseWheel="CardPanel_PreviewMouseWheel">
 
             <!-- 顶部状态反馈条 -->
             <ui:InfoBar x:Name="StatusInfoBar"

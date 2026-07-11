@@ -7,7 +7,7 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![WPF-UI](https://img.shields.io/badge/WPF--UI-3.0.5-CA1E1E?logo=wpf)](https://github.com/lepoco/wpfui)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?logo=windows)](https://www.microsoft.com/windows)
-[![Release](https://img.shields.io/badge/Release-v1.6.1-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
+[![Release](https://img.shields.io/badge/Release-v1.6.2-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
 [![BepInEx](https://img.shields.io/badge/BepInEx-5-FF7B00?logo=nuget)](https://github.com/BepInEx/BepInEx)
 
 🌐 **开源仓库**：[github.com/YU80Rice/UnturnedModManager](https://github.com/YU80Rice/UnturnedModManager)

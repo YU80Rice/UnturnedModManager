@@ -72,7 +72,8 @@
         <!-- 核心操作区 -->
         <StackPanel Grid.Row="2"
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Center">
+                    VerticalAlignment="Center"
+                    PreviewMouseWheel="CardPanel_PreviewMouseWheel">
 
             <!-- 模组环境状态 -->
             <Border x:Name="BepInExStatusBorder"
