@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Navigation;
 
 namespace UnturnedModManager.Pages;
@@ -11,26 +12,29 @@ public partial class AboutPage : Page
     public AboutPage()
     {
         InitializeComponent();
-        // 关键修复：订阅隧道事件 PreviewMouseWheelEvent + handledEventsToo=true
-        // 隧道事件从 Window 根向下传递，经过 ScrollViewer 时本处理器触发
-        // 即使祖先（NavigationView 等）标记 Handled=true，handledEventsToo=true 仍会触发
-        // 这比订阅冒泡 MouseWheelEvent 更可靠，因为后者可能被祖先在隧道阶段抑制而根本不触发
-        RootScrollViewer?.AddHandler(
-            UIElement.PreviewMouseWheelEvent,
-            (MouseWheelEventHandler)ScrollViewer_ForceScroll,
-            true);
     }
 
     /// <summary>
-    /// 强制滚动处理器：在隧道阶段拦截滚轮事件并手动滚动 ScrollViewer。
+    /// 拦截鼠标滚轮事件并手动路由到最近的 ScrollViewer 祖先。
+    /// 修复：内部 Border/ui:Card 有 Background 命中测试时，滚轮事件会被吞噬而不冒泡到 ScrollViewer。
+    /// PreviewMouseWheel 是隧道事件，在子控件处理前先到达此处。
+    /// 通过 VisualTreeHelper 向上递归寻找最近的 ScrollViewer 并手动滚动。
+    /// （套用 HomePage/SettingsPage 已验证的修复模式）
     /// </summary>
-    private void ScrollViewer_ForceScroll(object sender, MouseWheelEventArgs e)
+    private void CardPanel_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (RootScrollViewer != null)
+        if (sender is not DependencyObject element) return;
+
+        DependencyObject? current = element;
+        while (current != null)
         {
-            // e.Delta 标准 +120/-120，除以 2.0 给出 60 DIPs/档
-            RootScrollViewer.ScrollToVerticalOffset(RootScrollViewer.VerticalOffset - e.Delta / 2.0);
-            e.Handled = true;
+            if (current is ScrollViewer sv)
+            {
+                sv.ScrollToVerticalOffset(sv.VerticalOffset - e.Delta);
+                e.Handled = true;
+                return;
+            }
+            current = VisualTreeHelper.GetParent(current);
         }
     }
 

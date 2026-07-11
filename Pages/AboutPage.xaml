@@ -12,7 +12,8 @@
                   Padding="0">
         <StackPanel MaxWidth="1040"
                     HorizontalAlignment="Center"
-                    Margin="48,32,48,48">
+                    Margin="48,32,48,48"
+                    PreviewMouseWheel="CardPanel_PreviewMouseWheel">
 
             <!-- ================= 上半部分：关于软件 ================= -->
             <Border CornerRadius="14"
@@ -48,7 +49,7 @@
                             Margin="0,16,0,20"
                             Background="{DynamicResource AccentFillColorDefaultBrush}"
                             HorizontalAlignment="Center">
-                        <TextBlock Text="版本: v1.6.3 (Stable Release) - 2026/07/12"
+                        <TextBlock Text="版本: v1.6.4 (Stable Release) - 2026/07/12"
                                    FontSize="12"
                                    FontWeight="SemiBold"
                                    FontFamily="Cascadia Mono, Consolas, Courier New, monospace"
