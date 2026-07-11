@@ -832,34 +832,36 @@ public partial class HomePage : Page
 
     /// <summary>
     /// 从启动器 WPF 资源中释放核心优化模组到 BepInEx/plugins/ 目录。
-    /// 包含 WaterPerfOptimizer.dll 与 LaunchPerfOptimizer.dll，作为启动器自带核心功能。
+    /// 包含 WaterPerfOptimizer_v1.0.dll 与 LaunchPerfOptimizer_v1.0.dll，作为启动器自带核心功能。
     /// 资源以 &lt;Resource&gt; 项嵌入到 .g.resources 中，用 pack URI 读取。
+    /// 落地文件名去掉 _v1.0 后缀，保持纯净名（避免 BepInEx 重复加载版本化与未版本化副本）。
     /// </summary>
     private static void DeployEmbeddedCoreMods(string gamePath)
     {
         var pluginsPath = Path.Combine(gamePath, "BepInEx", "plugins");
         Directory.CreateDirectory(pluginsPath);
 
+        // 资源名（带版本）-> 落地名（不带版本）
         var coreMods = new[]
         {
-            "WaterPerfOptimizer.dll",
-            "LaunchPerfOptimizer.dll"
+            ("WaterPerfOptimizer_v1.0.dll", "WaterPerfOptimizer.dll"),
+            ("LaunchPerfOptimizer_v1.0.dll", "LaunchPerfOptimizer.dll")
         };
 
-        foreach (var fileName in coreMods)
+        foreach (var (resourceName, deployName) in coreMods)
         {
             try
             {
-                // WPF pack URI：从 .g.resources 读取嵌入的 .dll 资源
-                var uri = new Uri($"pack://application:,,,/Resources/{fileName}", UriKind.Absolute);
+                // WPF pack URI：从 .g.resources 读取嵌入的 .dll 资源（资源名在 .g.resources 中会转为小写）
+                var uri = new Uri($"pack://application:,,,/Resources/{resourceName}", UriKind.Absolute);
                 var info = System.Windows.Application.GetResourceStream(uri);
                 if (info == null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[CoreMod] WPF 资源未找到: {fileName}");
+                    System.Diagnostics.Debug.WriteLine($"[CoreMod] WPF 资源未找到: {resourceName}");
                     continue;
                 }
 
-                var targetPath = Path.Combine(pluginsPath, fileName);
+                var targetPath = Path.Combine(pluginsPath, deployName);
                 // 覆盖写：若已存在则先删除，确保每次部署都是最新版本
                 if (File.Exists(targetPath))
                 {
@@ -870,11 +872,11 @@ public partial class HomePage : Page
                 info.Stream.CopyTo(fs);
                 info.Stream.Dispose();
 
-                System.Diagnostics.Debug.WriteLine($"[CoreMod] 已释放: {fileName} -> {targetPath}");
+                System.Diagnostics.Debug.WriteLine($"[CoreMod] 已释放: {resourceName} -> {targetPath}");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[CoreMod] 释放失败 {fileName}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[CoreMod] 释放失败 {resourceName}: {ex.Message}");
             }
         }
     }
