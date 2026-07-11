@@ -1,0 +1,101 @@
+name: 🐛 Bug 报告
+description: 报告一个 Bug，帮助 UMM 启动器家族变得更好
+title: "[Bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 👋 感谢你抽出时间填写 Bug 报告！
+        在提交之前，请先搜索 [现有 Issues](https://github.com/YU80Rice/UnturnedModManager/issues?q=is%3Aissue) 避免重复提交。
+        请尽量填写完整信息，这将极大加速我们（以及 AI 助手）的定位与修复速度。
+
+  - type: dropdown
+    id: umm-version
+    attributes:
+      label: 🚀 UMM 启动器版本
+      description: 你正在使用的 UnturnedModManager 版本（可在启动器"关于"页查看）
+      options:
+        - v1.6.0（最新稳定版）
+        - v1.6.1（关于页修复版）
+        - 更早的版本（请在 Bug 描述中说明）
+        - 我不确定 / 没注意
+    validations:
+      required: true
+
+  - type: input
+    id: game-version
+    attributes:
+      label: 🎮 Unturned 游戏版本
+      description: 在游戏主菜单右下角可以看到
+      placeholder: 例如 3.23.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: 💻 操作系统
+      options:
+        - Windows 11
+        - Windows 10
+        - Windows 8.1
+        - Windows 7（不推荐，可能不兼容）
+        - 其他（请在描述中说明）
+    validations:
+      required: true
+
+  - type: input
+    id: summary
+    attributes:
+      label: 📝 一句话描述 Bug
+      description: 用一句简洁的话告诉我们发生了什么
+      placeholder: 例如：启动游戏后 BepInEx 未加载任何模组
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 🔴【核心】BepInEx 诊断日志（必填）
+      description: |
+        ## ⚠️ 这是本表单最关键的区块！
+
+        **请打开游戏目录下的 `BepInEx/LogOutput.log`，将其中包含红色 `[Error]` 或 `[Warning]` 的报错日志，或者崩溃时的完整堆栈信息，完整粘贴在下方代码框中！**
+
+        这是为了让未来的 AI 助手（或樱爪）可以直接读取并解析报错，实现极速自愈修复！
+        如果日志中没有明显报错，请粘贴最近 100 行 LogOutput.log 内容。
+      render: log
+      placeholder: |
+        [Info  :   BepInEx] Loading BepInEx 5.4.22.0
+        [Message:   BepInEx] ...
+        [Warning:   UnturnedModManager] ...
+        [Error :   BepInEx] ...
+        NullReferenceException: Object reference not set to an instance of an object
+          at UnturnedModManager.SomeClass.SomeMethod() ...
+          at ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 🔁 复现步骤（可选）
+      description: 你点击了什么、做了什么操作触发了这个 Bug？请按顺序列出，越详细越好。
+      placeholder: |
+        1. 打开 UMM 启动器
+        2. 点击 "启动游戏"
+        3. 进入主菜单后...
+        4.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: 📋 确认事项
+      options:
+        - label: 我已搜索过现有 Issues，确认没有重复提交
+          required: true
+        - label: 我已按要求粘贴了 BepInEx 诊断日志（这是修复速度的关键）
+          required: true

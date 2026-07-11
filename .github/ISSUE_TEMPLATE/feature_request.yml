@@ -1,0 +1,66 @@
+name: 💡 新功能 / 模组脑洞征集
+description: 提出新模组脑洞或启动器改进意见
+title: "[Idea] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 👋 感谢你为 UMM 启动器家族提出宝贵的脑洞！
+
+        无论是新模组的灵感，还是对启动器现有功能的改进意见，我们都非常欢迎。
+        请尽量描述清晰，这会帮助我们更快理解你的想法。
+
+  - type: input
+    id: summary
+    attributes:
+      label: 📝 一句话描述
+      placeholder: 例如：希望有一个自动整理背包的模组
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: 🗂️ 分类
+      options:
+        - 🎮 新模组脑洞（双端适配 v1.1.1）
+        - 🚀 启动器改进意见
+        - 🎨 UI / 视觉优化
+        - ⚡ 性能优化（单端 v1.0）
+        - 🔧 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: effect
+    attributes:
+      label: ✨ 你希望实现的效果
+      description: 详细描述你期待的功能行为，以及你为什么需要它
+      placeholder: |
+        我希望模组可以...
+        这样我就可以...
+    validations:
+      required: true
+
+  - type: textarea
+    id: interaction
+    attributes:
+      label: ⌨️ 你设想的按键或交互方式
+      description: 例如按下某个热键触发，或在启动器界面新增一个按钮
+      placeholder: |
+        - 默认热键：Plugin 0（F1）
+        - 触发条件：在主菜单中按下
+        - UI 形态：弹出侧边栏 / 全屏窗口
+        - 持久化：保存到本地 JSON 配置
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 📎 补充说明（可选）
+      description: 任何参考链接、截图、设计草图，或其他你想补充的内容
+      placeholder: 例如：类似 XXX 模组的设计，参考链接 https://...
+    validations:
+      required: false
