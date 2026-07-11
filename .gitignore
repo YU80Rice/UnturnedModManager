@@ -1,0 +1,29 @@
+# ============== .NET / Visual Studio ==============
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userprefs
+*.cache
+*.log
+
+# ============== 本地配置（含用户私有路径） ==============
+config.json
+
+# ============== 发布产物（Release 资产单独上传） ==============
+publish/
+bin/publish/
+
+# ============== IDE / 操作系统 ==============
+.idea/
+.vscode/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ============== 临时文件 ==============
+*.tmp
+*.bak
+*.swp
+*~
