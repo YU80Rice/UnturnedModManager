@@ -301,14 +301,14 @@
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
 
-                    <!-- 段落二：GPL-2.0 开源授权 -->
+                    <!-- 段落二：MIT 开源授权 -->
                     <StackPanel Margin="0,0,0,20">
-                        <TextBlock Text="📜 GPL-2.0 开源授权"
+                        <TextBlock Text="📜 MIT 开源授权"
                                    FontSize="14"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                    Margin="0,0,0,8" />
-                        <TextBlock Text="本项目基于 GPL-2.0 协议开源。这意味着您拥有自由使用、修改、分发的权利，但任何衍生作品必须同样以 GPL-2.0 协议开源，并标注原作者贡献。我们坚信：代码应当如流水般自由流动，而非被锁在商业牢笼中。知识与工具的共享，才是技术社区持续进步的真正动力。"
+                        <TextBlock Text="本项目基于 MIT 协议开源。这意味着您拥有自由使用、修改、分发、甚至商业利用的权利，唯一要求是在所有副本中保留版权与许可声明。我们坚信：代码应当如流水般自由流动，而非被锁在商业牢笼中。知识与工具的共享，才是技术社区持续进步的真正动力。"
                                    FontSize="13"
                                    TextWrapping="Wrap"
                                    LineHeight="23"
