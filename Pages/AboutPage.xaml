@@ -9,8 +9,7 @@
                   VerticalScrollBarVisibility="Visible"
                   HorizontalScrollBarVisibility="Disabled"
                   CanContentScroll="False"
-                  Padding="0"
-                  PreviewMouseWheel="RootScrollViewer_PreviewMouseWheel">
+                  Padding="0">
         <StackPanel MaxWidth="1040"
                     HorizontalAlignment="Center"
                     Margin="48,32,48,48">
