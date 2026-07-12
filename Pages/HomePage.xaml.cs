@@ -335,6 +335,15 @@ public partial class HomePage : Page
         try
         {
             EnsureModFileState(gamePath, modsEnabled);
+
+            // 修复 v1.6.5：已安装 BepInEx 的用户走"步骤 A"直放路径，此前会跳过 DeployEmbeddedCoreMods，
+            // 导致 BepInEx/plugins/ 下没有 LaunchPerfOptimizer.dll 与 WaterPerfOptimizer.dll，
+            // BepInEx 日志显示 "0 plugins to load" 且游戏闪退。模组模式下必须每次启动都重新释放核心模组（覆盖写）。
+            if (modsEnabled)
+            {
+                DeployEmbeddedCoreMods(gamePath);
+            }
+
             RefreshGlobalModStatus();
 
             // DXVK 自适应优化：开启时动态生成 dxvk.conf + 注入 DXVK_HUD 环境变量
