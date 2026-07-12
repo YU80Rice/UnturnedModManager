@@ -49,7 +49,7 @@
                             Margin="0,16,0,20"
                             Background="{DynamicResource AccentFillColorDefaultBrush}"
                             HorizontalAlignment="Center">
-                        <TextBlock Text="版本: v1.6.5 (Stable Release) - 2026/07/12"
+                        <TextBlock Text="版本: v1.6.6 (Stable Release) - 2026/07/13"
                                    FontSize="12"
                                    FontWeight="SemiBold"
                                    FontFamily="Cascadia Mono, Consolas, Courier New, monospace"

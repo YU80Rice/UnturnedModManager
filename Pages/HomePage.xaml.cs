@@ -344,6 +344,11 @@ public partial class HomePage : Page
                 DeployEmbeddedCoreMods(gamePath);
             }
 
+            // 修复 v1.6.6：直放 Unturned.exe 时绕过 Steam 启动流程，Steam SDK 会因找不到 App ID 而无法注入
+            // GameOverlayRenderer64.dll。无论模组 / 原版模式都无条件写入 steam_appid.txt，
+            // 让 Steam SDK 在初始化时能正确识别本进程属于 App 304930。
+            EnsureSteamAppIdFile(gamePath);
+
             RefreshGlobalModStatus();
 
             // DXVK 自适应优化：开启时动态生成 dxvk.conf + 注入 DXVK_HUD 环境变量
@@ -382,13 +387,21 @@ public partial class HomePage : Page
                 }
             }
 
-            // UseShellExecute=false 以支持 EnvironmentVariables（DXVK_HUD 注入需要）
+            // UseShellExecute=false 以支持 EnvironmentVariables（DXVK_HUD / SteamAppId 注入需要）
             // 注意：启动器不应以管理员权限运行，否则 Windows 会拦截 Steam 覆盖层的注入
             var psi = new ProcessStartInfo(exePath, arguments)
             {
                 UseShellExecute = false,
                 WorkingDirectory = gamePath
             };
+
+            // 修复 v1.6.6：注入 Steam Overlay 必需的环境变量。
+            // 即使 Steam 客户端以普通用户身份运行，通过环境变量显式声明 App ID，
+            // 可让 Steam SDK 在游戏进程初始化阶段就向 Steam 客户端注册 Overlay 注入意图，
+            // 避免因直放路径（绕过 Steam 启动流程）导致 Overlay 失效。
+            psi.EnvironmentVariables["SteamAppId"] = "304930";
+            psi.EnvironmentVariables["SteamGameId"] = "304930";
+            psi.EnvironmentVariables["SteamOverlayGameId"] = "304930";
 
             if (dxvkEnabled)
             {
@@ -408,8 +421,40 @@ public partial class HomePage : Page
     }
 
     /// <summary>
+    /// 确保游戏根目录下存在 steam_appid.txt 且内容为 "304930"。
+    /// 直放 Unturned.exe 时绕过了 Steam 的正常启动流程，Steam SDK 在初始化时
+    /// 会读取此文件以识别 App ID；若缺失，Steam Overlay、成就、P2P 联机等
+    /// Steamworks 功能将全部失效，部分情况下还会触发 Steam 重新接管启动流程
+    /// 并拉起 BattlEye 覆盖原版，破坏模组模式。
+    /// </summary>
+    private static void EnsureSteamAppIdFile(string gamePath)
+    {
+        var appidPath = Path.Combine(gamePath, "steam_appid.txt");
+        const string expectedContent = "304930";
+
+        try
+        {
+            if (File.Exists(appidPath))
+            {
+                var current = File.ReadAllText(appidPath).Trim();
+                if (current == expectedContent) return;
+            }
+            File.WriteAllText(appidPath, expectedContent + "\n");
+            System.Diagnostics.Debug.WriteLine($"[SteamAppId] 已写入: {appidPath}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SteamAppId] 写入失败: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// 根据 CPU 物理线程数动态生成 dxvk.conf 到游戏根目录。
     /// 启用管线库以减少着色器编译卡顿，编译器线程数自适应 CPU。
+    /// v1.6.6 追加三项安全鲁棒性配置，防止与 Steam/Discord Overlay 多重 Hook 冲突：
+    /// - dxgi.deferSurfaceCreation：延迟 DXGI 表面创建，给 Steam Overlay 留出 Hook 前置时间
+    /// - dxvk.allowFse：禁用全屏独占，避免独占全屏切换桌面时的图形上下文崩溃
+    /// - dxvk.allowDialogMode：允许对话框模式，优化多屏 / 窗口化焦点的 Vulkan 适配
     /// </summary>
     private static void EnsureDxvkConfFile(string gamePath)
     {
@@ -424,7 +469,15 @@ public partial class HomePage : Page
                     + $"dxvk.numCompilerThreads = {compilerThreads}\n"
                     + $"\n"
                     + $"# 开启管线库以减少着色器卡顿\n"
-                    + $"dxvk.enableGraphicsPipelineLibrary = True\n";
+                    + $"dxvk.enableGraphicsPipelineLibrary = True\n"
+                    + $"\n"
+                    + $"# v1.6.6 安全鲁棒性配置：防止与 Steam / Discord Overlay 多重 Hook 冲突\n"
+                    + $"# 延迟 DXGI 表面创建，给 Steam Overlay 留出 Hook 前置时间\n"
+                    + $"dxgi.deferSurfaceCreation = True\n"
+                    + $"# 禁用全屏独占，避免独占全屏切换桌面时的图形上下文崩溃\n"
+                    + $"dxvk.allowFse = False\n"
+                    + $"# 允许对话框模式，优化多屏 / 窗口化焦点的 Vulkan 适配\n"
+                    + $"dxvk.allowDialogMode = True\n";
 
         try
         {
