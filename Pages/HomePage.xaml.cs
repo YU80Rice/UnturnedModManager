@@ -403,15 +403,15 @@ public partial class HomePage : Page
             psi.EnvironmentVariables["SteamGameId"] = "304930";
             psi.EnvironmentVariables["SteamOverlayGameId"] = "304930";
 
-            if (dxvkEnabled)
-            {
-                // 注入原生 Vulkan HUD：编译器日志 + FPS + 图形 API
-                psi.EnvironmentVariables["DXVK_HUD"] = "compiler,fps,api";
-            }
-
+            // 修复 v1.6.7：移除 DXVK_HUD 环境变量注入。
+            // 此前 v1.6.6 在启用 DXVK 时注入了 DXVK_HUD=compiler,fps,api，导致游戏左上角
+            // 持续显示编译器/FPS/API 调试 HUD，干扰玩家体验。环境变量优先级高于 dxvk.conf，
+            // 用户即使手动改 dxvk.hud=False 也无法关闭。
+            // 现在移除该注入，HUD 默认不显示。需要调试的开发者可自行在 dxvk.conf 中加：
+            //   dxvk.hud = compiler,fps,api
             Process.Start(psi);
 
-            var hudSuffix = dxvkEnabled ? " · DXVK HUD 已注入" : string.Empty;
+            var hudSuffix = dxvkEnabled ? " · DXVK 已启用" : string.Empty;
             ShowStatus($"正在启动游戏（{modeLabel}{hudSuffix}）...", InfoBarSeverity.Informational);
         }
         catch (Exception ex)
