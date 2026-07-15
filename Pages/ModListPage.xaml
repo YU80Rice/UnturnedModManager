@@ -8,7 +8,8 @@
     <Grid Margin="24"
           AllowDrop="True"
           DragOver="Page_DragOver"
-          Drop="Page_Drop">
+          Drop="Page_Drop"
+          PreviewMouseWheel="Panel_PreviewMouseWheel">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -17,7 +18,8 @@
         </Grid.RowDefinitions>
 
         <!-- 标题栏 -->
-        <StackPanel Grid.Row="0" Margin="0,8,0,16">
+        <StackPanel Grid.Row="0" Margin="0,8,0,16"
+                    PreviewMouseWheel="Panel_PreviewMouseWheel">
             <TextBlock Text="模组管理"
                        FontSize="24"
                        FontWeight="SemiBold"
@@ -37,7 +39,8 @@
                     Margin="0,0,0,12" />
 
         <!-- 工具栏 -->
-        <Grid Grid.Row="2" Margin="0,0,0,12">
+        <Grid Grid.Row="2" Margin="0,0,0,12"
+              PreviewMouseWheel="Panel_PreviewMouseWheel">
             <StackPanel Orientation="Horizontal">
                 <ui:Button Appearance="Primary"
                            Content="刷新列表"

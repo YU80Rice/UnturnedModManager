@@ -5,12 +5,7 @@
       Title="关于"
       Background="{DynamicResource ApplicationBackgroundBrush}">
 
-    <ScrollViewer x:Name="RootScrollViewer"
-                  VerticalScrollBarVisibility="Visible"
-                  HorizontalScrollBarVisibility="Disabled"
-                  CanContentScroll="False"
-                  Padding="0">
-        <StackPanel MaxWidth="1040"
+    <StackPanel MaxWidth="1040"
                     HorizontalAlignment="Center"
                     Margin="48,32,48,48"
                     PreviewMouseWheel="CardPanel_PreviewMouseWheel">
@@ -49,7 +44,7 @@
                             Margin="0,16,0,20"
                             Background="{DynamicResource AccentFillColorDefaultBrush}"
                             HorizontalAlignment="Center">
-                        <TextBlock Text="版本: v1.6.7 (Stable Release) - 2026/07/13"
+                        <TextBlock Text="版本: v1.6.8 (Stable Release) - 2026/07/15"
                                    FontSize="12"
                                    FontWeight="SemiBold"
                                    FontFamily="Cascadia Mono, Consolas, Courier New, monospace"
@@ -349,5 +344,4 @@
             </StackPanel>
 
         </StackPanel>
-    </ScrollViewer>
 </Page>

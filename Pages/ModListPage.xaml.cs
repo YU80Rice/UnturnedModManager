@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using UnturnedModManager.Models;
 using Wpf.Ui.Controls;
 using InfoBarSeverity = Wpf.Ui.Controls.InfoBarSeverity;
@@ -187,5 +189,28 @@ public partial class ModListPage : Page
         StatusInfoBar.Message = message;
         StatusInfoBar.Severity = severity;
         StatusInfoBar.IsOpen = true;
+    }
+
+    /// <summary>
+    /// 拦截鼠标滚轮事件并手动路由到 NavigationView 内容区的 ScrollViewer。
+    /// 修复：ListView 内部 ScrollViewer 在隧道阶段吞噬滚轮事件，导致外层 NavigationView 无法滚动。
+    /// PreviewMouseWheel 是隧道事件，在子控件处理前先到达此处。
+    /// 从 Page 向上遍历视觉树，找到第一个 ScrollViewer（即 NavigationView 内容区的 ScrollViewer）。
+    /// </summary>
+    private void Panel_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        // 从 Page 自身向上寻找最近的 ScrollViewer 祖先
+        // 这样可以跳过 ListView 内部的 ScrollViewer（它是 Page 的后代，不是祖先）
+        DependencyObject? current = this;
+        while (current != null)
+        {
+            current = VisualTreeHelper.GetParent(current);
+            if (current is ScrollViewer sv)
+            {
+                sv.ScrollToVerticalOffset(sv.VerticalOffset - e.Delta);
+                e.Handled = true;
+                return;
+            }
+        }
     }
 }
