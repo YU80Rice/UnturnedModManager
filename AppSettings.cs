@@ -41,6 +41,26 @@ public static class AppSettings
     }
 
     /// <summary>
+    /// GPU 检测得到的 DXVK 推荐状态（null=未检测，true=推荐，false=不推荐）。
+    /// 首次启动时由 GpuDetector 检测后写入，用于决定 DXVK 开关的初始状态。
+    /// </summary>
+    public static bool? DxvkRecommendedByGpu
+    {
+        get => _data.DxvkRecommendedByGpu;
+        set { _data.DxvkRecommendedByGpu = value; Save(); }
+    }
+
+    /// <summary>
+    /// 是否已展示过 DXVK 兼容性警告（避免每次启动重复弹窗）。
+    /// 仅当用户手动开启 DXVK 但 GPU 不推荐时才弹窗，弹过一次后置 true。
+    /// </summary>
+    public static bool HasShownDxvkCompatWarning
+    {
+        get => _data.HasShownDxvkCompatWarning;
+        set { _data.HasShownDxvkCompatWarning = value; Save(); }
+    }
+
+    /// <summary>
     /// 应用主题模式："Dark"（深色，默认）或 "Light"（浅色）。
     /// 启动时由 MainWindow 应用，运行时通过主题切换按钮即时切换。
     /// </summary>
@@ -225,6 +245,10 @@ public static class AppSettings
         public bool LastSessionCrashed { get; set; } = false;
 
         public bool EnableDxvk { get; set; } = false;
+
+        public bool? DxvkRecommendedByGpu { get; set; } = null;
+
+        public bool HasShownDxvkCompatWarning { get; set; } = false;
 
         public string ThemeMode { get; set; } = "Dark";
     }

@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using UnturnedModManager.Helpers;
+using UnturnedModManager.Models;
 using Wpf.Ui.Controls;
 
 namespace UnturnedModManager.Pages;
@@ -107,6 +108,7 @@ public partial class HomePage : Page
         RefreshGlobalModStatus();
         RefreshBepInExStatus();
         RefreshDxvkToggle();
+        RefreshGpuInfo();
         RefreshCrashAlert();
 
         if (_firstLaunchDetectionDone) return;
@@ -129,6 +131,50 @@ public partial class HomePage : Page
         // 开关状态以 DLL 是否实际存在为准（更贴近运行时真实状态）
         DxvkOptimizerToggle.IsChecked = dllsPresent;
         _suppressToggleHandler = false;
+    }
+
+    /// <summary>
+    /// v1.6.8 新增：检测主显卡，在 DXVK 开关下方显示 GPU 信息与 DXVK 推荐度。
+    /// 首次启动若 GPU 检测结果为"不推荐"，且用户从未配置过 DXVK（EnableDxvk=false 且 DxvkRecommendedByGpu=null），
+    /// 则写入推荐值并确保 DXVK 关闭，避免老架构显卡（如 GTX 1060 Pascal）启用 DXVK 后严重降帧。
+    /// </summary>
+    private void RefreshGpuInfo()
+    {
+        GpuInfo gpu;
+        try
+        {
+            gpu = Task.Run(() => GpuDetector.DetectPrimary()).Result;
+        }
+        catch
+        {
+            GpuInfoBorder.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        if (string.IsNullOrEmpty(gpu.Name))
+        {
+            GpuInfoBorder.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        GpuNameText.Text = $"🖥️ {gpu.Name}  ·  {gpu.VendorName} {gpu.ArchitectureName}";
+        GpuRecommendationText.Text = $"{gpu.RecommendationText}  —  {gpu.RecommendationDetail}";
+        GpuInfoBorder.Visibility = Visibility.Visible;
+
+        // 首次启动智能默认：GPU 不推荐 DXVK 时，写入推荐值并确保 DXVK 关闭
+        if (AppSettings.DxvkRecommendedByGpu == null)
+        {
+            bool recommended = gpu.DxvkRecommendation != DxvkRecommendation.NotRecommended;
+            AppSettings.DxvkRecommendedByGpu = recommended;
+
+            if (!recommended && !AppSettings.EnableDxvk)
+            {
+                // 老架构显卡 + 用户从未启用过 DXVK -> 确保关闭
+                _suppressToggleHandler = true;
+                DxvkOptimizerToggle.IsChecked = false;
+                _suppressToggleHandler = false;
+            }
+        }
     }
 
     /// <summary>
@@ -545,6 +591,29 @@ public partial class HomePage : Page
         }
 
         bool wantEnable = toggle.IsChecked == true;
+
+        // v1.6.8：兼容性警告 - GPU 不推荐 DXVK 时弹窗确认（仅首次）
+        if (wantEnable && AppSettings.DxvkRecommendedByGpu == false && !AppSettings.HasShownDxvkCompatWarning)
+        {
+            AppSettings.HasShownDxvkCompatWarning = true;
+            var result = System.Windows.MessageBox.Show(
+                "⚠️ DXVK 兼容性提示\n\n" +
+                "检测到您的显卡架构较老，DXVK 2.4 依赖的 Vulkan 1.3 现代扩展支持不完整，" +
+                "可能导致严重降帧（如 GTX 1060 Pascal 架构实测仅 6 FPS）。\n\n" +
+                "建议：关闭 DXVK，使用原生 D3D11\n\n" +
+                "是否仍要启用 DXVK？",
+                "DXVK 兼容性警告",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Warning);
+            if (result != System.Windows.MessageBoxResult.Yes)
+            {
+                _suppressToggleHandler = true;
+                toggle.IsChecked = false;
+                _suppressToggleHandler = false;
+                return;
+            }
+        }
+
         var d3d11Path = Path.Combine(gamePath, DxvkD3d11Dll);
         var dxgiPath = Path.Combine(gamePath, DxvkDxgiDll);
         var d3d11DisabledPath = Path.Combine(gamePath, DxvkD3d11Disabled);
