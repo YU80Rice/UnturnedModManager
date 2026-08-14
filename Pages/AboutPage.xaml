@@ -215,6 +215,13 @@
                            FontSize="13"
                            TextWrapping="Wrap"
                            LineHeight="23"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Margin="0,0,0,14" />
+
+                <TextBlock Text="当前版本采用社区统一基线 BepInEx 5.4.23.5（win_x64，Unity Mono / winhttp doorstop），支持安装、升级、修复、临时停用与保留玩家插件数据的核心环境卸载。"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
             </StackPanel>
         </ui:Card>

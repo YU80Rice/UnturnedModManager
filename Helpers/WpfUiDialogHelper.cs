@@ -39,7 +39,7 @@ public static class WpfUiDialogHelper
     {
         return ConfirmAsync(
             "准备下载",
-            "即将下载官方 BepInEx 5.4.22 x64 稳定版，请确保您的网络通畅且 Steam 处于关闭状态，是否开始？");
+            "即将下载官方 BepInEx 5.4.23.5 win_x64（Unity Mono / winhttp doorstop），请确保网络通畅且 Unturned 已关闭。是否开始？");
     }
 
     /// <summary>

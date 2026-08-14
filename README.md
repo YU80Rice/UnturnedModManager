@@ -50,7 +50,7 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 ### 游戏与插件环境
 
 - 自动探测 Steam Library 中的 Unturned，亦可手动选择游戏目录；
-- 下载、安装或修复 BepInEx 5.4.22 x64；
+- 下载、安装、升级、修复或卸载社区统一基线 BepInEx 5.4.23.5（win_x64，Unity Mono / winhttp doorstop）；
 - 通过 `winhttp.dll` / `winhttp.dll.disabled` 切换 BepInEx 注入状态；
 - 模组模式使用 `Unturned.exe -NoBattlEye`，原版模式使用 `Unturned_BE.exe`；
 - 可选部署 DXVK 2.4，并根据检测到的 GPU 架构给出兼容性提示。
@@ -58,6 +58,8 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 > DXVK 的效果取决于显卡、驱动和游戏环境。UMM 只提供部署与切换能力，不承诺一定提高帧率。
 
 UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerfOptimizer`。两个文件仅暂存为后续整合原材料，不进入发布产物。
+
+“关闭插件环境”只会停用 `winhttp.dll`，适合临时以原版模式运行；“卸载环境”会移除 BepInEx 核心和 Doorstop 启动文件，但保留 `plugins`、`config`、缓存、日志与社区安装记录，方便以后重新安装后继续使用。
 
 ### 本地插件管理
 
@@ -110,7 +112,7 @@ UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerf
 | 表现层 | Pages + ViewModels，命令、状态和导航上下文分离 |
 | 业务层 | BepInEx、DXVK、本地插件、社区 API、安装器、账户与缓存服务 |
 | 社区 | [unmod.online](https://unmod.online/) HTTP API |
-| 插件环境 | [BepInEx 5](https://github.com/BepInEx/BepInEx) |
+| 插件环境 | [BepInEx 5.4.23.5](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.5)，win_x64 / Unity Mono / winhttp doorstop |
 | 图形转译 | [DXVK 2.4](https://github.com/doitsujin/dxvk)（可选） |
 
 v2.0 继续使用 WPF，因为 UMM 的目标平台、现有组件和 Unturned 运行环境均以 Windows 为中心。此次升级重点是建立清晰的 ViewModel/Service 边界、可靠状态模型和可测试业务逻辑，而不是仅为更换技术名称迁移 UI 框架。

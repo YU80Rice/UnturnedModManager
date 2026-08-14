@@ -80,4 +80,45 @@ public sealed class ModelBehaviorTests
             if (Directory.Exists(directory)) Directory.Delete(directory, true);
         }
     }
+
+    [Fact]
+    public void BepInExUninstall_RemovesLoaderCoreButPreservesPlayerData()
+    {
+        var gameRoot = Path.Combine(Path.GetTempPath(), "umm-bepinex-uninstall-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(gameRoot, "BepInEx", "core"));
+            Directory.CreateDirectory(Path.Combine(gameRoot, "BepInEx", "plugins"));
+            Directory.CreateDirectory(Path.Combine(gameRoot, "BepInEx", "config"));
+            Directory.CreateDirectory(Path.Combine(gameRoot, "BepInEx", "cache"));
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            File.WriteAllText(Path.Combine(gameRoot, "winhttp.dll"), "loader");
+            File.WriteAllText(Path.Combine(gameRoot, "doorstop_config.ini"), "loader");
+            File.WriteAllText(Path.Combine(gameRoot, ".doorstop_version"), "loader");
+            File.WriteAllText(Path.Combine(gameRoot, "changelog.txt"), "player-owned changelog");
+            File.WriteAllText(Path.Combine(gameRoot, "BepInEx", "core", "BepInEx.dll"), "core");
+            File.WriteAllText(Path.Combine(gameRoot, "BepInEx", "plugins", "KeepMe.dll"), "plugin");
+            File.WriteAllText(Path.Combine(gameRoot, "BepInEx", "config", "KeepMe.cfg"), "config");
+            File.WriteAllText(Path.Combine(gameRoot, "BepInEx", "cache", "KeepMe.cache"), "cache");
+            File.WriteAllText(Path.Combine(gameRoot, "BepInEx", "LogOutput.log"), "log");
+
+            var service = new BepInExService(new HttpDownloadService());
+            var result = service.Uninstall(gameRoot);
+
+            Assert.True(result.Success);
+            Assert.Equal("5.4.23.5", BepInExService.SupportedVersion);
+            Assert.False(Directory.Exists(Path.Combine(gameRoot, "BepInEx", "core")));
+            Assert.False(File.Exists(Path.Combine(gameRoot, "winhttp.dll")));
+            Assert.False(File.Exists(Path.Combine(gameRoot, "doorstop_config.ini")));
+            Assert.True(File.Exists(Path.Combine(gameRoot, "changelog.txt")));
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "plugins", "KeepMe.dll")));
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "config", "KeepMe.cfg")));
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "cache", "KeepMe.cache")));
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "LogOutput.log")));
+        }
+        finally
+        {
+            if (Directory.Exists(gameRoot)) Directory.Delete(gameRoot, true);
+        }
+    }
 }

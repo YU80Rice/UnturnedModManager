@@ -83,8 +83,13 @@
                         <ui:Button Content="一键安装" Icon="{ui:SymbolIcon ArrowDownload24}" Appearance="Primary"
                                    Command="{Binding InstallCommand}"
                                    Visibility="{Binding CanInstallBepInEx, Converter={StaticResource BoolToVisibility}}" />
-                        <ui:Button Content="检查并修复" Icon="{ui:SymbolIcon Wrench24}"
+                        <ui:Button Content="{Binding BepInExRepairButtonText}" Icon="{ui:SymbolIcon Wrench24}"
                                    Command="{Binding RepairCommand}"
+                                   Visibility="{Binding IsBepInExInstalled, Converter={StaticResource BoolToVisibility}}" />
+                        <ui:Button Content="卸载环境" Icon="{ui:SymbolIcon Delete24}"
+                                   Margin="8,0,0,0"
+                                   Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                   Command="{Binding UninstallCommand}"
                                    Visibility="{Binding IsBepInExInstalled, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
                 </Grid>

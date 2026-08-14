@@ -25,7 +25,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     private bool _hasOperationProgress;
     private int _operationPercentage;
     private string _operationText = "";
-    private BepInExStatus _bepStatus = new(false, false, "BepInEx 未安装", "尚未检测");
+    private BepInExStatus _bepStatus = new(false, false, false, null, "BepInEx 未安装", "尚未检测");
     private GpuInfo? _gpu;
 
     public HomeViewModel(
@@ -44,7 +44,10 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         _dialogs = dialogs;
         LaunchCommand = new AsyncRelayCommand(LaunchAsync, () => CanLaunch);
         InstallCommand = new AsyncRelayCommand(() => DeployBepInExAsync("安装", requireConfirmation: true), () => !IsBusy);
-        RepairCommand = new AsyncRelayCommand(() => DeployBepInExAsync("修复", requireConfirmation: true), () => !IsBusy);
+        RepairCommand = new AsyncRelayCommand(
+            () => DeployBepInExAsync(_bepStatus.IsCurrentVersion ? "修复" : "升级", requireConfirmation: true),
+            () => !IsBusy);
+        UninstallCommand = new AsyncRelayCommand(UninstallBepInExAsync, () => !IsBusy && IsBepInExInstalled);
         ToggleGlobalModsCommand = new RelayCommand(ToggleGlobalMods, () => !IsBusy);
         ToggleDxvkCommand = new AsyncRelayCommand(ToggleDxvkAsync, () => !IsBusy);
         CancelOperationCommand = new RelayCommand(CancelOperation, () => IsBusy);
@@ -59,6 +62,9 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public string BepInExDetail => _bepStatus.Detail;
     public bool IsBepInExInstalled => _bepStatus.IsInstalled;
     public bool CanInstallBepInEx => _bepStatus.HasValidGamePath && !_bepStatus.IsInstalled;
+    public string BepInExRepairButtonText => _bepStatus.IsCurrentVersion
+        ? "检查并修复"
+        : $"升级到 {BepInExService.SupportedVersion}";
     public bool GlobalModsEnabled { get => _globalModsEnabled; set => SetProperty(ref _globalModsEnabled, value); }
     public bool DxvkEnabled { get => _dxvkEnabled; set => SetProperty(ref _dxvkEnabled, value); }
     public bool HasGpuInfo => _gpu is not null && !string.IsNullOrWhiteSpace(_gpu.Name);
@@ -95,6 +101,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public ICommand LaunchCommand { get; }
     public ICommand InstallCommand { get; }
     public ICommand RepairCommand { get; }
+    public ICommand UninstallCommand { get; }
     public ICommand ToggleGlobalModsCommand { get; }
     public ICommand ToggleDxvkCommand { get; }
     public ICommand CancelOperationCommand { get; }
@@ -121,8 +128,10 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(BepInExDetail));
         OnPropertyChanged(nameof(IsBepInExInstalled));
         OnPropertyChanged(nameof(CanInstallBepInEx));
+        OnPropertyChanged(nameof(BepInExRepairButtonText));
         OnPropertyChanged(nameof(HasCrashAlert));
         RefreshRuntimeState();
+        RaiseCommandStates();
     }
 
     private async Task TryDetectGamePathAsync()
@@ -191,9 +200,12 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
             RaiseNotice("请先在设置中配置有效的 Unturned 安装路径。", UserNoticeSeverity.Warning);
             return;
         }
-        var message = operationName == "安装"
-            ? "启动器将下载并安装 BepInEx 5.4.22 x64 插件环境。是否继续？"
-            : "将重新下载并覆盖 BepInEx 核心环境；社区插件不会被删除。是否继续？";
+        var message = operationName switch
+        {
+            "安装" => $"启动器将下载并安装 BepInEx {BepInExService.SupportedVersion}（win_x64，Unity Mono / winhttp doorstop）。是否继续？",
+            "升级" => $"将升级到社区统一要求的 BepInEx {BepInExService.SupportedVersion}；现有 plugins、config 与社区安装记录会保留。是否继续？",
+            _ => $"将重新下载并覆盖 BepInEx {BepInExService.SupportedVersion} 核心环境；社区插件与配置不会被删除。是否继续？"
+        };
         if (requireConfirmation && !await _dialogs.ConfirmAsync($"{operationName} BepInEx", message)) return;
 
         BeginOperation($"准备{operationName} BepInEx…");
@@ -206,6 +218,40 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         catch (OperationCanceledException) { RaiseNotice($"BepInEx {operationName}已取消。", UserNoticeSeverity.Warning); }
         catch (Exception ex) { RaiseNotice($"BepInEx {operationName}失败：{ex.Message}", UserNoticeSeverity.Error); }
         finally { EndOperation(); RefreshAll(); }
+    }
+
+    private async Task UninstallBepInExAsync()
+    {
+        var gamePath = AppSettings.UnturnedInstallPath;
+        if (!_gamePaths.IsValid(gamePath))
+        {
+            RaiseNotice("请先在设置中配置有效的 Unturned 安装路径。", UserNoticeSeverity.Warning);
+            return;
+        }
+        if (_launcher.IsRunning())
+        {
+            RaiseNotice("请先退出 Unturned，再卸载插件环境。", UserNoticeSeverity.Warning);
+            return;
+        }
+
+        var confirmed = await _dialogs.ConfirmAsync(
+            "卸载 BepInEx 插件环境",
+            "将移除 BepInEx 核心、winhttp doorstop 与启动配置。\n\n"
+            + "玩家的 plugins、config、cache、日志及社区安装记录会保留，之后重新安装环境即可继续使用。\n\n"
+            + "是否继续？");
+        if (!confirmed) return;
+
+        IsBusy = true;
+        try
+        {
+            var result = await Task.Run(() => _bepInEx.Uninstall(gamePath));
+            RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Error);
+        }
+        finally
+        {
+            IsBusy = false;
+            RefreshAll();
+        }
     }
 
     private async Task LaunchAsync()
@@ -293,6 +339,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         ((AsyncRelayCommand)LaunchCommand).RaiseCanExecuteChanged();
         ((AsyncRelayCommand)InstallCommand).RaiseCanExecuteChanged();
         ((AsyncRelayCommand)RepairCommand).RaiseCanExecuteChanged();
+        ((AsyncRelayCommand)UninstallCommand).RaiseCanExecuteChanged();
         ((RelayCommand)ToggleGlobalModsCommand).RaiseCanExecuteChanged();
         ((AsyncRelayCommand)ToggleDxvkCommand).RaiseCanExecuteChanged();
         ((RelayCommand)CancelOperationCommand).RaiseCanExecuteChanged();
