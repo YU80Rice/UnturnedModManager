@@ -20,12 +20,15 @@ public sealed class BepInExService
     private const string WinHttpDll = "winhttp.dll";
     private const string WinHttpDisabled = "winhttp.dll.disabled";
     private const string CoreRelativePath = @"BepInEx\core\BepInEx.dll";
+    private const int CommunityPackageId = 4;
     private const string ExpectedPackageSha256 = "82F9878551030F54657792C0740D9D51A09500EEAE1FBA21106B0C441E6732C4";
     private const string ExpectedChangelogSha256 = "B184D858CB0FF6614CA8CE0247FB0D186CABC91ED7E4D4D9D57EA3D744CE98B5";
     private readonly HttpDownloadService _downloads;
     private static readonly DownloadSource[] Sources =
     [
-        new("国内镜像", "https://mirror.ghproxy.com/https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip", TimeSpan.FromSeconds(8)),
+        new("unmod.online 社区源", $"https://unmod.online/api/mods/{CommunityPackageId}/file", TimeSpan.FromSeconds(15), RequiresCommunityAuth: true),
+        new("国内镜像（gh-proxy.com）", "https://gh-proxy.com/https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip", TimeSpan.FromSeconds(15)),
+        new("国内镜像（ghproxy.net）", "https://ghproxy.net/https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip", TimeSpan.FromSeconds(15)),
         new("官方 GitHub", "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip", TimeSpan.FromMinutes(10))
     ];
 

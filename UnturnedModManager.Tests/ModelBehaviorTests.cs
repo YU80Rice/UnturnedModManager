@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Net;
+using System.Net.Http;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
 using Xunit;
@@ -119,6 +121,79 @@ public sealed class ModelBehaviorTests
         finally
         {
             if (Directory.Exists(gameRoot)) Directory.Delete(gameRoot, true);
+        }
+    }
+
+    [Fact]
+    public async Task DownloadService_SkipsCommunitySourceWhenSignedOut()
+    {
+        var requested = new List<string>();
+        var progress = new List<OperationProgress>();
+        var destination = Path.Combine(Path.GetTempPath(), "umm-download-" + Guid.NewGuid().ToString("N"));
+
+        try
+        {
+            var downloads = new HttpDownloadService(
+                communityTokenProvider: () => null,
+                clientFactory: _ => new HttpClient(new RecordingHandler(requested, "fallback")));
+
+            await downloads.DownloadAsync(
+                [
+                    new("unmod.online 社区源", "https://unmod.online/api/mods/4/file", TimeSpan.FromSeconds(1), RequiresCommunityAuth: true),
+                    new("国内镜像", "https://example.invalid/fallback.zip", TimeSpan.FromSeconds(1))
+                ],
+                destination,
+                new Progress<OperationProgress>(progress.Add));
+
+            Assert.Equal(["https://example.invalid/fallback.zip"], requested);
+            Assert.Contains(progress, item => item.Message.Contains("需要登录 unmod.online", StringComparison.Ordinal));
+            Assert.Equal("fallback", await File.ReadAllTextAsync(destination));
+        }
+        finally
+        {
+            if (File.Exists(destination)) File.Delete(destination);
+        }
+    }
+
+    [Fact]
+    public async Task DownloadService_SendsCommunityTokenOnlyAsCookie()
+    {
+        var handler = new RecordingHandler([], "community");
+        var destination = Path.Combine(Path.GetTempPath(), "umm-download-" + Guid.NewGuid().ToString("N"));
+
+        try
+        {
+            var downloads = new HttpDownloadService(
+                communityTokenProvider: () => "test-token",
+                clientFactory: _ => new HttpClient(handler));
+
+            await downloads.DownloadAsync(
+                [new("unmod.online 社区源", "https://unmod.online/api/mods/4/file", TimeSpan.FromSeconds(1), RequiresCommunityAuth: true)],
+                destination);
+
+            Assert.NotNull(handler.LastRequest);
+            Assert.Equal("token=test-token", handler.LastRequest!.Headers.GetValues("Cookie").Single());
+            Assert.Equal("community", await File.ReadAllTextAsync(destination));
+        }
+        finally
+        {
+            if (File.Exists(destination)) File.Delete(destination);
+        }
+    }
+
+    private sealed class RecordingHandler(ICollection<string> requestedUrls, string responseBody) : HttpMessageHandler
+    {
+        public HttpRequestMessage? LastRequest { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            requestedUrls.Add(request.RequestUri!.ToString());
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                RequestMessage = request,
+                Content = new StringContent(responseBody)
+            });
         }
     }
 }

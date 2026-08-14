@@ -223,6 +223,13 @@
                            TextWrapping="Wrap"
                            LineHeight="23"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+                <TextBlock Text="安装包下载按“已登录的 unmod.online 社区源 → gh-proxy.com / ghproxy.net 国内镜像 → GitHub 官方”顺序回退；未登录时会明确跳过需要账户 Cookie 的社区源。无论来自哪个源，安装前都会校验同一份官方 SHA-256。"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
+                           Margin="0,14,0,0"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
             </StackPanel>
         </ui:Card>
 

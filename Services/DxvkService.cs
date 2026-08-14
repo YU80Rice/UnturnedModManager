@@ -11,7 +11,8 @@ public sealed class DxvkService
     private readonly HttpDownloadService _downloads;
     private static readonly DownloadSource[] Sources =
     [
-        new("国内镜像", "https://mirror.ghproxy.com/https://github.com/doitsujin/dxvk/releases/download/v2.4/dxvk-2.4.tar.gz", TimeSpan.FromSeconds(8)),
+        new("国内镜像（gh-proxy.com）", "https://gh-proxy.com/https://github.com/doitsujin/dxvk/releases/download/v2.4/dxvk-2.4.tar.gz", TimeSpan.FromSeconds(15)),
+        new("国内镜像（ghproxy.net）", "https://ghproxy.net/https://github.com/doitsujin/dxvk/releases/download/v2.4/dxvk-2.4.tar.gz", TimeSpan.FromSeconds(15)),
         new("官方 GitHub", "https://github.com/doitsujin/dxvk/releases/download/v2.4/dxvk-2.4.tar.gz", TimeSpan.FromMinutes(10))
     ];
 
