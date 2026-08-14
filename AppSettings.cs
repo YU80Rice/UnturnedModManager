@@ -2,13 +2,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Win32;
 
 namespace UnturnedModManager;
 
 public static class AppSettings
 {
+    private static readonly object SaveLock = new();
+    private static readonly string ConfigDirectory = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "UnturnedModManager");
     private static readonly string ConfigPath = Path.Combine(
+        ConfigDirectory,
+        "config.json");
+    private static readonly string LegacyConfigPath = Path.Combine(
         AppDomain.CurrentDomain.BaseDirectory,
         "config.json");
 
@@ -70,14 +79,71 @@ public static class AppSettings
         set { _data.ThemeMode = value; Save(); }
     }
 
+    public static string CommunityThemeMode
+    {
+        get => string.IsNullOrEmpty(_data.CommunityThemeMode) ? "System" : _data.CommunityThemeMode;
+        set { _data.CommunityThemeMode = value; Save(); }
+    }
+
+    public static string? CommunityAuthToken
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(_data.CommunityAuthTokenProtected))
+            {
+                try
+                {
+                    var encrypted = Convert.FromBase64String(_data.CommunityAuthTokenProtected);
+                    return Encoding.UTF8.GetString(ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser));
+                }
+                catch { }
+            }
+            return _data.CommunityAuthToken;
+        }
+        set
+        {
+            _data.CommunityAuthToken = null;
+            _data.CommunityAuthTokenProtected = string.IsNullOrWhiteSpace(value)
+                ? null
+                : Convert.ToBase64String(ProtectedData.Protect(
+                    Encoding.UTF8.GetBytes(value), null, DataProtectionScope.CurrentUser));
+            Save();
+        }
+    }
+    public static int? CommunityUserId { get => _data.CommunityUserId; set { _data.CommunityUserId = value; Save(); } }
+    public static string? CommunityUsername { get => _data.CommunityUsername; set { _data.CommunityUsername = value; Save(); } }
+    public static string? CommunityAvatarUrl { get => _data.CommunityAvatarUrl; set { _data.CommunityAvatarUrl = value; Save(); } }
+
+    public static bool IsNavigationPaneOpen
+    {
+        get => _data.IsNavigationPaneOpen;
+        set { _data.IsNavigationPaneOpen = value; Save(); }
+    }
+    public static double WindowWidth { get => _data.WindowWidth; set { _data.WindowWidth = value; Save(); } }
+    public static double WindowHeight { get => _data.WindowHeight; set { _data.WindowHeight = value; Save(); } }
+    public static double WindowLeft { get => _data.WindowLeft; set { _data.WindowLeft = value; Save(); } }
+    public static double WindowTop { get => _data.WindowTop; set { _data.WindowTop = value; Save(); } }
+    public static bool IsWindowMaximized { get => _data.IsWindowMaximized; set { _data.IsWindowMaximized = value; Save(); } }
+
     static AppSettings()
     {
         try
         {
-            if (File.Exists(ConfigPath))
+            var sourcePath = File.Exists(ConfigPath) ? ConfigPath : LegacyConfigPath;
+            if (File.Exists(sourcePath))
             {
-                var json = File.ReadAllText(ConfigPath);
+                var json = File.ReadAllText(sourcePath);
                 _data = JsonSerializer.Deserialize<ConfigData>(json) ?? new ConfigData();
+                if (string.IsNullOrWhiteSpace(_data.CommunityAuthTokenProtected)
+                    && !string.IsNullOrWhiteSpace(_data.CommunityAuthToken))
+                {
+                    var legacyToken = _data.CommunityAuthToken;
+                    _data.CommunityAuthToken = null;
+                    _data.CommunityAuthTokenProtected = Convert.ToBase64String(ProtectedData.Protect(
+                        Encoding.UTF8.GetBytes(legacyToken), null, DataProtectionScope.CurrentUser));
+                    Save();
+                }
+                else if (!string.Equals(sourcePath, ConfigPath, StringComparison.OrdinalIgnoreCase)) Save();
             }
         }
         catch { }
@@ -230,12 +296,16 @@ public static class AppSettings
 
     public static void Save()
     {
-        try
+        lock (SaveLock)
         {
-            File.WriteAllText(ConfigPath,
-                JsonSerializer.Serialize(_data, new JsonSerializerOptions { WriteIndented = true }));
+            try
+            {
+                Directory.CreateDirectory(ConfigDirectory);
+                File.WriteAllText(ConfigPath,
+                    JsonSerializer.Serialize(_data, new JsonSerializerOptions { WriteIndented = true }));
+            }
+            catch { }
         }
-        catch { }
     }
 
     private class ConfigData
@@ -251,5 +321,17 @@ public static class AppSettings
         public bool HasShownDxvkCompatWarning { get; set; } = false;
 
         public string ThemeMode { get; set; } = "Dark";
+        public string CommunityThemeMode { get; set; } = "System";
+        public bool IsNavigationPaneOpen { get; set; } = true;
+        public double WindowWidth { get; set; } = 1280;
+        public double WindowHeight { get; set; } = 820;
+        public double WindowLeft { get; set; } = double.NaN;
+        public double WindowTop { get; set; } = double.NaN;
+        public bool IsWindowMaximized { get; set; }
+        public string? CommunityAuthToken { get; set; }
+        public string? CommunityAuthTokenProtected { get; set; }
+        public int? CommunityUserId { get; set; }
+        public string? CommunityUsername { get; set; }
+        public string? CommunityAvatarUrl { get; set; }
     }
 }

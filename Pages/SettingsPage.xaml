@@ -2,85 +2,71 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:controls="clr-namespace:UnturnedModManager.Controls"
       Title="设置"
       Background="{DynamicResource ApplicationBackgroundBrush}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" PreviewMouseWheel="CardPanel_PreviewMouseWheel">
+        <StackPanel Margin="32,24,32,40" MaxWidth="820" HorizontalAlignment="Left">
+            <controls:PageHeader Title="设置" Subtitle="配置游戏路径、社区账户与界面外观" Margin="0,0,0,22" />
+            <ui:InfoBar x:Name="StatusInfoBar" IsOpen="False" Margin="0,0,0,16" />
 
-    <Grid Margin="24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <!-- 标题栏 -->
-        <StackPanel Grid.Row="0" Margin="0,8,0,24">
-            <TextBlock Text="设置"
-                       FontSize="24"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-            <TextBlock Text="配置游戏路径与应用行为"
-                       FontSize="13"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Margin="0,4,0,0" />
-        </StackPanel>
-
-        <!-- 设置项目 -->
-        <StackPanel Grid.Row="1" MaxWidth="600"
-                    PreviewMouseWheel="CardPanel_PreviewMouseWheel">
-
-            <!-- 顶部状态反馈条 -->
-            <ui:InfoBar x:Name="StatusInfoBar"
-                        IsOpen="False"
-                        Title=""
-                        Message=""
-                        Margin="0,0,0,20" />
-
-            <!-- 游戏安装路径 -->
-            <Border CornerRadius="8"
-                    Padding="20,16"
-                    Margin="0,0,0,20"
+            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
                     Background="{DynamicResource ControlFillColorDefaultBrush}">
                 <StackPanel>
-                    <TextBlock Text="Unturned 安装路径"
-                               FontSize="15"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                    <TextBlock Text="指向游戏根目录（包含 Unturned.exe 的文件夹）"
-                               FontSize="12"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Margin="0,2,0,12" />
-
+                    <TextBlock Text="Unturned 安装路径" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="请选择包含 Unturned.exe 的游戏根目录。"
+                               Margin="0,3,0,12"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <ui:TextBox x:Name="GamePathTextBox"
-                                    Grid.Column="0"
-                                    PlaceholderText="例如: C:\Program Files (x86)\Steam\steamapps\common\Unturned" />
-                        <ui:Button Grid.Column="1"
-                                   Content="浏览..."
-                                   Appearance="Secondary"
-                                   Margin="12,0,0,0"
-                                   Click="BrowsePathButton_Click" />
-                        <ui:Button x:Name="AutoDetectButton"
-                                   Grid.Column="2"
-                                   Content="自动寻找"
-                                   Icon="{ui:SymbolIcon Search16}"
-                                   Appearance="Secondary"
-                                   Margin="5,0,0,0"
-                                   Click="AutoDetectButton_Click" />
+                        <ui:TextBox Text="{Binding GamePath, UpdateSourceTrigger=PropertyChanged}"
+                                    PlaceholderText="例如：E:\Steam\steamapps\common\Unturned" />
+                        <ui:Button Grid.Column="1" Content="浏览…" Margin="10,0,0,0"
+                                   Command="{Binding BrowseCommand}" />
+                        <ui:Button Grid.Column="2" Content="自动寻找" Icon="{ui:SymbolIcon Search16}"
+                                   Margin="6,0,0,0" Command="{Binding DetectCommand}" />
                     </Grid>
+                    <ProgressBar IsIndeterminate="True" Height="3" Margin="0,12,0,0"
+                                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
                 </StackPanel>
             </Border>
 
-            <!-- 保存按钮 -->
-            <ui:Button x:Name="SaveButton"
-                       Appearance="Primary"
-                       Content="保存设置"
-                       Icon="{ui:SymbolIcon Save24}"
-                       HorizontalAlignment="Left"
-                       Click="SaveButton_Click" />
+            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="社区账户" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding AccountStatus}" Margin="0,3,0,0"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <ui:Button Grid.Column="1" Content="{Binding AccountActionText}" Appearance="Primary"
+                               VerticalAlignment="Center" Command="{Binding ManageAccountCommand}" />
+                </Grid>
+            </Border>
+
+            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <StackPanel>
+                    <TextBlock Text="主题模式" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="选择浅色、深色，或跟随 Windows 系统设置。"
+                               Margin="0,3,0,12"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <ComboBox ItemsSource="{Binding ThemeChoices}"
+                              SelectedItem="{Binding SelectedTheme}"
+                              DisplayMemberPath="Label"
+                              Width="220"
+                              HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+
+            <ui:Button Content="保存设置" Icon="{ui:SymbolIcon Save24}"
+                       Appearance="Primary" HorizontalAlignment="Left"
+                       Command="{Binding SaveCommand}" />
         </StackPanel>
-    </Grid>
+    </ScrollViewer>
 </Page>

@@ -1,0 +1,31 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore .\UnturnedModManager.Tests\UnturnedModManager.Tests.csproj
+
+      - name: Build
+        run: dotnet build .\UnturnedModManager.Tests\UnturnedModManager.Tests.csproj -c Release --no-restore --nologo
+
+      - name: Test
+        run: dotnet test .\UnturnedModManager.Tests\UnturnedModManager.Tests.csproj -c Release --no-build --nologo

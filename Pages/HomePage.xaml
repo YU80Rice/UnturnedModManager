@@ -4,299 +4,165 @@
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       Title="游戏启动"
       Background="{DynamicResource ApplicationBackgroundBrush}">
-
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <!-- 异常退出提示条 -->
-        <Border x:Name="CrashAlertBorder"
-                Grid.Row="0"
-                CornerRadius="8"
-                Padding="16,12"
-                Margin="24,12,24,0"
-                Background="{DynamicResource ControlFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource SystemFillColorCriticalBrush}"
-                BorderThickness="0,3,0,0"
-                Visibility="Collapsed">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <ui:InfoBar Grid.Column="0"
-                             x:Name="CrashAlertInfoBar"
-                             IsOpen="True"
-                             IsClosable="False"
-                             Severity="Warning"
-                             Title="检测到异常退出"
-                             Message="检测到游戏上次未正常关闭。是否一键导出诊断日志至桌面进行分析？" />
-                <StackPanel Grid.Column="1"
-                            Orientation="Horizontal"
-                            VerticalAlignment="Center"
-                            Margin="12,0,4,0">
-                    <ui:Button x:Name="ExportLogsButton"
-                               Content="一键导出"
-                               Appearance="Primary"
-                               Icon="{ui:SymbolIcon FolderArrowRight24}"
-                               Click="ExportLogsButton_Click"
-                               Margin="0,0,8,0" />
-                    <ui:Button Content="忽略"
-                               Appearance="Secondary"
-                               Click="IgnoreCrashButton_Click" />
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- 标题区域 -->
-        <StackPanel Grid.Row="1"
-                    VerticalAlignment="Bottom"
-                    HorizontalAlignment="Center"
-                    Margin="0,0,0,24">
-            <TextBlock Text="Unturned Mod Manager"
-                       FontSize="32"
-                       FontWeight="SemiBold"
-                       HorizontalAlignment="Center"
-                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-            <TextBlock Text="客户端性能优化与模组管理"
-                       FontSize="14"
-                       HorizontalAlignment="Center"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Margin="0,8,0,0" />
-        </StackPanel>
-
-        <!-- 核心操作区 -->
-        <StackPanel Grid.Row="2"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    PreviewMouseWheel="CardPanel_PreviewMouseWheel">
-
-            <!-- 模组环境状态 -->
-            <Border x:Name="BepInExStatusBorder"
-                     CornerRadius="8"
-                     Padding="20,14"
-                     Margin="0,0,0,20"
-                     Background="{DynamicResource ControlFillColorDefaultBrush}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Ellipse x:Name="BepInExStatusIndicator"
-                             Grid.Column="0"
-                             Width="12"
-                             Height="12"
-                             VerticalAlignment="Center"
-                             Margin="0,0,12,0"
-                             Fill="{DynamicResource SystemFillColorCriticalBrush}" />
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock x:Name="BepInExStatusTitle"
-                                   Text="BepInEx 未安装"
-                                   FontSize="15"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                        <TextBlock x:Name="BepInExStatusDetail"
-                                   Text="未检测到 BepInEx，请先在设置中配置游戏路径并安装加载器。"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   Margin="0,2,0,0" />
-                    </StackPanel>
-
-                    <ui:Button x:Name="InstallBepInExButton"
-                               Grid.Column="2"
-                               Appearance="Primary"
-                               Content="一键安装"
-                               Icon="{ui:SymbolIcon ArrowDownload24}"
-                               VerticalAlignment="Center"
-                               Margin="16,0,0,0"
-                               Click="InstallBepInExButton_Click" />
-
-                    <ui:Button x:Name="RepairBepInExButton"
-                               Grid.Column="2"
-                               Appearance="Secondary"
-                               Content="修复"
-                               Icon="{ui:SymbolIcon Wrench24}"
-                               VerticalAlignment="Center"
-                               Margin="16,0,0,0"
-                               Visibility="Collapsed"
-                               Click="RepairBepInExButton_Click" />
-                </Grid>
-            </Border>
-
-            <!-- 全局模组开关 -->
-            <Border CornerRadius="8"
-                    Padding="20,16"
-                    Margin="0,0,0,16"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <ui:SymbolIcon Grid.Column="0"
-                                   Symbol="PlugDisconnected24"
-                                   FontSize="22"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,12,0"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="全局模组环境"
-                                   FontSize="15"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                        <TextBlock Text="启用后，BepInEx 模组加载器将在启动游戏时激活"
-                                   FontSize="12"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   Margin="0,2,0,0" />
-                    </StackPanel>
-                    <ui:ToggleSwitch x:Name="GlobalModToggle"
-                                     Grid.Column="2"
-                                     VerticalAlignment="Center"
-                                     Margin="12,0,0,0"
-                                     Checked="GlobalModToggle_Changed"
-                                     Unchecked="GlobalModToggle_Changed" />
-                </Grid>
-            </Border>
-
-            <!-- DXVK 极速优化开关 -->
-            <Border CornerRadius="8"
-                    Padding="20,16"
-                    Margin="0,0,0,28"
+    <ScrollViewer x:Name="RootScrollViewer"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  PanningMode="VerticalOnly">
+        <StackPanel Margin="30,22,30,42" MaxWidth="1040" HorizontalAlignment="Center">
+            <Border CornerRadius="10" Padding="14" Margin="0,0,0,16"
                     Background="{DynamicResource ControlFillColorDefaultBrush}"
-                    ToolTipService.ToolTip="将图形底层接口翻译为 Vulkan 运行，大幅降低 CPU 渲染压力，提升中高端显卡的占用率与游戏帧率。">
+                    BorderBrush="{DynamicResource SystemFillColorCriticalBrush}"
+                    BorderThickness="0,3,0,0"
+                    Visibility="{Binding HasCrashAlert, Converter={StaticResource BoolToVisibility}}">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <ui:SymbolIcon Grid.Column="0"
-                                   Symbol="TopSpeed24"
-                                   FontSize="22"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,12,0"
-                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="DXVK 极速优化 (DX11 ➔ Vulkan)"
-                                   FontSize="15"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                        <TextBlock Text="将图形底层接口翻译为 Vulkan 运行，大幅降低 CPU 渲染压力，提升中高端显卡的占用率与游戏帧率。"
-                                   FontSize="12"
-                                   TextWrapping="Wrap"
-                                   MaxWidth="380"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   Margin="0,2,0,0" />
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="检测到上次游戏异常退出" FontWeight="SemiBold" FontSize="15" />
+                        <TextBlock Text="可以一键导出 Unity 与 BepInEx 日志，便于排查插件或运行环境问题。"
+                                   Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
-                    <ui:ToggleSwitch x:Name="DxvkOptimizerToggle"
-                                     Grid.Column="2"
-                                     VerticalAlignment="Center"
-                                     Margin="12,0,0,0"
-                                     Checked="DxvkOptimizerToggle_Changed"
-                                     Unchecked="DxvkOptimizerToggle_Changed" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <ui:Button Content="导出诊断日志" Icon="{ui:SymbolIcon FolderArrowRight24}"
+                                   Appearance="Primary" Command="{Binding ExportLogsCommand}" />
+                        <ui:Button Content="忽略" Margin="8,0,0,0" Command="{Binding IgnoreCrashCommand}" />
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- v1.6.8 新增：GPU 兼容性信息条 -->
-            <Border x:Name="GpuInfoBorder"
-                    CornerRadius="8"
-                    Padding="16,12"
-                    Margin="0,0,0,28"
-                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                    Visibility="Collapsed">
+            <Grid Margin="0,0,0,22">
+                <StackPanel>
+                    <TextBlock Text="游戏启动" FontSize="30" FontWeight="SemiBold" />
+                    <TextBlock Text="管理运行环境、性能优化并安全启动 Unturned"
+                               Margin="0,5,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+                <Border HorizontalAlignment="Right" VerticalAlignment="Center" Padding="12,6" CornerRadius="12"
+                        Background="{DynamicResource ControlFillColorSecondaryBrush}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="8" Height="8" Margin="0,0,7,0">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="#20B468" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsGameRunning}" Value="True">
+                                            <Setter Property="Fill" Value="#F0A020" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <TextBlock Text="{Binding LaunchButtonText}" FontSize="12" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <ui:InfoBar x:Name="StatusInfoBar" IsOpen="False" IsClosable="True" Margin="0,0,0,16" />
+
+            <Border CornerRadius="12" Padding="20" Margin="0,0,0,16"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ui:SymbolIcon x:Name="GpuInfoIcon"
-                                   Grid.Column="0"
-                                   Symbol="Desktop24"
-                                   FontSize="18"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,12,0"
-                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock x:Name="GpuNameText"
-                                   FontSize="13"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                        <TextBlock x:Name="GpuRecommendationText"
-                                   FontSize="12"
-                                   TextWrapping="Wrap"
-                                   Margin="0,2,0,0"
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Ellipse Width="12" Height="12" Margin="0,0,14,0" VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsBepInExInstalled}" Value="True">
+                                        <Setter Property="Fill" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding BepInExTitle}" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding BepInExDetail}" Margin="0,4,0,0"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <ui:Button Content="一键安装" Icon="{ui:SymbolIcon ArrowDownload24}" Appearance="Primary"
+                                   Command="{Binding InstallCommand}"
+                                   Visibility="{Binding CanInstallBepInEx, Converter={StaticResource BoolToVisibility}}" />
+                        <ui:Button Content="检查并修复" Icon="{ui:SymbolIcon Wrench24}"
+                                   Command="{Binding RepairCommand}"
+                                   Visibility="{Binding IsBepInExInstalled, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <Border Grid.Column="0" CornerRadius="12" Padding="20"
+                        Background="{DynamicResource ControlFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <ui:SymbolIcon Symbol="PlugDisconnected24" FontSize="22" Margin="0,0,12,0" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="全局模组环境" FontSize="15" FontWeight="SemiBold" />
+                            <TextBlock Text="启用 BepInEx 插件加载；关闭后以纯净模式运行。"
+                                       Margin="0,3,0,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="2" IsChecked="{Binding GlobalModsEnabled}"
+                                         Command="{Binding ToggleGlobalModsCommand}" Margin="12,0,0,0" />
+                    </Grid>
+                </Border>
+                <Border Grid.Column="2" CornerRadius="12" Padding="20"
+                        Background="{DynamicResource ControlFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <ui:SymbolIcon Symbol="TopSpeed24" FontSize="22" Margin="0,0,12,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="DXVK 极速优化" FontSize="15" FontWeight="SemiBold" />
+                            <TextBlock Text="将 DX11 转换为 Vulkan；是否推荐取决于显卡架构。"
+                                       Margin="0,3,0,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="2" IsChecked="{Binding DxvkEnabled}"
+                                         Command="{Binding ToggleDxvkCommand}" Margin="12,0,0,0" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Border CornerRadius="12" Padding="16" Margin="0,0,0,20"
+                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                    Visibility="{Binding HasGpuInfo, Converter={StaticResource BoolToVisibility}}">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <ui:SymbolIcon Symbol="Desktop24" FontSize="20" Margin="0,0,12,0" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding GpuName}" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding GpuRecommendation}" Margin="0,3,0,0" TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- 启动游戏大按钮 -->
-            <ui:Button x:Name="LaunchGameButton"
-                       Appearance="Primary"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       Height="56"
-                       Width="280"
-                       CornerRadius="8"
-                       Click="LaunchGameButton_Click">
-                <StackPanel Orientation="Horizontal">
-                    <ui:SymbolIcon Symbol="Play24"
-                                   FontSize="20"
-                                   Margin="0,0,10,0" />
-                    <TextBlock Text="启动游戏"
-                               VerticalAlignment="Center" />
-                </StackPanel>
-            </ui:Button>
-
-            <!-- 安装进度面板（安装时替换启动按钮） -->
-            <Border x:Name="InstallProgressPanel"
-                   CornerRadius="8"
-                   Padding="20,16"
-                   Width="280"
-                   Background="{DynamicResource ControlFillColorDefaultBrush}"
-                   Visibility="Collapsed">
-                <StackPanel>
-                    <ProgressBar x:Name="InstallProgressBar"
-                                  Height="8"
-                                  Minimum="0"
-                                  Maximum="100"
-                                  Value="0" />
-                    <TextBlock x:Name="InstallProgressText"
-                               Text="准备下载..."
-                               FontSize="13"
-                               HorizontalAlignment="Center"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                               Margin="0,8,0,0" />
+            <Border CornerRadius="12" Padding="22" Background="{DynamicResource ControlFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                <StackPanel HorizontalAlignment="Center">
+                    <ui:Button Appearance="Primary" Height="56" MinWidth="300"
+                               FontSize="18" FontWeight="SemiBold"
+                               Command="{Binding LaunchCommand}" IsEnabled="{Binding CanLaunch}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Play24" FontSize="20" Margin="0,0,10,0" />
+                            <TextBlock Text="{Binding LaunchButtonText}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </ui:Button>
+                    <StackPanel Width="420" Margin="0,18,0,0"
+                                Visibility="{Binding HasOperationProgress, Converter={StaticResource BoolToVisibility}}">
+                        <ProgressBar Minimum="0" Maximum="100" Value="{Binding OperationPercentage, Mode=OneWay}"
+                                     IsIndeterminate="False" Height="7" />
+                        <TextBlock Text="{Binding OperationText}" Margin="0,8,0,0" TextAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <ui:Button Content="取消当前操作" Command="{Binding CancelOperationCommand}"
+                                   HorizontalAlignment="Center" Margin="0,10,0,0" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </StackPanel>
-
-        <!-- 底部状态栏（含倒计时进度条） -->
-        <Border Grid.Row="3"
-                VerticalAlignment="Bottom"
-                HorizontalAlignment="Center"
-                Margin="0,0,0,32">
-            <StackPanel x:Name="StatusContainer" Visibility="Collapsed">
-                <ui:InfoBar x:Name="StatusInfoBar"
-                            IsOpen="True"
-                            IsClosable="False"
-                            Title=""
-                            Message="" />
-                <ProgressBar x:Name="StatusProgressBar"
-                             Height="3"
-                             Minimum="0"
-                             Maximum="100"
-                             Value="100"
-                             Margin="2,2,2,0"
-                             Background="Transparent"
-                             Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
-            </StackPanel>
-        </Border>
-    </Grid>
+    </ScrollViewer>
 </Page>

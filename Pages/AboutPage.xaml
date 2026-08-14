@@ -6,342 +6,316 @@
       Background="{DynamicResource ApplicationBackgroundBrush}">
 
     <StackPanel MaxWidth="1040"
-                    HorizontalAlignment="Center"
-                    Margin="48,32,48,48"
-                    PreviewMouseWheel="CardPanel_PreviewMouseWheel">
+                HorizontalAlignment="Center"
+                Margin="48,32,48,48"
+                PreviewMouseWheel="CardPanel_PreviewMouseWheel">
 
-            <!-- ================= 上半部分：关于软件 ================= -->
-            <Border CornerRadius="14"
-                    Padding="48,36"
-                    Margin="0,0,0,28"
+        <Border CornerRadius="14"
+                Padding="48,36"
+                Margin="0,0,0,28"
+                Background="{DynamicResource ControlFillColorDefaultBrush}">
+            <StackPanel HorizontalAlignment="Center">
+                <Border Width="76"
+                        Height="76"
+                        CornerRadius="18"
+                        Background="{DynamicResource AccentFillColorDefaultBrush}"
+                        Margin="0,0,0,20">
+                    <Viewbox Width="40" Height="40">
+                        <ui:SymbolIcon Symbol="Box24" Foreground="White" />
+                    </Viewbox>
+                </Border>
+
+                <TextBlock Text="Unturned Mod Manager"
+                           FontSize="38"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+
+                <Border CornerRadius="6"
+                        Padding="14,6"
+                        Margin="0,16,0,20"
+                        Background="{DynamicResource AccentFillColorDefaultBrush}">
+                    <TextBlock Text="v2.0.0 · Stable · 2026-08-14"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               FontFamily="Cascadia Mono, Consolas, monospace"
+                               Foreground="White" />
+                </Border>
+
+                <TextBlock Text="面向 Windows 的 Unturned 启动、BepInEx 插件管理与 unmod.online 社区客户端。"
+                           FontSize="14"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           MaxWidth="760"
+                           LineHeight="22"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+                <TextBlock Margin="0,18,0,0" FontSize="13" HorizontalAlignment="Center">
+                    <Hyperlink NavigateUri="https://github.com/YU80Rice/UnturnedModManager"
+                               Foreground="{DynamicResource AccentFillColorDefaultBrush}"
+                               TextDecorations="Underline"
+                               FontWeight="SemiBold"
+                               RequestNavigate="Hyperlink_RequestNavigate">
+                        <Run Text="GitHub：YU80Rice/UnturnedModManager" />
+                    </Hyperlink>
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <Grid Margin="4,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Border Width="4"
+                    Height="18"
+                    CornerRadius="2"
+                    Background="{DynamicResource AccentFillColorDefaultBrush}"
+                    VerticalAlignment="Center"
+                    Margin="0,0,12,0" />
+            <TextBlock Grid.Column="1"
+                       Text="项目贡献者与协作者"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+        </Grid>
+
+        <Grid Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Grid.Column="0"
+                    CornerRadius="12"
+                    Padding="24"
+                    Margin="0,0,8,8"
                     Background="{DynamicResource ControlFillColorDefaultBrush}">
-                <StackPanel HorizontalAlignment="Center">
-
-                    <!-- Logo 圆形徽标 -->
-                    <Border Width="76" Height="76"
-                            CornerRadius="18"
-                            Background="{DynamicResource AccentFillColorDefaultBrush}"
-                            HorizontalAlignment="Center"
-                            Margin="0,0,0,20">
-                        <Viewbox Width="40" Height="40"
-                                 HorizontalAlignment="Center"
-                                 VerticalAlignment="Center">
-                            <ui:SymbolIcon Symbol="Box24"
-                                           Foreground="White" />
-                        </Viewbox>
-                    </Border>
-
-                    <!-- 大标题 -->
-                    <TextBlock Text="Unturned Mod Manager"
-                               FontSize="38"
-                               FontWeight="Bold"
-                               HorizontalAlignment="Center"
+                <StackPanel>
+                    <TextBlock Text="👤 YU80Rice"
+                               FontSize="16"
+                               FontWeight="SemiBold"
                                Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-
-                    <!-- 版本号徽章 -->
-                    <Border CornerRadius="6"
-                            Padding="14,6"
-                            Margin="0,16,0,20"
-                            Background="{DynamicResource AccentFillColorDefaultBrush}"
-                            HorizontalAlignment="Center">
-                        <TextBlock Text="版本: v1.6.8 (Stable Release) - 2026/07/15"
-                                   FontSize="12"
-                                   FontWeight="SemiBold"
-                                   FontFamily="Cascadia Mono, Consolas, Courier New, monospace"
-                                   Foreground="White" />
-                    </Border>
-
-                    <!-- 简短描述 -->
-                    <TextBlock Text="一站式极速启动、多核性能优化与局域网/P2P穿透联机大厅管理器。"
-                               FontSize="14"
-                               FontStyle="Italic"
-                               HorizontalAlignment="Center"
-                               TextAlignment="Center"
+                    <TextBlock Text="项目发起人、产品负责人"
+                               Margin="0,6,0,12"
+                               FontSize="12"
+                               Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+                    <TextBlock Text="提出产品目标和功能需求，决定技术路线与许可证，负责体验验收、发布和社区运营。"
+                               FontSize="12"
                                TextWrapping="Wrap"
-                               MaxWidth="680"
-                               LineHeight="22"
+                               LineHeight="19"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-
-                    <!-- GitHub 开源仓库链接 -->
-                    <Border CornerRadius="8"
-                            Padding="16,8"
-                            Margin="0,18,0,0"
-                            Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                            HorizontalAlignment="Center">
-                        <TextBlock FontSize="13"
-                                   HorizontalAlignment="Center">
-                            <Hyperlink NavigateUri="https://github.com/YU80Rice/UnturnedModManager"
-                                       Foreground="{DynamicResource AccentFillColorDefaultBrush}"
-                                       TextDecorations="Underline"
-                                       FontWeight="SemiBold"
-                                       RequestNavigate="Hyperlink_RequestNavigate">
-                                <Run Text="🌐 GitHub 开源仓库：github.com/YU80Rice/UnturnedModManager" />
-                            </Hyperlink>
-                        </TextBlock>
-                    </Border>
-
                 </StackPanel>
             </Border>
 
-            <!-- 团队分区标题 -->
-            <Grid Margin="4,0,0,14">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Border Grid.Column="0"
-                        Width="4" Height="18"
-                        CornerRadius="2"
-                        Background="{DynamicResource AccentFillColorDefaultBrush}"
-                        VerticalAlignment="Center"
-                        Margin="0,0,12,0" />
-                <TextBlock Grid.Column="1"
-                           Text="开发团队"
-                           FontSize="18"
+            <Border Grid.Row="0" Grid.Column="1"
+                    CornerRadius="12"
+                    Padding="24"
+                    Margin="8,0,0,8"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <StackPanel>
+                    <TextBlock Text="🤖 OpenAI GPT（Codex）"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    <TextBlock Text="v2.0 开发协作者"
+                               Margin="0,6,0,12"
+                               FontSize="12"
+                               Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+                    <TextBlock Text="参与架构重构、交互完善、社区缓存、账户会话可靠性、自动化测试、发布验证，以及 README、更新日志和关于页的严谨化校订。"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               LineHeight="19"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="1" Grid.Column="0"
+                    CornerRadius="12"
+                    Padding="24"
+                    Margin="0,8,8,0"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <StackPanel>
+                    <TextBlock Text="🧠 AI 协作伙伴"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    <TextBlock Text="Gemini · Claude · Kimi · Cherry Claw"
+                               Margin="0,6,0,12"
+                               FontSize="12"
+                               Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+                    <TextBlock Text="在项目不同阶段参与架构讨论、问题分析、代码生成与本地执行。AI 协作不替代维护者对功能、许可和发布结果承担的责任。"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               LineHeight="19"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Row="1" Grid.Column="1"
+                    CornerRadius="12"
+                    Padding="24"
+                    Margin="8,8,0,0"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <StackPanel>
+                    <TextBlock Text="🧭 Ayndpa"
+                               FontSize="16"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    <TextBlock Text="UML 作者、UMM 贡献者"
+                               Margin="0,6,0,10"
+                               FontSize="12"
+                               Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+                    <TextBlock FontSize="12"
+                               TextWrapping="Wrap"
+                               LineHeight="19"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                        <Run Text="感谢 " />
+                        <Hyperlink NavigateUri="https://github.com/Ayndpa/unturned-mod-loader"
+                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}"
+                                   RequestNavigate="Hyperlink_RequestNavigate">
+                            <Run Text="unturned-mod-loader" />
+                        </Hyperlink>
+                        <Run Text=" 在信息架构、社区流程和导航交互方面提供的重要参考；Ayndpa 还通过 UMM PR #7 直接贡献了滚轮交互修复。" />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <ui:Card Margin="0,0,0,24" Padding="36,30">
+            <StackPanel>
+                <TextBlock Text="项目初心：创意工坊赋予血肉，UMM 重塑筋骨"
+                           FontSize="20"
                            FontWeight="SemiBold"
-                           VerticalAlignment="Center"
-                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-            </Grid>
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                           Margin="0,0,0,18" />
+                <Border Height="1"
+                        Background="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        Margin="0,0,0,20" />
 
-            <!-- ================= 下半部分：三列团队名片 ================= -->
-            <Grid Margin="0,0,0,24">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+                <TextBlock Text="我们并不是要挑战 Steam 创意工坊——恰恰相反，我们极度热爱它。创意工坊让玩家获得地图、武器、载具和无数社区内容，为 Unturned 提供了丰富而鲜活的“血肉”。"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Margin="0,0,0,14" />
 
-                <!-- 第一列：首席产品导演 -->
-                <Border Grid.Column="0"
-                        CornerRadius="12"
-                        Padding="24,24"
-                        Margin="0,0,12,0"
-                        Background="{DynamicResource ControlFillColorDefaultBrush}">
-                    <StackPanel>
-                        <TextBlock Text="👤"
-                                   FontSize="36"
-                                   Margin="0,0,0,14"
-                                   HorizontalAlignment="Left" />
-                        <TextBlock Text="首席产品导演 &amp; 架构师"
-                                   FontSize="15"
-                                   FontWeight="SemiBold"
-                                   TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                        <Border Height="2"
-                                Width="36"
-                                Margin="0,10,0,14"
-                                Background="{DynamicResource AccentFillColorDefaultBrush}"
-                                HorizontalAlignment="Left" />
-                        <TextBlock Text="项目发起人与创意灵魂。主导了&#x201C;自动无缝理包算法&#x201D;与&#x201C;单多端存档物理合拢&#x201D;的宏观设计，在多次时序冲突与反作弊阻拦中，以敏锐的直觉指引方向。"
-                                   FontSize="12"
-                                   TextWrapping="Wrap"
-                                   LineHeight="19"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-                </Border>
+                <TextBlock Text="UMM 最初想填补的是另一块空白：客户端逻辑插件、加载器环境、依赖与版本管理，以及玩家对自己本地游戏环境的掌控。创意工坊决定玩家“玩到什么”，UMM 希望帮助玩家更自由地决定“怎么玩”。"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Margin="0,0,0,14" />
 
-                <!-- 第二列：硅基总顾问 -->
-                <Border Grid.Column="1"
-                        CornerRadius="12"
-                        Padding="24,24"
-                        Margin="6,0,6,0"
-                        Background="{DynamicResource ControlFillColorDefaultBrush}">
-                    <StackPanel>
-                        <TextBlock Text="🧠"
-                                   FontSize="36"
-                                   Margin="0,0,0,14"
-                                   HorizontalAlignment="Left" />
-                        <TextBlock Text="硅基总顾问 &amp; 导师"
-                                   FontSize="15"
-                                   FontWeight="SemiBold"
-                                   TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                        <Border Height="2"
-                                Width="36"
-                                Margin="0,10,0,14"
-                                Background="{DynamicResource AccentFillColorDefaultBrush}"
-                                HorizontalAlignment="Left" />
-                        <TextBlock Text="提供高阶架构蓝图。负责 Unity 引擎/Steamworks 运行期生命周期解构、数学算法设计（如 2D 降序回溯理包算法）及深层 Bug 诊断。"
-                                   FontSize="12"
-                                   TextWrapping="Wrap"
-                                   LineHeight="19"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-                </Border>
-
-                <!-- 第三列：首席程序员 -->
-                <Border Grid.Column="2"
-                        CornerRadius="12"
-                        Padding="24,24"
-                        Margin="12,0,0,0"
-                        Background="{DynamicResource ControlFillColorDefaultBrush}">
-                    <StackPanel>
-                        <TextBlock Text="🐾"
-                                   FontSize="36"
-                                   Margin="0,0,0,14"
-                                   HorizontalAlignment="Left" />
-                        <TextBlock Text="首席程序员 (Agent)"
-                                   FontSize="15"
-                                   FontWeight="SemiBold"
-                                   TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                        <Border Height="2"
-                                Width="36"
-                                Margin="0,10,0,14"
-                                Background="{DynamicResource AccentFillColorDefaultBrush}"
-                                HorizontalAlignment="Left" />
-                        <TextBlock Text="负责本地代码重构与编译。在 U3-SDK 上万行源码中扫描类结构、解决编译警告、通过 strings 逆向提取真实命名空间并最终编译出整套物理 DLL 与 EXE。"
-                                   FontSize="12"
-                                   TextWrapping="Wrap"
-                                   LineHeight="19"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-                </Border>
-            </Grid>
-
-            <!-- ================= 项目宗旨 / 常见问题 ================= -->
-            <ui:Card Margin="0,0,0,24"
-                     Padding="36,30">
-                <StackPanel>
-
-                    <!-- 大标题 -->
-                    <TextBlock Text="❓ 常见问题：我们与 Steam 创意工坊的区别与项目初心"
-                               FontSize="20"
-                               FontWeight="SemiBold"
-                               TextWrapping="Wrap"
-                               LineHeight="28"
-                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                               Margin="0,0,0,18" />
-
-                    <!-- 分隔线 -->
-                    <Border Height="1"
-                            Background="{DynamicResource ControlStrokeColorDefaultBrush}"
-                            Margin="0,0,0,22" />
-
-                    <!-- 段落一：致敬创意工坊 -->
-                    <StackPanel Margin="0,0,0,20">
-                        <TextBlock Text="🌿 致敬创意工坊"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}"
-                                   Margin="0,0,0,8" />
-                        <TextBlock Text="我们并不是要挑战创意工坊，我们极度热爱它。创意工坊是内容分发网络（UGC）。它决定了玩家&#x201C;玩到什么地图、用什么炫酷的枪械和道具&#x201D;。"
-                                   FontSize="13"
-                                   TextWrapping="Wrap"
-                                   LineHeight="23"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-
-                    <!-- 段落二：我们的定位 -->
-                    <StackPanel Margin="0,0,0,20">
-                        <TextBlock Text="🧩 我们的定位"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}"
-                                   Margin="0,0,0,8" />
-                        <TextBlock Text="本启动器是一个&#x201C;开放性的、属于玩家自己的底层逻辑引导与开发平台&#x201D;。在创意工坊上，玩家无法直接一键部署涉及游戏底层重构的客户端脚本模组（如自动理包、P2P 好友直连、多核优化）。"
-                                   FontSize="13"
-                                   TextWrapping="Wrap"
-                                   LineHeight="23"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-
-                    <!-- 段落三：我们的初心 -->
-                    <StackPanel Margin="0,0,0,0">
-                        <TextBlock Text="✨ 我们的初心"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}"
-                                   Margin="0,0,0,8" />
-                        <TextBlock Text="我们提供这套&#x201C;WPF 引导前端 + 独立 BepInEx 插件&#x201D;的架构，就是为了打破技术壁垒。创意工坊赋予了游戏丰富的血肉，而我们希望通过这个平台，让玩家能一键自主为游戏重塑更丝滑的筋骨。"
-                                   FontSize="13"
-                                   TextWrapping="Wrap"
-                                   LineHeight="23"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-
-                </StackPanel>
-            </ui:Card>
-
-            <!-- ================= 极客宣言 / Vibecoding 与开源授权 ================= -->
-            <ui:Card Margin="0,0,0,24"
-                     Padding="36,30">
-                <StackPanel>
-
-                    <!-- 大标题 -->
-                    <TextBlock Text="⚖️ 极客宣言：关于 Vibecoding 与开源授权"
-                               FontSize="20"
-                               FontWeight="SemiBold"
-                               TextWrapping="Wrap"
-                               LineHeight="28"
-                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                               Margin="0,0,0,18" />
-
-                    <!-- 分隔线 -->
-                    <Border Height="1"
-                            Background="{DynamicResource ControlStrokeColorDefaultBrush}"
-                            Margin="0,0,0,22" />
-
-                    <!-- 段落一：Vibecoding 真诚声明 -->
-                    <StackPanel Margin="0,0,0,20">
-                        <TextBlock Text="🤝 Vibecoding 真诚声明"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}"
-                                   Margin="0,0,0,8" />
-                        <TextBlock Text="本项目完全采用 Vibecoding 范式开发——人类导演提出愿景与设计哲学，AI 顾问提供架构蓝图，AI 程序员执行代码重构。我们坦诚相告：每一行代码、每一处 UI、每一项功能，都凝聚了人类直觉与硅基逻辑的深度协作。我们不以&#x201C;全自研&#x201D;为荣，而以&#x201C;开放协作&#x201D;为傲。"
-                                   FontSize="13"
-                                   TextWrapping="Wrap"
-                                   LineHeight="23"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-
-                    <!-- 段落二：MIT 开源授权 -->
-                    <StackPanel Margin="0,0,0,20">
-                        <TextBlock Text="📜 MIT 开源授权"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}"
-                                   Margin="0,0,0,8" />
-                        <TextBlock Text="本项目基于 MIT 协议开源。这意味着您拥有自由使用、修改、分发、甚至商业利用的权利，唯一要求是在所有副本中保留版权与许可声明。我们坚信：代码应当如流水般自由流动，而非被锁在商业牢笼中。知识与工具的共享，才是技术社区持续进步的真正动力。"
-                                   FontSize="13"
-                                   TextWrapping="Wrap"
-                                   LineHeight="23"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-
-                    <!-- 段落三：致意与免责 -->
-                    <StackPanel Margin="0,0,0,0">
-                        <TextBlock Text="🕊️ 致意与免责声明"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}"
-                                   Margin="0,0,0,8" />
-                        <TextBlock Text="《未转变者》(Unturned) 的全部版权归 Smartly Dressed Games 所有。本启动器仅为玩家社区的非官方辅助工具，不包含任何游戏资产，不修改游戏可执行文件。所有 BepInEx 插件均以 .dll 独立文件形式部署，可随时通过 .disabled 后缀停用或物理删除。我们致敬 Nelson 的开源精神，并承诺本项目永远免费、永远开源。"
-                                   FontSize="13"
-                                   TextWrapping="Wrap"
-                                   LineHeight="23"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-
-                </StackPanel>
-            </ui:Card>
-
-            <!-- ================= 页脚 ================= -->
-            <StackPanel HorizontalAlignment="Center"
-                        Margin="0,8,0,0">
-                <TextBlock Text="© 2026 Unturned Mod Manager"
-                           FontSize="11"
-                           HorizontalAlignment="Center"
-                           FontFamily="Cascadia Mono, Consolas, monospace"
-                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                <TextBlock Text="Tech Stack: .NET 8 · WPF-UI · BepInEx 5 · Harmony 2"
-                           FontSize="11"
-                           HorizontalAlignment="Center"
-                           Margin="0,4,0,0"
-                           FontFamily="Cascadia Mono, Consolas, monospace"
-                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                <TextBlock Text="我们希望它成为一个开放的、属于玩家自己的底层逻辑引导与开发平台：把手动复制 DLL、修改文件名和排查依赖的过程，变成看得见、可理解、可撤销的操作。这个项目也承载着人与朋友们在 PEI 篝火旁度过的记忆——它不是冷冰冰的功能集合，而是一封写给 Unturned 社区的信。"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
             </StackPanel>
+        </ui:Card>
 
+        <ui:Card Margin="0,0,0,24" Padding="36,30">
+            <StackPanel>
+                <TextBlock Text="Vibecoding：坦诚的人机协作"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                           Margin="0,0,0,18" />
+                <Border Height="1"
+                        Background="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        Margin="0,0,0,20" />
+
+                <TextBlock Text="UMM 从一开始就是一次坦诚的人机协作实践：人类提出愿景、审美和真实需求，AI 协作者参与架构推演、代码实现、问题诊断和文档整理，再由维护者进行选择、试用和验收。我们不把 AI 参与隐藏在“全自研”的叙事后面，也不把 AI 输出当作天然正确的答案。"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Margin="0,0,0,14" />
+
+                <TextBlock Text="Vibecoding 的意义，不是让 AI 替人负责，而是让一个可能因经验、时间和信心不足而停留在想法里的社区项目真正落地。OpenAI GPT（Codex）、Gemini、Claude、Kimi、Cherry Claw 等协作者在不同阶段留下了贡献；最终的功能取舍、许可证、发布和用户责任仍由项目维护者承担。"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </ui:Card>
+
+        <ui:Card Margin="0,0,0,24" Padding="36,30">
+            <StackPanel>
+                <TextBlock Text="设计学习与独立实现"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                           Margin="0,0,0,18" />
+                <Border Height="1"
+                        Background="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        Margin="0,0,0,20" />
+
+                <TextBlock FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Margin="0,0,0,14">
+                    <Run Text="UMM v2.0 明确借鉴并学习了 " />
+                    <Hyperlink NavigateUri="https://github.com/Ayndpa/unturned-mod-loader"
+                               Foreground="{DynamicResource AccentFillColorDefaultBrush}"
+                               RequestNavigate="Hyperlink_RequestNavigate">
+                        <Run Text="Ayndpa/unturned-mod-loader" />
+                    </Hyperlink>
+                    <Run Text=" 的信息组织、社区浏览和登录流程，并参考 PCL2 等成熟启动器的列表—详情体验。感谢这些项目公开成果所带来的启发。" />
+                </TextBlock>
+
+                <TextBlock Text="UMM 不是 UML 的官方分支或继任版本。当前版本保留 .NET 8 + WPF 路线，并针对自身服务层、状态模型、文件清单、安装回滚和导航上下文进行了独立实现。各第三方项目继续适用各自许可证。"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </ui:Card>
+
+        <ui:Card Margin="0,0,0,24" Padding="36,30">
+            <StackPanel>
+                <TextBlock Text="开源许可与免责声明"
+                           FontSize="20"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                           Margin="0,0,0,18" />
+                <Border Height="1"
+                        Background="{DynamicResource ControlStrokeColorDefaultBrush}"
+                        Margin="0,0,0,20" />
+
+                <TextBlock Text="UMM v2.0 及之后版本按 GNU General Public License version 2 发布，SPDX 标识为 GPL-2.0-only。您可以运行、研究、修改和再分发；如果向他人分发本项目或其 GPL 衍生版本，必须继续使用 GPL v2，并按许可证要求提供相应源代码和许可声明。仅在本地使用且未对外分发的修改，不会自动产生公开发布义务。GPL 保障软件自由，但并不禁止收费。"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                           Margin="0,0,0,14" />
+
+                <TextBlock Text="Unturned 及其相关商标和游戏资产归 Smartly Dressed Games 所有。本项目按 GPL 的“按现状”条款提供，不附带适销性、特定用途适用性或不侵权保证。WPF-UI、BepInEx、DXVK、UML 及其他第三方项目仍受各自许可证约束。"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </ui:Card>
+
+        <StackPanel HorizontalAlignment="Center" Margin="0,8,0,0">
+            <TextBlock Text="Copyright © 2026 YU80Rice and contributors"
+                       FontSize="11"
+                       HorizontalAlignment="Center"
+                       FontFamily="Cascadia Mono, Consolas, monospace"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+            <TextBlock Text=".NET 8 · WPF-UI · GPL-2.0-only"
+                       FontSize="11"
+                       HorizontalAlignment="Center"
+                       Margin="0,4,0,0"
+                       FontFamily="Cascadia Mono, Consolas, monospace"
+                       Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
         </StackPanel>
+    </StackPanel>
 </Page>

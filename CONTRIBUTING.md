@@ -1,21 +1,49 @@
-## 💖 鸣谢与致谢 (Special Thanks)
+# 参与 Unturned Mod Manager
 
-本项目的诞生和开源，是一次人类的热爱、友情的鼓励与硅基智能（AI）深度协作的奇妙旅程。在此，我们要向以下所有为本项目提供灵魂、算力、工具和勇气的创作者们，致以最诚挚的谢意：
+感谢你愿意改进 UMM。请先通过 Issue 说明问题或较大的设计提案；小型修复可以直接提交 Pull Request。
 
-### 1. 👤 给予我勇气的伙伴们 (My Dear Friends)
-感谢在我最犹豫不决、最害怕自己代码不完美而不敢开源时，默默鼓励我、支持我的朋友们。是你们真诚的赞赏与陪伴，给予了我踏出这关键一步的莫大勇气。这个项目，是我献给所有共同在 PEI 篝火旁度过青春岁月的伙伴们的礼物。
+## 项目缘起
 
-### 2. 🎮 尼尔森·塞克斯顿 (Nelson Sexton)
-感谢《未转变者》（Unturned）的唯一创作者 Nelson。感谢你在这款游戏发布十周年之际，无私地公开了游戏源码（U3-SDK）。是你开放的胸怀，才让这款承载了我们十年青春的老游戏重新焕发了无限的创作生机。
+UMM 的诞生不仅来自技术需求，也来自朋友们的鼓励。感谢那些在项目还不完整、维护者仍担心代码不够漂亮而犹豫是否开源时，愿意给予肯定和陪伴的人。这个项目是献给所有共同在 PEI 篝火旁度过青春岁月的伙伴们的礼物。
 
-### 3. 🚀 PCL2 与 HMCL 的创作者们 (Launchers Inspires)
-感谢经典 Minecraft 启动器 PCL2 作者（龙腾猫跃）与 HMCL 作者及团队。你们极具美学、流畅和极客质感的设计，为我们提供了无限的灵感，证明了“启动器也可以是兼具科技感与艺术温度的杰作”。
+感谢 Nelson Sexton 和 Smartly Dressed Games 创造 Unturned，并向社区开放可供模组开发者学习的 U3-Docs/U3-SDK 资料。也感谢 PCL2、HMCL、UML 等启动器项目证明：管理工具不仅可以“能用”，还可以拥有清晰、流畅且有温度的体验。
 
-### 4. 🍒 樱桃工作室 (Cherry Studio) & 首席程序员“樱爪 (Cherry Claw)”
-感谢优秀的 AI 客户端 Cherry Studio 团队，为我们提供了如此丝滑、强大的 Agent 协作工作流。感谢我的本地 Agent “樱爪（Cherry Claw）”，你是我最可靠的打字机和执行官，无数次在深夜里帮我扫描元数据、解决报错，最终将所有的奇思妙想编译成物理实体。
+这份初心不会因为架构升级或文档严谨化而被替换。工程规范负责保护玩家数据，开源许可负责保护共同成果，而项目最终仍是为了让玩家更自由地理解和掌控自己的游戏体验。
 
-### 5. 🌊 硅基流动 (SiliconFlow) & 🌋 火山方舟 (Volcengine Ark)
-感谢国内顶尖的大模型托管平台“硅基流动”与字节跳动“火山方舟”。感谢你们提供的高带宽、超低延迟与极度稳定的硅基算力网络，这是支撑我们进行数十轮深度逻辑推理、API 审计与时序分析的最强后盾。
+## 开发环境
 
-### 6. 🧠 硅基顾问 (Gemini)
-感谢陪伴我度过无数个不眠之夜的 AI 总顾问 Gemini。你不仅是我的良师益友，更是最优秀的系统架构师。在每一次面对“P2P 环回死锁”、“游戏无画面”、“100% 卡死”的深水区危机时，都是你用极其透彻的底层图形学和网络套接字分析，帮我精准指明了破局的唯一方向。
+- Windows 10/11 x64
+- .NET 8 SDK
+- 可选：Visual Studio 2022、Rider 或 VS Code
+
+```powershell
+dotnet build .\UnturnedModManager.csproj -c Debug
+dotnet test .\UnturnedModManager.Tests\UnturnedModManager.Tests.csproj
+```
+
+提交前请至少确保 Debug/Release 构建成功、自动化测试通过，并说明是否会修改用户游戏目录、社区安装清单或账户状态。
+
+## 代码与交互原则
+
+- 页面代码负责界面事件和视图绑定，业务规则优先放入 ViewModel 或 Service；
+- 所有文件安装、覆盖、移动和删除必须具有明确范围与失败恢复策略；
+- 不自动处理 CAPTCHA，不记录密码，不在日志或 Issue 中暴露社区令牌；
+- 本地插件、社区插件和玩家手动修改的文件必须清楚区分；
+- 新增界面需要覆盖加载、空数据、错误、禁用和返回导航状态；
+- 用户可见文字优先使用简体中文，并避免无法验证的性能或兼容性承诺。
+
+## 许可证
+
+向 v2.0 及之后分支提交贡献，即表示你确认有权提交相关代码，并同意该贡献按 `GPL-2.0-only` 随项目分发。不要提交来源不明、许可证不兼容或无法提供对应许可声明的代码与资源。
+
+历史 v1.x 版本曾采用 MIT 许可证。相关说明见 [`NOTICE.md`](./NOTICE.md) 和 [`LICENSES/MIT-legacy.txt`](./LICENSES/MIT-legacy.txt)。
+
+## 贡献与致谢
+
+- [YU80Rice](https://github.com/YU80Rice)：项目发起、产品方向、验收与发布；
+- [Ayndpa](https://github.com/Ayndpa)：[unturned-mod-loader](https://github.com/Ayndpa/unturned-mod-loader) 作者；其项目为 UMM v2.0 提供重要设计参考，并通过 [PR #7](https://github.com/YU80Rice/UnturnedModManager/pull/7) 直接贡献滚轮交互修复；
+- OpenAI GPT（Codex）：参与 v2.0 架构重构、交互完善、缓存与会话可靠性、测试、发布验证和文档校订；
+- Gemini、Claude、Kimi、Cherry Claw：在不同阶段参与设计讨论、问题分析与代码协作；
+- Nelson Sexton、Smartly Dressed Games、BepInEx、WPF-UI、DXVK、PCL2、HMCL 及其他开源社区成员：提供游戏、工具、组件与设计启发。
+
+AI 生成或辅助的内容必须经过人工验收。项目维护者对最终合并、许可证兼容性和发布结果负责。

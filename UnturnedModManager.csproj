@@ -7,9 +7,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <Version>1.6.8</Version>
-    <AssemblyVersion>1.6.8.0</AssemblyVersion>
-    <FileVersion>1.6.8.0</FileVersion>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+    <Authors>YU80Rice and contributors</Authors>
+    <Description>Unturned 启动、BepInEx 插件管理与 unmod.online 社区客户端。</Description>
+    <Copyright>Copyright (C) 2026 YU80Rice</Copyright>
+    <PackageLicenseExpression>GPL-2.0-only</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/YU80Rice/UnturnedModManager</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,8 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\WaterPerfOptimizer_v1.0.dll" />
-    <Resource Include="Resources\LaunchPerfOptimizer_v1.0.dll" />
+    <Compile Remove="UnturnedModManager.Tests\**\*.cs" />
   </ItemGroup>
 
 </Project>

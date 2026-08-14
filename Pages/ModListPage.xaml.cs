@@ -1,216 +1,109 @@
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using UnturnedModManager.Models;
+using UnturnedModManager.Services;
+using UnturnedModManager.ViewModels;
 using Wpf.Ui.Controls;
-using InfoBarSeverity = Wpf.Ui.Controls.InfoBarSeverity;
 
 namespace UnturnedModManager.Pages;
 
 public partial class ModListPage : Page
 {
-    public ObservableCollection<ModItem> Mods { get; } = new();
+    private readonly LocalModsViewModel _viewModel = App.Services.CreateLocalModsViewModel();
 
     public ModListPage()
     {
         InitializeComponent();
-        ModListView.ItemsSource = Mods;
-        Loaded += OnPageLoaded;
+        DataContext = _viewModel;
+        _viewModel.NoticeRaised += OnNoticeRaised;
+        _viewModel.OpenCommunityRequested += OnOpenCommunityRequested;
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
     }
 
-    private void OnPageLoaded(object sender, RoutedEventArgs e) => RefreshModList();
+    private async void OnLoaded(object sender, RoutedEventArgs e) => await _viewModel.ActivateAsync();
+    private void OnUnloaded(object sender, RoutedEventArgs e) => _viewModel.Deactivate();
 
-    private void RefreshButton_Click(object sender, RoutedEventArgs e) => RefreshModList();
-    private void OpenPluginsFolder_Click(object sender, RoutedEventArgs e)
-    {
-        var pluginsPath = GetPluginsPath();
-        if (pluginsPath != null && Directory.Exists(pluginsPath))
-            System.Diagnostics.Process.Start("explorer.exe", pluginsPath);
-    }
+    private void OnOpenCommunityRequested(int id) =>
+        AppNavigationService.Current.OpenCommunityDetail(this, id);
 
-    private void ModToggle_Changed(object sender, RoutedEventArgs e)
+    private void OnNoticeRaised(UserNotice notice)
     {
-        if (sender is Wpf.Ui.Controls.ToggleSwitch toggle && toggle.Tag is string fileName)
+        if (!Dispatcher.CheckAccess())
         {
-            var pluginsPath = GetPluginsPath();
-            if (pluginsPath == null) return;
-
-            bool enable = toggle.IsChecked == true;
-            var dllPath = Path.Combine(pluginsPath, fileName);
-            var disabledPath = dllPath + ".disabled";
-
-            try
-            {
-                if (enable && File.Exists(disabledPath))
-                    File.Move(disabledPath, dllPath);
-                else if (!enable && File.Exists(dllPath))
-                    File.Move(dllPath, disabledPath);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Mod toggle error: {ex.Message}");
-            }
-        }
-    }
-
-    public void RefreshModList()
-    {
-        Mods.Clear();
-        var pluginsPath = GetPluginsPath();
-        if (pluginsPath == null || !Directory.Exists(pluginsPath))
-        {
-            EmptyLabel.Visibility = Visibility.Visible;
+            Dispatcher.Invoke(() => OnNoticeRaised(notice));
             return;
         }
 
-        var modFiles = Directory.GetFiles(pluginsPath, "*.dll")
-            .Concat(Directory.GetFiles(pluginsPath, "*.dll.disabled"))
-            .Where(f => !f.EndsWith(".disabled") || !File.Exists(f.Replace(".disabled", "")))
-            .ToList();
-
-        foreach (var file in modFiles)
+        StatusInfoBar.Message = notice.Message;
+        StatusInfoBar.Severity = notice.Severity switch
         {
-            var fileName = Path.GetFileName(file);
-            bool isEnabled = !fileName.EndsWith(".disabled");
-            var lastWrite = File.GetLastWriteTime(file);
-            Mods.Add(new ModItem
-            {
-                Name = Path.GetFileNameWithoutExtension(fileName.Replace(".disabled", "")),
-                FileName = isEnabled ? fileName : fileName.Replace(".disabled", ""),
-                IsEnabled = isEnabled,
-                InstallTime = $"安装时间: {lastWrite:yyyy-MM-dd HH:mm:ss}"
-            });
-        }
-
-        EmptyLabel.Visibility = Mods.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        ModCountLabel.Text = $"共 {Mods.Count} 个模组";
-    }
-
-    private string? GetPluginsPath()
-    {
-        var gamePath = AppSettings.UnturnedInstallPath;
-        if (string.IsNullOrEmpty(gamePath)) return null;
-        return Path.Combine(gamePath, "BepInEx", "plugins");
-    }
-
-    /// <summary>
-    /// 拖拽悬浮事件：仅接受文件类型，显示 Copy 复制指针（带 + 号）。
-    /// </summary>
-    private void Page_DragOver(object sender, System.Windows.DragEventArgs e)
-    {
-        if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
-        {
-            e.Effects = System.Windows.DragDropEffects.Copy;
-        }
-        else
-        {
-            e.Effects = System.Windows.DragDropEffects.None;
-        }
-        e.Handled = true;
-    }
-
-    /// <summary>
-    /// 拖拽放下事件：提取 .dll / .dll.disabled 文件，强制覆盖复制到 BepInEx/plugins/，
-    /// 完成后静默刷新列表并展示导入统计。
-    /// </summary>
-    private void Page_Drop(object sender, System.Windows.DragEventArgs e)
-    {
-        if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
-        {
-            e.Handled = true;
-            return;
-        }
-
-        var paths = (string[]?)e.Data.GetData(System.Windows.DataFormats.FileDrop);
-        e.Handled = true;
-
-        if (paths == null || paths.Length == 0)
-            return;
-
-        var pluginsPath = GetPluginsPath();
-        if (pluginsPath == null || !Directory.Exists(pluginsPath))
-        {
-            ShowStatus("请先在设置中配置有效的 Unturned 安装路径并安装 BepInEx", InfoBarSeverity.Warning);
-            return;
-        }
-
-        Directory.CreateDirectory(pluginsPath);
-        int count = 0;
-        int skipped = 0;
-
-        foreach (var path in paths)
-        {
-            // 同时接受 .dll 与 .dll.disabled（忽略大小写）
-            var ext = Path.GetExtension(path);
-            bool isDll = ext.Equals(".dll", StringComparison.OrdinalIgnoreCase);
-            bool isDisabled = ext.Equals(".disabled", StringComparison.OrdinalIgnoreCase);
-            if (!isDll && !isDisabled)
-            {
-                skipped++;
-                continue;
-            }
-
-            var fileName = Path.GetFileName(path);
-            var targetPath = Path.Combine(pluginsPath, fileName);
-
-            try
-            {
-                File.Copy(path, targetPath, overwrite: true);
-                count++;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[DragDrop] 复制失败 {path}: {ex.Message}");
-                skipped++;
-            }
-        }
-
-        RefreshModList();
-
-        if (count > 0)
-        {
-            ShowStatus($"成功一键导入并安装了 {count} 个模组插件！", InfoBarSeverity.Success);
-        }
-        else
-        {
-            ShowStatus("未识别到可导入的 .dll 模组文件，请拖入 .dll 或 .dll.disabled", InfoBarSeverity.Warning);
-        }
-    }
-
-    /// <summary>
-    /// 在页面顶部 StatusInfoBar 上展示反馈消息。
-    /// </summary>
-    private void ShowStatus(string message, InfoBarSeverity severity)
-    {
-        StatusInfoBar.Message = message;
-        StatusInfoBar.Severity = severity;
+            UserNoticeSeverity.Success => InfoBarSeverity.Success,
+            UserNoticeSeverity.Warning => InfoBarSeverity.Warning,
+            UserNoticeSeverity.Error => InfoBarSeverity.Error,
+            _ => InfoBarSeverity.Informational
+        };
         StatusInfoBar.IsOpen = true;
     }
 
-    /// <summary>
-    /// 拦截鼠标滚轮事件并手动路由到 NavigationView 内容区的 ScrollViewer。
-    /// 修复：ListView 内部 ScrollViewer 在隧道阶段吞噬滚轮事件，导致外层 NavigationView 无法滚动。
-    /// PreviewMouseWheel 是隧道事件，在子控件处理前先到达此处。
-    /// 从 Page 向上遍历视觉树，找到第一个 ScrollViewer（即 NavigationView 内容区的 ScrollViewer）。
-    /// </summary>
+    private void ModsList_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.ListView list
+            || HasInteractiveAncestor(e.OriginalSource as DependencyObject))
+            return;
+
+        var container = ItemsControl.ContainerFromElement(list, e.OriginalSource as DependencyObject) as System.Windows.Controls.ListViewItem;
+        if (container?.DataContext is not ModItem item)
+            return;
+
+        if (_viewModel.OpenCommunityCommand.CanExecute(item))
+        {
+            e.Handled = true;
+            _viewModel.OpenCommunityCommand.Execute(item);
+        }
+    }
+
+    private void Page_DragOver(object sender, System.Windows.DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)
+            ? System.Windows.DragDropEffects.Copy
+            : System.Windows.DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private async void Page_Drop(object sender, System.Windows.DragEventArgs e)
+    {
+        e.Handled = true;
+        if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)
+            || e.Data.GetData(System.Windows.DataFormats.FileDrop) is not string[] files)
+            return;
+        await _viewModel.ImportAsync(files);
+    }
+
+    private static bool HasInteractiveAncestor(DependencyObject? current)
+    {
+        while (current is not null)
+        {
+            if (current is System.Windows.Controls.Button or ToggleSwitch) return true;
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return false;
+    }
+
     private void Panel_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        // 从 Page 自身向上寻找最近的 ScrollViewer 祖先
-        // 这样可以跳过 ListView 内部的 ScrollViewer（它是 Page 的后代，不是祖先）
-        DependencyObject? current = this;
-        while (current != null)
+        if (sender is not DependencyObject current) return;
+        while (current is not null)
         {
-            current = VisualTreeHelper.GetParent(current);
-            if (current is ScrollViewer sv)
+            if (current is ScrollViewer viewer)
             {
-                sv.ScrollToVerticalOffset(sv.VerticalOffset - e.Delta);
+                viewer.ScrollToVerticalOffset(viewer.VerticalOffset - e.Delta);
                 e.Handled = true;
                 return;
             }
+            current = VisualTreeHelper.GetParent(current);
         }
     }
 }

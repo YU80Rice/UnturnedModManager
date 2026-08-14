@@ -2,10 +2,10 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-      Title="模组管理"
+      xmlns:controls="clr-namespace:UnturnedModManager.Controls"
+      Title="本地插件"
       Background="{DynamicResource ApplicationBackgroundBrush}">
-
-    <Grid Margin="24"
+    <Grid Margin="28"
           AllowDrop="True"
           DragOver="Page_DragOver"
           Drop="Page_Drop"
@@ -17,106 +17,120 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- 标题栏 -->
-        <StackPanel Grid.Row="0" Margin="0,8,0,16"
-                    PreviewMouseWheel="Panel_PreviewMouseWheel">
-            <TextBlock Text="模组管理"
-                       FontSize="24"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-            <TextBlock Text="管理已安装的 BepInEx 模组，独立启用或禁用每个模组 · 支持拖拽 .dll 一键导入"
-                       FontSize="13"
-                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                       Margin="0,4,0,0" />
-        </StackPanel>
+        <controls:PageHeader Title="本地插件"
+                             Subtitle="管理启停、卸载和社区更新；点击已匹配的条目可打开社区详情。"
+                             Margin="0,0,0,16" />
 
-        <!-- 状态提示条 -->
-        <ui:InfoBar x:Name="StatusInfoBar"
-                    Grid.Row="1"
-                    IsOpen="False"
-                    Title=""
-                    Message=""
-                    Margin="0,0,0,12" />
+        <ui:InfoBar x:Name="StatusInfoBar" Grid.Row="1" IsOpen="False" Margin="0,0,0,12" />
 
-        <!-- 工具栏 -->
-        <Grid Grid.Row="2" Margin="0,0,0,12"
-              PreviewMouseWheel="Panel_PreviewMouseWheel">
+        <Grid Grid.Row="2" Margin="0,0,0,12">
             <StackPanel Orientation="Horizontal">
-                <ui:Button Appearance="Primary"
-                           Content="刷新列表"
+                <ui:Button Content="刷新并同步"
                            Icon="{ui:SymbolIcon ArrowSync24}"
-                           Click="RefreshButton_Click" />
-                <ui:Button Appearance="Secondary"
-                           Content="打开插件文件夹"
+                           Appearance="Primary"
+                           Command="{Binding RefreshCommand}" />
+                <ui:Button Content="打开插件文件夹"
                            Icon="{ui:SymbolIcon FolderOpen24}"
-                           Margin="12,0,0,0"
-                           Click="OpenPluginsFolder_Click" />
+                           Margin="10,0,0,0"
+                           Command="{Binding OpenFolderCommand}" />
             </StackPanel>
-            <TextBlock x:Name="ModCountLabel"
+            <TextBlock Text="{Binding CountText}"
                        HorizontalAlignment="Right"
                        VerticalAlignment="Center"
-                       FontSize="13"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
         </Grid>
 
-        <!-- 模组列表 -->
         <Border Grid.Row="3"
-                CornerRadius="8"
+                CornerRadius="10"
                 Background="{DynamicResource ControlFillColorDefaultBrush}">
-            <ListView x:Name="ModListView"
-                      BorderThickness="0"
-                      Background="Transparent"
-                      HorizontalContentAlignment="Stretch"
-                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <Border Padding="16,10"
-                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                BorderThickness="0,0,0,1">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+            <Grid>
+                <ListView ItemsSource="{Binding Mods}"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          HorizontalContentAlignment="Stretch"
+                          PreviewMouseLeftButtonUp="ModsList_PreviewMouseLeftButtonUp"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="16,12"
+                                    Tag="{Binding}"
+                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                    BorderThickness="0,0,0,1"
+                                    Cursor="Hand">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding DisplayTitle}"
+                                                       FontSize="16"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <Border Margin="10,0,0,0"
+                                                    Padding="7,2"
+                                                    CornerRadius="7"
+                                                    Background="{DynamicResource ControlFillColorSecondaryBrush}">
+                                                <TextBlock Text="{Binding SourceText}" FontSize="11" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding FileName}"
+                                                   Margin="0,3,0,0"
+                                                   FontSize="12"
+                                                   ToolTip="{Binding RelativePath}"
+                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock Text="{Binding VersionText}"
+                                                   Margin="0,2,0,0"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <ui:Button Content="更新"
+                                                   Icon="{ui:SymbolIcon ArrowSync24}"
+                                                   Appearance="Primary"
+                                                   Margin="0,0,8,0"
+                                                   Command="{Binding DataContext.UpdateCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}"
+                                                   CommandParameter="{Binding}"
+                                                   Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}" />
+                                        <ui:Button Content="社区详情"
+                                                   Margin="0,0,8,0"
+                                                   Command="{Binding DataContext.OpenCommunityCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}"
+                                                   CommandParameter="{Binding}"
+                                                   Visibility="{Binding IsCommunityMatched, Converter={StaticResource BoolToVisibility}}" />
+                                        <ui:Button Content="卸载"
+                                                   Icon="{ui:SymbolIcon Delete24}"
+                                                   Appearance="Secondary"
+                                                   Margin="0,0,10,0"
+                                                   Command="{Binding DataContext.UninstallCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}"
+                                                   CommandParameter="{Binding}" />
+                                        <ui:ToggleSwitch IsChecked="{Binding IsEnabled}"
+                                                         Command="{Binding DataContext.ToggleCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}"
+                                                         CommandParameter="{Binding}" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
 
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Name}"
-                                               FontSize="16"
-                                               FontWeight="Bold"
-                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                                    <TextBlock Text="{Binding FileName}"
-                                               FontSize="12"
-                                               FontWeight="Light"
-                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                               Margin="0,2,0,0" />
-                                    <TextBlock Text="{Binding InstallTime}"
-                                               FontSize="11"
-                                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                               Margin="0,2,0,0" />
-                                </StackPanel>
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
+                    <ui:SymbolIcon Symbol="Box24" FontSize="38" HorizontalAlignment="Center" />
+                    <TextBlock Text="暂无插件，可将 .dll 文件拖入此页面安装。"
+                               Margin="0,12,0,0"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
 
-                                <ui:ToggleSwitch Grid.Column="1"
-                                                 HorizontalAlignment="Right"
-                                                 VerticalAlignment="Center"
-                                                 IsChecked="{Binding IsEnabled}"
-                                                 Checked="ModToggle_Changed"
-                                                 Unchecked="ModToggle_Changed"
-                                                 Tag="{Binding FileName}" />
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                <Border Background="{DynamicResource ControlFillColorDefaultBrush}"
+                        Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <ProgressBar IsIndeterminate="True" Width="180" Height="4" />
+                        <TextBlock Text="正在读取本地插件并同步社区信息…" Margin="0,12,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
-
-        <!-- 空状态 -->
-        <TextBlock x:Name="EmptyLabel"
-                   Grid.Row="3"
-                   Text="暂无模组，请将模组 .dll 放入 BepInEx/plugins/ 目录"
-                   FontSize="14"
-                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   Visibility="Collapsed" />
     </Grid>
 </Page>
