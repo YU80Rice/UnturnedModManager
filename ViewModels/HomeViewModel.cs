@@ -87,6 +87,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public string HomeAnnouncementTitle => $"{HomeAnnouncementVersion} 已准备就绪";
     public IReadOnlyList<string> HomeAnnouncementHighlights { get; } =
     [
+        "首页新增可开关的 Q 版吉祥物欢迎区与版本公告，不会后台下载或静默更新。",
         "详情页支持封面与正文图片预览，可缩放查看插件内容。",
         "任务中心会显示安装、更新、卸载的实时进度、失败原因和重试入口。",
         "本地插件方案、安全回滚与真实游戏目录管理保持可见、可恢复。"
