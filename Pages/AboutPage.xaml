@@ -231,7 +231,7 @@
                            Margin="0,14,0,0"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
 
-                <TextBlock Text="v2.0 的持续升级包含首次启动引导、社区详情 Markdown 排版、依赖条目跳转和更宽的折叠侧栏。UMM 暂不强制引入 WinFsp 多 profile，相关能力会在数据迁移方案稳定后单独评估。"
+                <TextBlock Text="v2.0 的持续升级包含首次启动引导、社区详情 Markdown 排版、依赖条目跳转和更宽的折叠侧栏。UMM 不采用 WinFsp 虚拟盘或挂载式多 profile，以避免 Unity 对虚拟文件系统读取不兼容的风险。"
                            FontSize="13"
                            TextWrapping="Wrap"
                            LineHeight="23"

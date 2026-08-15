@@ -129,7 +129,7 @@ UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerf
 
 v2.0 继续使用 WPF，因为 UMM 的目标平台、现有组件和 Unturned 运行环境均以 Windows 为中心。此次升级重点是建立清晰的 ViewModel/Service 边界、可靠状态模型和可测试业务逻辑，而不是仅为更换技术名称迁移 UI 框架。
 
-当前仍未引入 UML 的 WinFsp 虚拟文件系统和多 profile 隔离。UMM 先保持直接、可见、可恢复的真实游戏目录管理，待 profile 数据模型和迁移策略稳定后再进行独立版本升级。
+UMM 明确不采用 UML 的 WinFsp 虚拟文件系统、虚拟盘挂载或挂载式多 profile。Unity 对虚拟文件系统读取存在兼容风险；UMM 选择直接、可见、可恢复的真实游戏目录管理，以安装清单、备份和安全卸载保证可追踪性。
 
 UMM 的网页协议为 `umm://`，例如 `umm://install/42`。当前 unmod.online 页面尚未主动生成该链接时，用户仍可在 UMM 内的“插件社区”搜索并安装；协议不会绕过登录、依赖检查或安装确认。
 
