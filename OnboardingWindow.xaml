@@ -3,13 +3,13 @@
                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                   Title="Unturned Mod Manager · 首次设置"
-                  Width="720"
-                  Height="560"
-                  MinWidth="640"
-                  MinHeight="500"
-                  ResizeMode="NoResize"
+                  Width="760"
+                  Height="600"
+                  MinWidth="660"
+                  MinHeight="520"
+                  ResizeMode="CanResize"
                   WindowStartupLocation="CenterScreen"
-                  WindowBackdropType="Mica">
+                  WindowBackdropType="None">
     <Grid Margin="36,30,36,28">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -32,7 +32,10 @@
                        Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
         </StackPanel>
 
-        <Grid Grid.Row="1">
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+        <Grid>
             <StackPanel Visibility="{Binding IsWelcomeStep, Converter={StaticResource BoolToVisibility}}">
                 <Border Style="{StaticResource SurfaceCardStyle}" Padding="24" Margin="0,0,0,16">
                     <StackPanel>
@@ -82,8 +85,7 @@
                         <ComboBox ItemsSource="{Binding ThemeChoices}"
                                   SelectedItem="{Binding SelectedTheme}"
                                   DisplayMemberPath="Label"
-                                  Width="240"
-                                  HorizontalAlignment="Left" />
+                                  HorizontalAlignment="Stretch" />
                     </StackPanel>
                 </Border>
                 <TextBlock Text="社区账户登录不是必需步骤。需要安装和更新 unmod.online 插件时，再从侧栏账户入口登录即可。"
@@ -107,6 +109,7 @@
                 </Border>
             </StackPanel>
         </Grid>
+        </ScrollViewer>
 
         <Grid Grid.Row="2" Margin="0,22,0,0">
             <ui:Button Content="稍后设置"

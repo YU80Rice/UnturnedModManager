@@ -1,5 +1,6 @@
 using System.Windows;
 using System.IO;
+using System.Windows.Threading;
 using UnturnedModManager.Services;
 
 namespace UnturnedModManager;
@@ -8,6 +9,7 @@ public partial class App : System.Windows.Application
 {
     public static AppServices Services { get; private set; } = null!;
     private OnboardingWindow? _onboardingWindow;
+    private bool _isOnboardingLaunchQueued;
     private int? _pendingInstallModId;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -73,21 +75,54 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        AppSettings.IsOnboardingCompleted = false;
-        ShowOnboarding(MainWindow);
-        if (MainWindow is MainWindow mainWindow)
-            mainWindow.ApplyThemeFromSettings();
+        // Do not change the completed flag before the window has actually finished.  The old
+        // implementation opened a nested modal dialog directly from the Settings command,
+        // which could tear down the app if WPF rejected that modal transition.  Queue the
+        // transition after the current command and confirmation dialog have returned instead.
+        if (_isOnboardingLaunchQueued)
+            return;
+
+        _isOnboardingLaunchQueued = true;
+        _ = Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(() =>
+        {
+            _isOnboardingLaunchQueued = false;
+            if (_onboardingWindow is not null)
+            {
+                ActivateWindow(_onboardingWindow);
+                return;
+            }
+
+            ShowOnboarding(MainWindow);
+            if (MainWindow is MainWindow mainWindow)
+                mainWindow.ApplyThemeFromSettings();
+        }));
     }
 
     private void ShowOnboarding(Window? owner)
     {
-        var onboarding = new OnboardingWindow();
-        if (owner is not null)
-            onboarding.Owner = owner;
+        try
+        {
+            var onboarding = new OnboardingWindow();
+            if (owner is not null)
+                onboarding.Owner = owner;
 
-        _onboardingWindow = onboarding;
-        try { onboarding.ShowDialog(); }
-        finally { _onboardingWindow = null; }
+            _onboardingWindow = onboarding;
+            onboarding.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            WriteDiagnostic("onboarding-error.log", ex);
+            System.Windows.MessageBox.Show(
+                "首次设置向导未能打开。主窗口仍可继续使用，游戏路径和主题也可以在“设置”中修改。\n\n"
+                + "诊断日志已保存到 AppData\\Roaming\\UnturnedModManager\\onboarding-error.log。",
+                "Unturned Mod Manager",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+        finally
+        {
+            _onboardingWindow = null;
+        }
     }
 
     private void OnSecondaryActivation(string[] arguments)
@@ -138,5 +173,16 @@ public partial class App : System.Windows.Application
         window.Topmost = true;
         window.Topmost = false;
         window.Focus();
+    }
+
+    private static void WriteDiagnostic(string fileName, Exception exception)
+    {
+        try
+        {
+            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UnturnedModManager");
+            Directory.CreateDirectory(folder);
+            File.WriteAllText(Path.Combine(folder, fileName), exception.ToString());
+        }
+        catch { }
     }
 }

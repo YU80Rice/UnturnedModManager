@@ -5,52 +5,67 @@
       Title="关于"
       Background="{DynamicResource ApplicationBackgroundBrush}">
 
-    <StackPanel MaxWidth="1040"
-                HorizontalAlignment="Center"
-                Margin="48,32,48,48"
-                PreviewMouseWheel="CardPanel_PreviewMouseWheel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  PreviewMouseWheel="CardPanel_PreviewMouseWheel">
+    <Grid Margin="48,32,48,48">
+    <StackPanel MaxWidth="1200"
+                HorizontalAlignment="Stretch">
 
         <Border CornerRadius="14"
                 Padding="48,36"
                 Margin="0,0,0,28"
                 Background="{DynamicResource ControlFillColorDefaultBrush}">
-            <StackPanel HorizontalAlignment="Center">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <Border Width="76"
                         Height="76"
                         CornerRadius="18"
                         Background="{DynamicResource AccentFillColorDefaultBrush}"
-                        Margin="0,0,0,20">
+                        Margin="0,0,0,20"
+                        HorizontalAlignment="Center">
                     <Viewbox Width="40" Height="40">
                         <ui:SymbolIcon Symbol="Box24" Foreground="White" />
                     </Viewbox>
                 </Border>
 
-                <TextBlock Text="Unturned Mod Manager"
+                <TextBlock Grid.Row="1"
+                           Text="Unturned Mod Manager"
                            FontSize="38"
                            FontWeight="Bold"
                            HorizontalAlignment="Center"
                            Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
 
-                <Border CornerRadius="6"
+                <Border Grid.Row="2"
+                        CornerRadius="6"
                         Padding="14,6"
                         Margin="0,16,0,20"
+                        HorizontalAlignment="Stretch"
                         Background="{DynamicResource AccentFillColorDefaultBrush}">
                     <TextBlock Text="v2.0.0 · Stable · 2026-08-14"
                                FontSize="12"
                                FontWeight="SemiBold"
                                FontFamily="Cascadia Mono, Consolas, monospace"
+                               TextAlignment="Center"
+                               HorizontalAlignment="Stretch"
                                Foreground="White" />
                 </Border>
 
-                <TextBlock Text="面向 Windows 的 Unturned 启动、BepInEx 插件管理与 unmod.online 社区客户端。"
+                <TextBlock Grid.Row="3"
+                           Text="面向 Windows 的 Unturned 启动、BepInEx 插件管理与 unmod.online 社区客户端。"
                            FontSize="14"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
-                           MaxWidth="760"
                            LineHeight="22"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
 
-                <TextBlock Margin="0,18,0,0" FontSize="13" HorizontalAlignment="Center">
+                <TextBlock Grid.Row="4" Margin="0,18,0,0" FontSize="13" HorizontalAlignment="Center">
                     <Hyperlink NavigateUri="https://github.com/YU80Rice/UnturnedModManager"
                                Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                TextDecorations="Underline"
@@ -59,7 +74,7 @@
                         <Run Text="GitHub：YU80Rice/UnturnedModManager" />
                     </Hyperlink>
                 </TextBlock>
-            </StackPanel>
+            </Grid>
         </Border>
 
         <Grid Margin="4,0,0,14">
@@ -346,4 +361,6 @@
                        Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
         </StackPanel>
     </StackPanel>
+    </Grid>
+    </ScrollViewer>
 </Page>

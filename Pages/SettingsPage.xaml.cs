@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using UnturnedModManager.Helpers;
 using UnturnedModManager.ViewModels;
 using Wpf.Ui.Controls;
@@ -30,7 +31,12 @@ public partial class SettingsPage : Page
     private static void RestartOnboarding()
     {
         if (System.Windows.Application.Current is App app)
-            app.RestartOnboarding();
+        {
+            // Keep the settings command's async completion separate from opening a modal
+            // window. This prevents a nested modal loop from being entered while the command
+            // still owns a confirmation dialog.
+            _ = app.Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(app.RestartOnboarding));
+        }
     }
 
     private void OnNoticeRaised(UserNotice notice)
