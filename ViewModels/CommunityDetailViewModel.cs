@@ -56,6 +56,7 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
     public ObservableCollection<CommunityDependency> DependencyItems { get; } = [];
     public bool HasDependencies => DependencyItems.Count > 0;
     public string? CoverUrl => _mod?.CoverUrl;
+    public bool HasCover => !string.IsNullOrWhiteSpace(CoverUrl);
     public bool IsLoading => State == ViewState.Loading;
     public bool HasError => State == ViewState.Error;
     public bool IsEmpty => State == ViewState.Empty;
@@ -210,6 +211,7 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(Dependencies));
         OnPropertyChanged(nameof(HasDependencies));
         OnPropertyChanged(nameof(CoverUrl));
+        OnPropertyChanged(nameof(HasCover));
         NotifyInstallationState();
     }
 

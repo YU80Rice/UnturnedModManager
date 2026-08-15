@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using UnturnedModManager.Helpers;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
 using UnturnedModManager.ViewModels;
@@ -65,6 +66,18 @@ public partial class ModListPage : Page
         }
     }
 
+    private void ModsList_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != System.Windows.Input.Key.Enter
+            || sender is not System.Windows.Controls.ListView list
+            || list.SelectedItem is not ModItem item
+            || !_viewModel.OpenCommunityCommand.CanExecute(item))
+            return;
+
+        _viewModel.OpenCommunityCommand.Execute(item);
+        e.Handled = true;
+    }
+
     private void Page_DragOver(object sender, System.Windows.DragEventArgs e)
     {
         e.Effects = e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)
@@ -93,17 +106,5 @@ public partial class ModListPage : Page
     }
 
     private void Panel_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-    {
-        if (sender is not DependencyObject current) return;
-        while (current is not null)
-        {
-            if (current is ScrollViewer viewer)
-            {
-                viewer.ScrollToVerticalOffset(viewer.VerticalOffset - e.Delta);
-                e.Handled = true;
-                return;
-            }
-            current = VisualTreeHelper.GetParent(current);
-        }
-    }
+        => ScrollWheelRouter.RouteToNearestScrollViewer(sender, e);
 }

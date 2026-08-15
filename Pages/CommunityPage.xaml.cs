@@ -1,4 +1,6 @@
 using System.Windows.Controls;
+using System.Windows.Input;
+using UnturnedModManager.Helpers;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
 using UnturnedModManager.ViewModels;
@@ -18,4 +20,7 @@ public partial class CommunityPage : Page
     {
         if (sender is System.Windows.Controls.ListBox list && list.SelectedItem is CommunityMod mod) { list.SelectedItem = null; _viewModel.OpenSelected(mod); }
     }
+
+    private void Page_PreviewMouseWheel(object sender, MouseWheelEventArgs e) =>
+        ScrollWheelRouter.RouteToNearestScrollViewer(sender, e);
 }

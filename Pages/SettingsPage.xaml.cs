@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
+using UnturnedModManager.Helpers;
 using UnturnedModManager.ViewModels;
 using Wpf.Ui.Controls;
 
@@ -47,17 +47,5 @@ public partial class SettingsPage : Page
     }
 
     private void CardPanel_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-    {
-        if (sender is not DependencyObject current) return;
-        while (current is not null)
-        {
-            if (current is ScrollViewer viewer)
-            {
-                viewer.ScrollToVerticalOffset(viewer.VerticalOffset - e.Delta);
-                e.Handled = true;
-                return;
-            }
-            current = VisualTreeHelper.GetParent(current);
-        }
-    }
+        => ScrollWheelRouter.RouteToNearestScrollViewer(sender, e);
 }

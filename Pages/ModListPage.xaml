@@ -49,6 +49,7 @@
                           Background="Transparent"
                           HorizontalContentAlignment="Stretch"
                           PreviewMouseLeftButtonUp="ModsList_PreviewMouseLeftButtonUp"
+                          PreviewKeyDown="ModsList_PreviewKeyDown"
                           ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListView.ItemTemplate>
                         <DataTemplate>

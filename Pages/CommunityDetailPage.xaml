@@ -32,7 +32,8 @@
                         <Image Source="{Binding CoverUrl}"
                                Height="260"
                                Stretch="UniformToFill"
-                               Margin="0,0,0,20" />
+                               Margin="0,0,0,20"
+                               Visibility="{Binding HasCover, Converter={StaticResource BoolToVisibility}}" />
                         <TextBlock Text="{Binding Title}"
                                    FontSize="30"
                                    FontWeight="SemiBold"
@@ -84,7 +85,8 @@
                                            Appearance="Primary"
                                            Icon="{ui:SymbolIcon ArrowSync24}"
                                            Command="{Binding RetryCommand}" />
-                                <ui:Button Content="返回上一级"
+                                <ui:Button x:Name="ErrorBackButton"
+                                           Content="返回上一级"
                                            Click="BackButton_Click"
                                            Margin="10,0,0,0" />
                             </StackPanel>

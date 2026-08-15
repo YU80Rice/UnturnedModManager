@@ -2,8 +2,8 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Navigation;
+using UnturnedModManager.Helpers;
 
 namespace UnturnedModManager.Pages;
 
@@ -22,21 +22,7 @@ public partial class AboutPage : Page
     /// （套用 HomePage/SettingsPage 已验证的修复模式）
     /// </summary>
     private void CardPanel_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-    {
-        if (sender is not DependencyObject element) return;
-
-        DependencyObject? current = element;
-        while (current != null)
-        {
-            if (current is ScrollViewer sv)
-            {
-                sv.ScrollToVerticalOffset(sv.VerticalOffset - e.Delta);
-                e.Handled = true;
-                return;
-            }
-            current = VisualTreeHelper.GetParent(current);
-        }
-    }
+        => ScrollWheelRouter.RouteToNearestScrollViewer(sender, e);
 
     /// <summary>
     /// 点击超链接时用默认浏览器打开 URL。

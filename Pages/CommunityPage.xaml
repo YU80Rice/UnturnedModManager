@@ -4,7 +4,7 @@
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:controls="clr-namespace:UnturnedModManager.Controls"
       Title="插件社区" Background="{DynamicResource ApplicationBackgroundBrush}">
-    <Grid Margin="28,22,28,24">
+    <Grid Margin="28,22,28,24" PreviewMouseWheel="Page_PreviewMouseWheel">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <Grid Margin="0,0,0,18">
             <controls:PageHeader Title="插件社区" Subtitle="发现并安装 unmod.online 社区插件 · 自动处理依赖 · 安装可追踪、可卸载"/>

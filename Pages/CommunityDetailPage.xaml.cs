@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
+using UnturnedModManager.Helpers;
 using UnturnedModManager.Services;
 using UnturnedModManager.ViewModels;
 
@@ -16,12 +16,12 @@ public partial class CommunityDetailPage : Page
         InitializeComponent();
         _origin = origin;
         BackButton.Content = origin?.BackLabel ?? "返回上一级";
+        ErrorBackButton.Content = BackButton.Content;
         _viewModel = App.Services.CreateCommunityDetailViewModel(id); DataContext = _viewModel;
         _viewModel.NoticeRaised += OnNoticeRaised;
         _viewModel.SignInRequested += OpenSignIn;
         _viewModel.DependencyRequested += OpenDependency;
         Loaded += async (_, _) => { Focus(); await _viewModel.LoadAsync(); };
-        Unloaded += (_, _) => _viewModel.Dispose();
     }
     private void OpenSignIn()
     {
@@ -50,8 +50,5 @@ public partial class CommunityDetailPage : Page
     }
     private void Page_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e) { if (e.Key == Key.Escape) { BackButton_Click(sender, e); e.Handled = true; } }
     private void Page_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-    {
-        if (sender is not DependencyObject current) return;
-        while (current is not null) { if (current is ScrollViewer viewer) { viewer.ScrollToVerticalOffset(viewer.VerticalOffset - e.Delta); e.Handled = true; return; } current = VisualTreeHelper.GetParent(current); }
-    }
+        => ScrollWheelRouter.RouteToNearestScrollViewer(sender, e);
 }
