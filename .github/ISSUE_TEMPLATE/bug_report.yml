@@ -16,7 +16,7 @@ body:
       label: 🚀 UMM 启动器版本
       description: 你正在使用的 UnturnedModManager 版本（可在启动器"关于"页查看）
       options:
-        - v2.0.0（当前大版本）
+        - v2.1.0（当前稳定版）
         - v1.6.8
         - 更早的版本（请在 Bug 描述中说明）
         - 我不确定 / 没注意

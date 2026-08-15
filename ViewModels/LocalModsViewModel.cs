@@ -16,6 +16,7 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
     private readonly CommunityApiClient _api;
     private readonly CommunityModInstaller _installer;
     private readonly LocalModService _localMods;
+    private readonly PluginProfileService _profiles;
     private readonly IUserDialogService _dialogs;
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
     private CancellationTokenSource? _refreshCts;
@@ -23,6 +24,9 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
     private string _fingerprint = "";
     private bool _initialized;
     private bool _communitySyncCompleted;
+    private PluginProfile? _selectedProfile;
+    private string _newProfileName = "";
+    private string _profileStatusText = "尚未创建插件方案。";
 
     public LocalModsViewModel()
         : this(new CommunityApiClient(), new CommunityModInstaller(), null, new UserDialogService())
@@ -33,11 +37,13 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
         CommunityApiClient api,
         CommunityModInstaller installer,
         LocalModService? localMods,
-        IUserDialogService dialogs)
+        IUserDialogService dialogs,
+        PluginProfileService? profiles = null)
     {
         _api = api;
         _installer = installer;
         _localMods = localMods ?? new LocalModService(installer);
+        _profiles = profiles ?? new PluginProfileService(_localMods);
         _dialogs = dialogs;
         RefreshCommand = new AsyncRelayCommand(() => RefreshAsync(force: true));
         OpenFolderCommand = new AsyncRelayCommand(() =>
@@ -49,9 +55,14 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
         ToggleCommand = new RelayCommand<ModItem>(Toggle);
         UpdateCommand = new AsyncRelayCommand<ModItem>(UpdateAsync);
         UninstallCommand = new AsyncRelayCommand<ModItem>(UninstallAsync);
+        CreateProfileCommand = new AsyncRelayCommand(CreateProfileAsync, () => !string.IsNullOrWhiteSpace(NewProfileName));
+        ApplyProfileCommand = new AsyncRelayCommand(ApplyProfileAsync, () => SelectedProfile is not null);
+        SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync, () => SelectedProfile is not null);
+        DeleteProfileCommand = new AsyncRelayCommand(DeleteProfileAsync, () => SelectedProfile is not null);
     }
 
     public ObservableCollection<ModItem> Mods { get; } = [];
+    public ObservableCollection<PluginProfile> PluginProfiles { get; } = [];
     public ViewState State
     {
         get => _state;
@@ -65,6 +76,25 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
     public bool IsLoading => State == ViewState.Loading;
     public bool IsEmpty => State == ViewState.Empty;
     public string CountText => $"共 {Mods.Count} 个插件";
+    public string ProfileStatusText { get => _profileStatusText; private set => SetProperty(ref _profileStatusText, value); }
+    public string NewProfileName
+    {
+        get => _newProfileName;
+        set
+        {
+            if (!SetProperty(ref _newProfileName, value)) return;
+            RaiseProfileCommandCanExecuteChanged();
+        }
+    }
+    public PluginProfile? SelectedProfile
+    {
+        get => _selectedProfile;
+        set
+        {
+            if (!SetProperty(ref _selectedProfile, value)) return;
+            RaiseProfileCommandCanExecuteChanged();
+        }
+    }
 
     public ICommand RefreshCommand { get; }
     public ICommand OpenFolderCommand { get; }
@@ -72,12 +102,17 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
     public ICommand ToggleCommand { get; }
     public ICommand UpdateCommand { get; }
     public ICommand UninstallCommand { get; }
+    public ICommand CreateProfileCommand { get; }
+    public ICommand ApplyProfileCommand { get; }
+    public ICommand SaveProfileCommand { get; }
+    public ICommand DeleteProfileCommand { get; }
 
     public event Action<int>? OpenCommunityRequested;
     public event Action<UserNotice>? NoticeRaised;
 
     public async Task ActivateAsync()
     {
+        RefreshProfiles();
         var currentFingerprint = _localMods.GetFingerprint();
         if (!_initialized || !currentFingerprint.Equals(_fingerprint, StringComparison.Ordinal))
         {
@@ -120,6 +155,7 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
             _fingerprint = _localMods.GetFingerprint();
             _initialized = true;
             _communitySyncCompleted = false;
+            RefreshProfiles();
             State = Mods.Count == 0 ? ViewState.Empty : ViewState.Loaded;
             await SynchronizeCommunityAsync(Mods.ToList(), token);
             _communitySyncCompleted = true;
@@ -237,6 +273,85 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
             result.Message,
             result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
         await RefreshAsync(force: true);
+    }
+
+    private Task CreateProfileAsync()
+    {
+        var result = _profiles.CreateFromCurrent(NewProfileName, Mods.ToList());
+        RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
+        if (!result.Success) return Task.CompletedTask;
+
+        NewProfileName = "";
+        RefreshProfiles(result.Profile?.Id);
+        return Task.CompletedTask;
+    }
+
+    private async Task ApplyProfileAsync()
+    {
+        var profile = SelectedProfile;
+        if (profile is null) return;
+        var confirmed = await _dialogs.ConfirmAsync(
+            "应用插件方案",
+            $"确定应用“{profile.Name}”吗？\n\n"
+            + "UMM 会让已记录的插件恢复到保存时的启停状态；当前已安装、但未包含在该方案中的插件会被停用。"
+            + "不会删除 DLL、社区安装记录或 BepInEx 配置。请确保 Unturned 已退出。");
+        if (!confirmed) return;
+
+        var result = await Task.Run(() => _profiles.Apply(profile.Id));
+        RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
+        if (!result.Success) return;
+
+        RefreshProfiles(profile.Id);
+        await RefreshAsync(force: true);
+    }
+
+    private Task SaveProfileAsync()
+    {
+        var profile = SelectedProfile;
+        if (profile is null) return Task.CompletedTask;
+
+        var result = _profiles.SaveCurrent(profile.Id, Mods.ToList());
+        RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
+        if (result.Success) RefreshProfiles(profile.Id);
+        return Task.CompletedTask;
+    }
+
+    private async Task DeleteProfileAsync()
+    {
+        var profile = SelectedProfile;
+        if (profile is null) return;
+        if (!await _dialogs.ConfirmAsync(
+                "删除插件方案",
+                $"确定删除方案“{profile.Name}”吗？\n\n只会删除该方案的启停记录，不会删除任何插件文件或修改当前状态。"))
+            return;
+
+        var result = _profiles.Delete(profile.Id);
+        RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
+        if (result.Success) RefreshProfiles();
+    }
+
+    private void RefreshProfiles(string? preferredProfileId = null)
+    {
+        var selectedId = preferredProfileId ?? SelectedProfile?.Id ?? _profiles.GetActiveProfileId();
+        var profiles = _profiles.GetProfiles();
+        PluginProfiles.Clear();
+        foreach (var profile in profiles) PluginProfiles.Add(profile);
+
+        SelectedProfile = selectedId is null
+            ? null
+            : PluginProfiles.FirstOrDefault(profile => profile.Id == selectedId);
+        var active = PluginProfiles.FirstOrDefault(profile => profile.Id == _profiles.GetActiveProfileId());
+        ProfileStatusText = active is null
+            ? "尚未应用插件方案；本地插件仍按当前启停状态运行。"
+            : $"当前生效：{active.Name}（{active.Summary}）";
+    }
+
+    private void RaiseProfileCommandCanExecuteChanged()
+    {
+        ((AsyncRelayCommand)CreateProfileCommand).RaiseCanExecuteChanged();
+        ((AsyncRelayCommand)ApplyProfileCommand).RaiseCanExecuteChanged();
+        ((AsyncRelayCommand)SaveProfileCommand).RaiseCanExecuteChanged();
+        ((AsyncRelayCommand)DeleteProfileCommand).RaiseCanExecuteChanged();
     }
 
     private void OpenFolder()

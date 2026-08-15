@@ -14,6 +14,7 @@ config.json
 # ============== 发布产物（Release 资产单独上传） ==============
 publish/
 bin/publish/
+/Release/
 
 # ============== IDE / 操作系统 ==============
 .idea/

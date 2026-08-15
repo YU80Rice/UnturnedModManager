@@ -11,20 +11,33 @@ namespace UnturnedModManager.Services;
 public sealed class LocalModService
 {
     private readonly CommunityModInstaller _installer;
+    private readonly Func<string?> _gamePathProvider;
 
-    public LocalModService(CommunityModInstaller installer) => _installer = installer;
+    public LocalModService(CommunityModInstaller installer)
+        : this(installer, () => AppSettings.UnturnedInstallPath)
+    {
+    }
+
+    public LocalModService(CommunityModInstaller installer, Func<string?> gamePathProvider)
+    {
+        _installer = installer;
+        _gamePathProvider = gamePathProvider;
+    }
 
     public string? GetPluginsPath()
     {
-        if (string.IsNullOrWhiteSpace(AppSettings.UnturnedInstallPath)) return null;
-        return Path.Combine(AppSettings.UnturnedInstallPath, "BepInEx", "plugins");
+        var gamePath = _gamePathProvider();
+        if (string.IsNullOrWhiteSpace(gamePath)) return null;
+        return Path.Combine(gamePath, "BepInEx", "plugins");
     }
 
     public IReadOnlyList<ModItem> Scan()
     {
-        _installer.Reconcile(AppSettings.UnturnedInstallPath);
-        var pluginsPath = GetPluginsPath();
-        if (pluginsPath is null || !Directory.Exists(pluginsPath)) return [];
+        var gamePath = _gamePathProvider();
+        if (string.IsNullOrWhiteSpace(gamePath)) return [];
+        _installer.Reconcile(gamePath);
+        var pluginsPath = Path.Combine(gamePath, "BepInEx", "plugins");
+        if (!Directory.Exists(pluginsPath)) return [];
 
         var candidates = Directory.EnumerateFiles(pluginsPath, "*", SearchOption.AllDirectories)
             .Where(IsPluginFile)
@@ -40,7 +53,7 @@ public sealed class LocalModService
         return candidates
             .Where(path => !path.EndsWith(".dll.disabled", StringComparison.OrdinalIgnoreCase)
                 || !enabledFiles.Contains(Path.GetFullPath(path[..^".disabled".Length])))
-            .Select(path => CreateItem(path, pluginsPath))
+            .Select(path => CreateItem(path, pluginsPath, gamePath))
             .ToList();
     }
 
@@ -74,6 +87,67 @@ public sealed class LocalModService
         catch (Exception ex)
         {
             return new(false, $"无法更改插件状态：{ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 在验证全部目标后批量切换本地插件状态。任何移动失败都会按相反顺序回滚，
+    /// 因此插件方案不会留下半完成的启停状态。
+    /// </summary>
+    public LocalModBatchOperationResult ApplyStates(IReadOnlyDictionary<string, bool> desiredStates)
+    {
+        var items = Scan();
+        var changes = new List<(ModItem Item, string Source, string Destination, bool Enabled)>();
+
+        foreach (var item in items)
+        {
+            var enabled = desiredStates.TryGetValue(item.RelativePath, out var requested) && requested;
+            if (item.IsEnabled == enabled) continue;
+
+            var enabledPath = item.FullPath.EndsWith(".disabled", StringComparison.OrdinalIgnoreCase)
+                ? item.FullPath[..^".disabled".Length]
+                : item.FullPath;
+            var source = enabled ? enabledPath + ".disabled" : enabledPath;
+            var destination = enabled ? enabledPath : enabledPath + ".disabled";
+
+            if (!File.Exists(source))
+                return new(false, 0, $"找不到插件文件：{item.FileName}");
+            if (File.Exists(destination))
+                return new(false, 0, $"无法切换“{item.FileName}”：目标文件已存在（{Path.GetFileName(destination)}）。");
+
+            changes.Add((item, source, destination, enabled));
+        }
+
+        var completed = new List<(ModItem Item, string Source, string Destination, bool Enabled)>();
+        try
+        {
+            foreach (var change in changes)
+            {
+                File.Move(change.Source, change.Destination);
+                completed.Add(change);
+                change.Item.FullPath = change.Destination;
+                change.Item.IsEnabled = change.Enabled;
+            }
+
+            return new(true, completed.Count, completed.Count == 0
+                ? "当前插件状态已经符合该方案。"
+                : $"已切换 {completed.Count} 个插件状态。");
+        }
+        catch (Exception ex)
+        {
+            foreach (var change in completed.AsEnumerable().Reverse())
+            {
+                try
+                {
+                    if (File.Exists(change.Destination) && !File.Exists(change.Source))
+                        File.Move(change.Destination, change.Source);
+                    change.Item.FullPath = change.Source;
+                    change.Item.IsEnabled = !change.Enabled;
+                }
+                catch { /* 保留原始错误信息；下次刷新时可显示实际磁盘状态。 */ }
+            }
+
+            return new(false, 0, $"切换插件方案失败，已尝试回滚：{ex.Message}");
         }
     }
 
@@ -170,12 +244,12 @@ public sealed class LocalModService
         catch { return Guid.NewGuid().ToString(); }
     }
 
-    private ModItem CreateItem(string path, string pluginsPath)
+    private ModItem CreateItem(string path, string pluginsPath, string gamePath)
     {
         var disabled = path.EndsWith(".disabled", StringComparison.OrdinalIgnoreCase);
         var enabledPath = disabled ? path[..^".disabled".Length] : path;
         var fileName = Path.GetFileName(enabledPath);
-        var gameRelativePath = Path.GetRelativePath(AppSettings.UnturnedInstallPath, enabledPath);
+        var gameRelativePath = Path.GetRelativePath(gamePath, enabledPath);
         var owner = _installer.FindOwner(gameRelativePath);
         var assembly = ReadAssembly(path);
 
@@ -211,3 +285,4 @@ public sealed class LocalModService
 
 public sealed record LocalModOperationResult(bool Success, string Message);
 public sealed record LocalModImportResult(int Imported, int Skipped, string Message);
+public sealed record LocalModBatchOperationResult(bool Success, int Changed, string Message);

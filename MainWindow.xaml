@@ -5,6 +5,7 @@
     <ui:NavigationViewItem Content="游戏启动" Icon="{ui:SymbolIcon Home24}" TargetPageType="{x:Type pages:HomePage}" NavigationCacheMode="Required"/>
     <ui:NavigationViewItem Content="本地插件" Icon="{ui:SymbolIcon Box24}" TargetPageType="{x:Type pages:ModListPage}" NavigationCacheMode="Required"/>
     <ui:NavigationViewItem Content="插件社区" Icon="{ui:SymbolIcon StoreMicrosoft24}" TargetPageType="{x:Type pages:CommunityPage}" NavigationCacheMode="Required"/>
+    <ui:NavigationViewItem Content="任务中心" Icon="{ui:SymbolIcon ArrowDownload24}" TargetPageType="{x:Type pages:TaskCenterPage}" NavigationCacheMode="Required"/>
     <ui:NavigationViewItem Content="设置" Icon="{ui:SymbolIcon Settings24}" TargetPageType="{x:Type pages:SettingsPage}" NavigationCacheMode="Required"/>
    </ui:NavigationView.MenuItems>
    <ui:NavigationView.FooterMenuItems><ui:NavigationViewItem Content="关于" Icon="{ui:SymbolIcon Info24}" TargetPageType="{x:Type pages:AboutPage}" NavigationCacheMode="Required"/></ui:NavigationView.FooterMenuItems>

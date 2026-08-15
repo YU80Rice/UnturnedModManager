@@ -1,5 +1,6 @@
 using System.Windows.Input;
 using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
 
@@ -11,6 +12,7 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
     private readonly CommunityModInstaller _installer;
     private readonly IUserDialogService _dialogs;
     private readonly CommunityAuthService _authentication;
+    private readonly OperationTaskCenter _tasks;
     private readonly int _id;
     private readonly AsyncRelayCommand _installCommand;
     private readonly AsyncRelayCommand _updateCommand;
@@ -20,9 +22,12 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
     private ViewState _state = ViewState.Idle;
     private string _errorMessage = "";
     private bool _isBusy;
+    private static readonly Regex MarkdownImagePattern = new(
+        @"!\[[^\]]*\]\(\s*(?<url>https?://[^\s)]+)",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public CommunityDetailViewModel(int id)
-        : this(id, new CommunityApiClient(), new CommunityModInstaller(), new UserDialogService(), new CommunityAuthService())
+        : this(id, new CommunityApiClient(), new CommunityModInstaller(), new UserDialogService(), new CommunityAuthService(), new OperationTaskCenter())
     {
     }
 
@@ -31,19 +36,26 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         CommunityApiClient api,
         CommunityModInstaller installer,
         IUserDialogService dialogs,
-        CommunityAuthService authentication)
+        CommunityAuthService authentication,
+        OperationTaskCenter? tasks = null)
     {
         _id = id;
         _api = api;
         _installer = installer;
         _dialogs = dialogs;
         _authentication = authentication;
+        _tasks = tasks ?? new OperationTaskCenter();
         _installCommand = new AsyncRelayCommand(InstallAsync, () => CanInstall);
         _updateCommand = new AsyncRelayCommand(UpdateAsync, () => CanUpdate);
         _uninstallCommand = new AsyncRelayCommand(UninstallAsync, () => CanUninstall);
         _retryCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
         SignInCommand = new RelayCommand(() => SignInRequested?.Invoke());
         OpenDependencyCommand = new RelayCommand<CommunityDependency>(dependency => DependencyRequested?.Invoke(dependency.Id));
+        OpenImagePreviewCommand = new RelayCommand<string>(url => ImagePreviewRequested?.Invoke(url));
+        OpenCoverPreviewCommand = new RelayCommand(() =>
+        {
+            if (!string.IsNullOrWhiteSpace(CoverUrl)) ImagePreviewRequested?.Invoke(CoverUrl);
+        }, () => HasCover);
         _authentication.SessionChanged += OnAuthenticationChanged;
     }
 
@@ -54,9 +66,21 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
     public string Body => _mod?.DisplayBody ?? "";
     public string Dependencies => _mod?.DependencySummary ?? "正在读取依赖信息…";
     public ObservableCollection<CommunityDependency> DependencyItems { get; } = [];
+    public ObservableCollection<string> GalleryImages { get; } = [];
     public bool HasDependencies => DependencyItems.Count > 0;
+    public bool HasGalleryImages => GalleryImages.Count > 0;
     public string? CoverUrl => _mod?.CoverUrl;
     public bool HasCover => !string.IsNullOrWhiteSpace(CoverUrl);
+    public string AuthorText => _mod?.AuthorName ?? "未知作者";
+    public string VersionText => _mod is null ? "—" : _mod.Version.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? _mod.Version : $"v{_mod.Version}";
+    public string DownloadsText => _mod is null ? "—" : $"{_mod.Downloads:N0}";
+    public string LikesText => _mod is null ? "—" : $"{_mod.LikeCount:N0}";
+    public string FileSizeText => _mod is null ? "—" : FormatSize(_mod.FileSize);
+    public string CategoryText => _mod?.CategoryDisplay ?? "其他";
+    public string DependencyCountText => _mod is null ? "—" : _mod.Dependencies.Count.ToString();
+    public string InstallationStatusText => _mod is null
+        ? "正在读取"
+        : IsInstalled ? (HasUpdate ? "可更新" : "已安装") : "未安装";
     public bool IsLoading => State == ViewState.Loading;
     public bool HasError => State == ViewState.Error;
     public bool IsEmpty => State == ViewState.Empty;
@@ -112,9 +136,12 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
     public ICommand RetryCommand => _retryCommand;
     public ICommand SignInCommand { get; }
     public ICommand OpenDependencyCommand { get; }
+    public ICommand OpenImagePreviewCommand { get; }
+    public ICommand OpenCoverPreviewCommand { get; }
     public event Action<UserNotice>? NoticeRaised;
     public event Action? SignInRequested;
     public event Action<int>? DependencyRequested;
+    public event Action<string>? ImagePreviewRequested;
 
     public async Task LoadAsync()
     {
@@ -127,6 +154,7 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
             DependencyItems.Clear();
             foreach (var dependency in _mod.Dependencies)
                 DependencyItems.Add(dependency);
+            LoadPreviewImages(_mod);
             NotifyModState();
             State = ViewState.Loaded;
         }
@@ -143,13 +171,18 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         IsBusy = true;
         try
         {
-            await _installer.InstallWithDependenciesAsync(
-                _api,
-                _mod,
-                AppSettings.UnturnedInstallPath,
-                message => RaiseNotice(message, UserNoticeSeverity.Information));
+            var task = await _tasks.RunAsync(
+                OperationTaskKind.Install,
+                _mod.Id,
+                _mod.DisplayTitle,
+                (progress, token) => _installer.InstallWithDependenciesDetailedAsync(
+                    _api, _mod, AppSettings.UnturnedInstallPath, progress, token));
             NotifyInstallationState();
-            RaiseNotice("插件及其依赖已安装。", UserNoticeSeverity.Success);
+            RaiseNotice(
+                task.Status == OperationTaskStatus.Succeeded
+                    ? "插件及其依赖已安装。可在“任务中心”查看完整记录。"
+                    : $"安装失败：{task.FailureReason}。可在“任务中心”重试。",
+                task.Status == OperationTaskStatus.Succeeded ? UserNoticeSeverity.Success : UserNoticeSeverity.Error);
         }
         catch (Exception ex)
         {
@@ -164,13 +197,18 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         IsBusy = true;
         try
         {
-            await _installer.UpdateAsync(
-                _api,
-                _mod,
-                AppSettings.UnturnedInstallPath,
-                message => RaiseNotice(message, UserNoticeSeverity.Information));
+            var task = await _tasks.RunAsync(
+                OperationTaskKind.Update,
+                _mod.Id,
+                _mod.DisplayTitle,
+                (progress, token) => _installer.UpdateDetailedAsync(
+                    _api, _mod, AppSettings.UnturnedInstallPath, progress, token));
             NotifyInstallationState();
-            RaiseNotice($"{_mod.DisplayTitle} 已更新至 {_mod.Version}。", UserNoticeSeverity.Success);
+            RaiseNotice(
+                task.Status == OperationTaskStatus.Succeeded
+                    ? $"{_mod.DisplayTitle} 已更新至 {_mod.Version}。可在“任务中心”查看完整记录。"
+                    : $"更新失败：{task.FailureReason}。可在“任务中心”重试。",
+                task.Status == OperationTaskStatus.Succeeded ? UserNoticeSeverity.Success : UserNoticeSeverity.Error);
         }
         catch (Exception ex)
         {
@@ -190,11 +228,26 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         IsBusy = true;
         try
         {
-            var result = _installer.Uninstall(_mod.Id, AppSettings.UnturnedInstallPath);
+            UninstallResult? result = null;
+            var task = await _tasks.RunAsync(
+                OperationTaskKind.Uninstall,
+                _mod.Id,
+                _mod.DisplayTitle,
+                async (progress, token) =>
+                {
+                    progress.Report(TaskOperationProgress.At(10, "正在校验插件文件是否被修改…"));
+                    result = await Task.Run(
+                        () => _installer.Uninstall(_mod.Id, AppSettings.UnturnedInstallPath),
+                        token);
+                    if (!result.Success) throw new InvalidOperationException(result.Message);
+                    progress.Report(TaskOperationProgress.At(100, "已卸载并恢复可恢复文件"));
+                });
             NotifyInstallationState();
             RaiseNotice(
-                result.Message,
-                result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
+                task.Status == OperationTaskStatus.Succeeded
+                    ? result?.Message ?? "插件已卸载。"
+                    : $"卸载失败：{task.FailureReason}。可在“任务中心”查看原因。",
+                task.Status == OperationTaskStatus.Succeeded ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
         }
         catch (Exception ex)
         {
@@ -210,8 +263,16 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(Body));
         OnPropertyChanged(nameof(Dependencies));
         OnPropertyChanged(nameof(HasDependencies));
+        OnPropertyChanged(nameof(HasGalleryImages));
         OnPropertyChanged(nameof(CoverUrl));
         OnPropertyChanged(nameof(HasCover));
+        OnPropertyChanged(nameof(AuthorText));
+        OnPropertyChanged(nameof(VersionText));
+        OnPropertyChanged(nameof(DownloadsText));
+        OnPropertyChanged(nameof(LikesText));
+        OnPropertyChanged(nameof(FileSizeText));
+        OnPropertyChanged(nameof(CategoryText));
+        OnPropertyChanged(nameof(DependencyCountText));
         NotifyInstallationState();
     }
 
@@ -223,6 +284,7 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(CanUpdate));
         OnPropertyChanged(nameof(CanUninstall));
         OnPropertyChanged(nameof(RequiresLogin));
+        OnPropertyChanged(nameof(InstallationStatusText));
         RaiseCommandStates();
     }
 
@@ -232,6 +294,7 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         _updateCommand.RaiseCanExecuteChanged();
         _uninstallCommand.RaiseCanExecuteChanged();
         _retryCommand.RaiseCanExecuteChanged();
+        if (OpenCoverPreviewCommand is RelayCommand coverCommand) coverCommand.RaiseCanExecuteChanged();
     }
 
     private void RaiseNotice(string message, UserNoticeSeverity severity) =>
@@ -255,6 +318,23 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         : bytes >= 1024
             ? $"{bytes / 1024d:F1} KB"
             : $"{bytes} B";
+
+    private void LoadPreviewImages(CommunityModDetail mod)
+    {
+        GalleryImages.Clear();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(mod.CoverUrl))
+            seen.Add(mod.CoverUrl);
+
+        foreach (Match match in MarkdownImagePattern.Matches(mod.DisplayBody))
+        {
+            var url = match.Groups["url"].Value.Trim().TrimEnd('.', ',', ';');
+            if (Uri.TryCreate(url, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+                && seen.Add(uri.AbsoluteUri))
+                GalleryImages.Add(uri.AbsoluteUri);
+        }
+    }
 
     public void Dispose()
     {

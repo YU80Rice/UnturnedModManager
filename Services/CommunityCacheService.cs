@@ -19,9 +19,7 @@ public sealed class CommunityCacheService
 
     public CommunityCacheService(string? cacheDirectory = null)
     {
-        _cacheDirectory = cacheDirectory ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "UnturnedModManager", "cache", "community");
+        _cacheDirectory = cacheDirectory ?? AppDataPaths.CommunityCacheDirectory;
     }
 
     public async Task<T?> ReadAsync<T>(string key, TimeSpan maxAge, CancellationToken token = default)

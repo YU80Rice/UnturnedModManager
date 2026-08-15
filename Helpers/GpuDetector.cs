@@ -6,7 +6,7 @@ namespace UnturnedModManager.Helpers;
 
 /// <summary>
 /// 通过 WMI Win32_VideoController 枚举显卡，并按显卡名称识别架构代际与 DXVK 推荐度。
-/// v1.6.8 新增：针对 Pascal / Polaris 等老架构默认关闭 DXVK，避免 GTX 1060 等老卡严重降帧。
+/// 对 Pascal / Polaris 等老架构不建议 DXVK；对新架构只标记为“可测试”，不承诺性能收益。
 /// </summary>
 public static class GpuDetector
 {
@@ -18,13 +18,20 @@ public static class GpuDetector
         var result = new List<GpuInfo>();
         try
         {
-            using var searcher = new ManagementObjectSearcher("SELECT Name FROM Win32_VideoController");
+            using var searcher = new ManagementObjectSearcher(
+                "SELECT Name, PNPDeviceID, AdapterCompatibility, Availability, CurrentHorizontalResolution, CurrentVerticalResolution FROM Win32_VideoController");
             foreach (var obj in searcher.Get())
             {
                 var name = obj["Name"]?.ToString()?.Trim();
                 if (!string.IsNullOrEmpty(name))
                 {
-                    result.Add(Classify(name));
+                    var info = Classify(name);
+                    var pnpDeviceId = obj["PNPDeviceID"]?.ToString();
+                    var compatibility = obj["AdapterCompatibility"]?.ToString();
+                    info.IsVirtualAdapter = IsVirtualAdapter(name, pnpDeviceId, compatibility);
+                    info.IsIntegratedAdapter = IsIntegratedGpu(name);
+                    info.IsActiveAdapter = IsActiveAdapter(obj);
+                    result.Add(info);
                 }
             }
         }
@@ -41,16 +48,22 @@ public static class GpuDetector
     /// </summary>
     public static GpuInfo DetectPrimary()
     {
-        var all = DetectAll();
-        if (all.Count == 0) return new GpuInfo();
+        return SelectPrimary(DetectAll());
+    }
 
-        // 优先返回非集显的独显
-        foreach (var gpu in all)
-        {
-            if (!IsIntegratedGpu(gpu.Name))
-                return gpu;
-        }
-        return all[0];
+    /// <summary>
+    /// 在物理显卡中选取用于 DXVK 判定的适配器。远程桌面、投屏和虚拟显示驱动不能
+    /// 代表实际 Vulkan 硬件，因此会被排除；活动的独显优先于集显。
+    /// </summary>
+    public static GpuInfo SelectPrimary(IEnumerable<GpuInfo> adapters)
+    {
+        var physical = adapters.Where(adapter => !adapter.IsVirtualAdapter).ToList();
+        if (physical.Count == 0) return new GpuInfo();
+
+        return physical.FirstOrDefault(adapter => adapter.IsActiveAdapter && !adapter.IsIntegratedAdapter)
+            ?? physical.FirstOrDefault(adapter => !adapter.IsIntegratedAdapter)
+            ?? physical.FirstOrDefault(adapter => adapter.IsActiveAdapter)
+            ?? physical[0];
     }
 
     /// <summary>
@@ -67,6 +80,34 @@ public static class GpuDetector
             || n.Contains("AMD RADEON(TM) VEGA") && !n.Contains("RX VEGA")
             || n.Contains("MICROSOFT BASIC RENDER DRIVER");
     }
+
+    private static bool IsVirtualAdapter(string name, string? pnpDeviceId, string? compatibility)
+    {
+        var identity = $"{name} {pnpDeviceId} {compatibility}".ToUpperInvariant();
+        return identity.Contains("ROOT\\DISPLAY")
+            || identity.Contains("VIRTUAL DISPLAY")
+            || identity.Contains("VIRTUAL ADAPTER")
+            || identity.Contains("ORAY")
+            || identity.Contains("GAMEVIEWER")
+            || identity.Contains("PARSEC")
+            || identity.Contains("SPACEDESK")
+            || identity.Contains("MIRAGE")
+            || identity.Contains("REMOTE DISPLAY")
+            || identity.Contains("REMOTEFX")
+            || identity.Contains("RDP")
+            || identity.Contains(" IDD");
+    }
+
+    private static bool IsActiveAdapter(ManagementBaseObject adapter)
+    {
+        var width = ConvertToInt(adapter["CurrentHorizontalResolution"]);
+        var height = ConvertToInt(adapter["CurrentVerticalResolution"]);
+        if (width > 0 && height > 0) return true;
+        return ConvertToInt(adapter["Availability"]) == 3;
+    }
+
+    private static int ConvertToInt(object? value) =>
+        value is null ? 0 : int.TryParse(value.ToString(), out var parsed) ? parsed : 0;
 
     /// <summary>
     /// 按显卡名称识别厂商、架构代际、DXVK 推荐度。

@@ -1,4 +1,4 @@
-# Unturned Mod Manager v2.0
+# Unturned Mod Manager v2.1
 
 > 面向 Windows 的 Unturned 启动、BepInEx 插件管理与 [unmod.online](https://unmod.online/) 社区客户端。
 
@@ -6,7 +6,7 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![WPF-UI](https://img.shields.io/badge/WPF--UI-3.0.5-CA1E1E)](https://github.com/lepoco/wpfui)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?logo=windows)](https://www.microsoft.com/windows)
-[![Release](https://img.shields.io/badge/Release-v2.0.0-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
+[![Release](https://img.shields.io/badge/Release-v2.1.0-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
 [![Build and test](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml/badge.svg)](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml)
 
 **仓库：** [github.com/YU80Rice/UnturnedModManager](https://github.com/YU80Rice/UnturnedModManager)
@@ -45,7 +45,7 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 
 ---
 
-## v2.0 能做什么
+## v2.1 能做什么
 
 ### 游戏与插件环境
 
@@ -54,8 +54,11 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 - 通过 `winhttp.dll` / `winhttp.dll.disabled` 切换 BepInEx 注入状态；
 - 模组模式使用 `Unturned.exe -NoBattlEye`，原版模式使用 `Unturned_BE.exe`；
 - 可选部署 DXVK 2.4，并根据检测到的 GPU 架构给出兼容性提示。
+- 可在首页分析本机 Unity、Unturned、BepInEx 与 DXVK 日志，导出不上传的诊断包以协助排查异常退出。
 
-> DXVK 的效果取决于显卡、驱动和游戏环境。UMM 只提供部署与切换能力，不承诺一定提高帧率。
+配置默认保存于 `%AppData%\Roaming\UnturnedModManager\config.json`。发布包目录不保存用户配置；如需隔离验收或便携式调试，可在启动前设置 `UMM_DATA_DIRECTORY`，配置和社区缓存会一起写入该目录。
+
+> DXVK 的效果取决于显卡、驱动和游戏环境。UMM 会跳过远程/投屏虚拟显示驱动，优先分析实际物理显卡；即使显卡具备 Vulkan 支持，Windows 原生 D3D11 也不一定更慢，因此应以相同场景的帧率和稳定性实测为准。
 
 BepInEx 安装包使用多源回退策略，并在解压前统一校验 SHA-256：
 
@@ -77,13 +80,17 @@ UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerf
 - 将本地 DLL 名称、程序集信息与社区条目进行匹配；
 - 从本地插件跳转到对应社区详情，并支持社区版本更新；
 - 保留来源页导航上下文，详情页“返回”会回到真正的上一级页面。
+- 支持为每个 Unturned 安装目录保存多个“插件方案”：方案记录全部本地插件的启停状态，例如“联机优化（ABC）”或“开发调试（XYZ）”；应用方案时未包含的现有插件会被停用，但 DLL、社区安装记录与 BepInEx 配置都不会被删除或复制。
 
 ### unmod.online 社区
 
 - 浏览器登录并通过本机 `localhost` 回调接收社区令牌；人机验证始终由用户在网页中完成；
 - 社区列表、缩略图、分类、排序和防抖搜索；筛选条件变化后自动刷新；
 - 列表内查看摘要，进入独立详情页后查看完整信息和执行安装；详情支持基础 Markdown 排版、依赖条目跳转及来源上下文返回；
+- 插件封面可点击进入独立图片预览，支持滚动、缩放、Ctrl + 滚轮和 Esc 关闭；详情正文中的 HTTPS Markdown 图片也会以缩略图库形式提供同样的安全预览；
+- 详情页展示作者、版本、分类、文件大小、下载量、点赞量、依赖数量和当前安装状态，不以伪造数据补充社区未提供的图库；
 - 安装依赖、更新、卸载及安装清单同步；
+- 新增任务中心：社区插件安装、更新与卸载均可显示流式下载百分比、已下载大小、当前阶段、失败原因、尝试次数及操作历史；失败任务可在同一次启动中重试；
 - 分类、列表和详情元数据缓存；网络暂时不可用时可读取最近缓存；
 - 已验证会话与“仅有本地缓存账户”状态分离，避免离线时误启用受保护操作。
 
@@ -110,8 +117,9 @@ UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerf
 - 首次启动提供三步引导：游戏目录、主题偏好和功能说明；已经配置过游戏目录的旧版本升级不会被重复打断。
 - 启动器启用单实例保护：第二次启动会唤醒已有窗口，并将安装意图安全转交给它，避免多个窗口同时修改同一套插件文件。
 - 注册独立的 `umm://install/{社区插件 ID}` 协议入口；它只打开对应插件详情供用户确认安装，不会抢占 UML 使用的 `unmod://` 协议。
+- 提供六套可持久化配色；非默认配色会同时更新按钮、开关、导航选中、进度条和焦点等交互状态，而不只是改变页面背景。
 
-社区令牌当前保存在 `%AppData%\UnturnedModManager\config.json`。请将该文件视为敏感数据，不要公开上传或附在 Issue 中。
+社区令牌当前保存在 `%AppData%\UnturnedModManager\config.json`；插件方案保存在同一数据根目录的 `plugin-profiles` 下，任务历史保存在 `task-history.json`，并按游戏安装目录隔离。请将该目录视为敏感数据，不要公开上传或附在 Issue 中。
 
 ---
 
@@ -123,13 +131,14 @@ UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerf
 | 桌面 UI | WPF + [WPF-UI 3.0.5](https://github.com/lepoco/wpfui) |
 | 表现层 | Pages + ViewModels，命令、状态和导航上下文分离 |
 | 业务层 | BepInEx、DXVK、本地插件、社区 API、安装器、账户与缓存服务 |
+| 操作中心 | 独立任务服务保存进度、失败原因与有限历史；重试委托只在当前启动会话有效 |
 | 社区 | [unmod.online](https://unmod.online/) HTTP API |
 | 插件环境 | [BepInEx 5.4.23.5](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.23.5)，win_x64 / Unity Mono / winhttp doorstop |
 | 图形转译 | [DXVK 2.4](https://github.com/doitsujin/dxvk)（可选） |
 
 v2.0 继续使用 WPF，因为 UMM 的目标平台、现有组件和 Unturned 运行环境均以 Windows 为中心。此次升级重点是建立清晰的 ViewModel/Service 边界、可靠状态模型和可测试业务逻辑，而不是仅为更换技术名称迁移 UI 框架。
 
-UMM 明确不采用 UML 的 WinFsp 虚拟文件系统、虚拟盘挂载或挂载式多 profile。Unity 对虚拟文件系统读取存在兼容风险；UMM 选择直接、可见、可恢复的真实游戏目录管理，以安装清单、备份和安全卸载保证可追踪性。
+UMM 明确不采用 UML 的 WinFsp 虚拟文件系统、虚拟盘挂载或挂载式多 profile。Unity 对虚拟文件系统读取存在兼容风险；UMM 选择直接、可见、可恢复的真实游戏目录管理。其“插件方案”只保存 `.dll` / `.dll.disabled` 启停快照，并通过预检与失败回滚切换，不会挂载虚拟盘、复制 DLL 或改写 BepInEx 配置。
 
 UMM 的网页协议为 `umm://`，例如 `umm://install/42`。当前 unmod.online 页面尚未主动生成该链接时，用户仍可在 UMM 内的“插件社区”搜索并安装；协议不会绕过登录、依赖检查或安装确认。
 
@@ -192,8 +201,8 @@ UMM v2.0 起使用 [GNU General Public License version 2](./LICENSE)，SPDX 标�
 | 贡献者 | 贡献 |
 |---|---|
 | [YU80Rice](https://github.com/YU80Rice) | 项目发起、产品方向、功能需求、验收与社区运营 |
-| [Ayndpa](https://github.com/Ayndpa) | UML 作者；为 v2.0 提供重要设计参考；通过 UMM PR #7 直接贡献滚轮交互修复 |
-| OpenAI GPT（Codex） | v2.0 架构重构、交互完善、缓存与会话可靠性、自动化测试、发布验证及文档校订 |
+| [Ayndpa](https://github.com/Ayndpa) | UML 作者；为 v2.x 提供重要设计参考；通过 UMM PR #7 直接贡献滚轮交互修复 |
+| OpenAI GPT（Codex） | v2.x 架构重构、交互完善、任务中心与图片预览、缓存与会话可靠性、自动化测试、发布验证及文档校订 |
 | Gemini、Claude、Kimi、Cherry Claw | 不同阶段的架构讨论、问题分析与代码协作 |
 
 同时感谢：

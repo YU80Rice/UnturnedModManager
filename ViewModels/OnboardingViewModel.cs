@@ -14,6 +14,7 @@ public sealed class OnboardingViewModel : ViewModelBase
     private readonly ThemeService _themes;
     private string _gamePath = "";
     private ThemeChoice? _selectedTheme;
+    private ThemePaletteChoice? _selectedPalette;
     private int _step;
     private bool _isBusy;
     private string _message = "";
@@ -34,8 +35,18 @@ public sealed class OnboardingViewModel : ViewModelBase
             new(ThemePreference.Light, "浅色"),
             new(ThemePreference.Dark, "深色")
         ];
+        PaletteChoices =
+        [
+            new(ThemePalette.Fluent, "默认 Fluent"),
+            new(ThemePalette.WarmPaper, "暖米白 · UMM 蓝"),
+            new(ThemePalette.MistyForest, "松林雾绿"),
+            new(ThemePalette.OceanDusk, "深海雾蓝"),
+            new(ThemePalette.Lavender, "夜雾紫"),
+            new(ThemePalette.KleinBlue, "克莱因蓝")
+        ];
         var currentTheme = ThemeService.Parse(AppSettings.CommunityThemeMode);
         _selectedTheme = ThemeChoices.First(choice => choice.Value == currentTheme);
+        _selectedPalette = PaletteChoices.First(choice => choice.Value == ThemeService.ParsePalette(AppSettings.CommunityColorPalette));
 
         BrowseCommand = new RelayCommand(Browse);
         DetectCommand = new AsyncRelayCommand(DetectAsync, () => !IsBusy);
@@ -46,10 +57,21 @@ public sealed class OnboardingViewModel : ViewModelBase
     }
 
     public ObservableCollection<ThemeChoice> ThemeChoices { get; }
+    public ObservableCollection<ThemePaletteChoice> PaletteChoices { get; }
     public string GamePath
     {
         get => _gamePath;
         set => SetProperty(ref _gamePath, value);
+    }
+
+    public ThemePaletteChoice? SelectedPalette
+    {
+        get => _selectedPalette;
+        set
+        {
+            if (!SetProperty(ref _selectedPalette, value) || value is null) return;
+            _themes.ApplyPalette(value.Value, persist: false);
+        }
     }
 
     public ThemeChoice? SelectedTheme
@@ -173,6 +195,11 @@ public sealed class OnboardingViewModel : ViewModelBase
         {
             AppSettings.CommunityThemeMode = theme.Value.ToString();
             _themes.Apply(theme.Value);
+        }
+        if (SelectedPalette is { } palette)
+        {
+            AppSettings.CommunityColorPalette = palette.Value.ToString();
+            _themes.ApplyPalette(palette.Value);
         }
 
         AppSettings.IsOnboardingCompleted = true;

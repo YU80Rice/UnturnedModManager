@@ -5,21 +5,20 @@ using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Win32;
+using UnturnedModManager.Services;
 
 namespace UnturnedModManager;
 
 public static class AppSettings
 {
     private static readonly object SaveLock = new();
-    private static readonly string ConfigDirectory = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "UnturnedModManager");
+    private static readonly string ConfigDirectory = AppDataPaths.RootDirectory;
     private static readonly string ConfigPath = Path.Combine(
         ConfigDirectory,
         "config.json");
-    private static readonly string LegacyConfigPath = Path.Combine(
-        AppDomain.CurrentDomain.BaseDirectory,
-        "config.json");
+    private static readonly string? LegacyConfigPath = AppDataPaths.IsIsolatedProfile
+        ? null
+        : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
 
     private static ConfigData _data = new();
 
@@ -30,8 +29,8 @@ public static class AppSettings
     }
 
     /// <summary>
-    /// 上次游戏会话是否以异常退出（ExitCode != 0）收场。
-    /// true 时主页顶部会展示崩溃提示条，引导玩家导出日志。
+    /// 上次由 UMM 启动的游戏会话是否以非零退出码收场。
+    /// 这只是异常退出线索，不等同于已确认的游戏崩溃；true 时首页会引导玩家分析日志。
     /// </summary>
     public static bool LastSessionCrashed
     {
@@ -40,8 +39,8 @@ public static class AppSettings
     }
 
     /// <summary>
-    /// 是否启用 DXVK 极速优化（将 DX11 翻译为 Vulkan 运行）。
-    /// true 时会在游戏根目录部署 d3d11.dll + dxgi.dll，false 时移除。
+    /// 是否启用 DXVK 渲染测试（将 DX11 翻译为 Vulkan 运行）。
+    /// true 时会在游戏根目录部署 d3d11.dll + dxgi.dll，false 时停用为 .disabled。
     /// </summary>
     public static bool EnableDxvk
     {
@@ -50,8 +49,8 @@ public static class AppSettings
     }
 
     /// <summary>
-    /// GPU 检测得到的 DXVK 推荐状态（null=未检测，true=推荐，false=不推荐）。
-    /// 首次启动时由 GpuDetector 检测后写入，用于决定 DXVK 开关的初始状态。
+    /// GPU 检测得到的 DXVK 测试建议（null=未检测，true=可测试，false=不建议）。
+    /// 首次启动时由 GpuDetector 检测后写入，用于决定是否显示兼容性确认。
     /// </summary>
     public static bool? DxvkRecommendedByGpu
     {
@@ -83,6 +82,48 @@ public static class AppSettings
     {
         get => string.IsNullOrEmpty(_data.CommunityThemeMode) ? "System" : _data.CommunityThemeMode;
         set { _data.CommunityThemeMode = value; Save(); }
+    }
+
+    /// <summary>
+    /// 独立于明暗模式的界面配色方案。保留 Fluent 默认方案，并提供暖米白方案。
+    /// </summary>
+    public static string CommunityColorPalette
+    {
+        get => string.IsNullOrEmpty(_data.CommunityColorPalette) ? "Fluent" : _data.CommunityColorPalette;
+        set { _data.CommunityColorPalette = value; Save(); }
+    }
+
+    public static int? LastSessionExitCode
+    {
+        get => _data.LastSessionExitCode;
+        set { _data.LastSessionExitCode = value; Save(); }
+    }
+
+    public static bool LastSessionUsedMods
+    {
+        get => _data.LastSessionUsedMods;
+        set { _data.LastSessionUsedMods = value; Save(); }
+    }
+
+    public static bool LastSessionUsedDxvk
+    {
+        get => _data.LastSessionUsedDxvk;
+        set { _data.LastSessionUsedDxvk = value; Save(); }
+    }
+
+    public static DateTime? LastSessionEndedUtc
+    {
+        get => _data.LastSessionEndedUtc;
+        set { _data.LastSessionEndedUtc = value; Save(); }
+    }
+
+    /// <summary>
+    /// 用于避免沿用虚拟显示适配器得出的旧 DXVK 判断。
+    /// </summary>
+    public static string? DxvkRecommendationGpuName
+    {
+        get => _data.DxvkRecommendationGpuName;
+        set { _data.DxvkRecommendationGpuName = value; Save(); }
     }
 
     public static string? CommunityAuthToken
@@ -126,16 +167,28 @@ public static class AppSettings
     }
     public static double WindowWidth { get => _data.WindowWidth; set { _data.WindowWidth = value; Save(); } }
     public static double WindowHeight { get => _data.WindowHeight; set { _data.WindowHeight = value; Save(); } }
-    public static double WindowLeft { get => _data.WindowLeft; set { _data.WindowLeft = value; Save(); } }
-    public static double WindowTop { get => _data.WindowTop; set { _data.WindowTop = value; Save(); } }
+    // WPF 用 NaN 表示“没有保存的位置”。JSON 不支持 NaN，因此持久化层使用 null，
+    // 这样全新用户在第一次完成引导时也能立即保存配置。
+    public static double WindowLeft
+    {
+        get => _data.WindowLeft ?? double.NaN;
+        set { _data.WindowLeft = double.IsFinite(value) ? value : null; Save(); }
+    }
+    public static double WindowTop
+    {
+        get => _data.WindowTop ?? double.NaN;
+        set { _data.WindowTop = double.IsFinite(value) ? value : null; Save(); }
+    }
     public static bool IsWindowMaximized { get => _data.IsWindowMaximized; set { _data.IsWindowMaximized = value; Save(); } }
 
     static AppSettings()
     {
         try
         {
-            var sourcePath = File.Exists(ConfigPath) ? ConfigPath : LegacyConfigPath;
-            if (File.Exists(sourcePath))
+            var sourcePath = File.Exists(ConfigPath)
+                ? ConfigPath
+                : LegacyConfigPath is { } legacy && File.Exists(legacy) ? legacy : null;
+            if (sourcePath is not null)
             {
                 var json = File.ReadAllText(sourcePath);
                 _data = JsonSerializer.Deserialize<ConfigData>(json) ?? new ConfigData();
@@ -335,12 +388,18 @@ public static class AppSettings
 
         public string ThemeMode { get; set; } = "Dark";
         public string CommunityThemeMode { get; set; } = "System";
+        public string CommunityColorPalette { get; set; } = "Fluent";
+        public int? LastSessionExitCode { get; set; }
+        public bool LastSessionUsedMods { get; set; }
+        public bool LastSessionUsedDxvk { get; set; }
+        public DateTime? LastSessionEndedUtc { get; set; }
+        public string? DxvkRecommendationGpuName { get; set; }
         public bool IsNavigationPaneOpen { get; set; } = true;
         public bool IsOnboardingCompleted { get; set; }
         public double WindowWidth { get; set; } = 1280;
         public double WindowHeight { get; set; } = 820;
-        public double WindowLeft { get; set; } = double.NaN;
-        public double WindowTop { get; set; } = double.NaN;
+        public double? WindowLeft { get; set; }
+        public double? WindowTop { get; set; }
         public bool IsWindowMaximized { get; set; }
         public string? CommunityAuthToken { get; set; }
         public string? CommunityAuthTokenProtected { get; set; }

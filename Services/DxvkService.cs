@@ -54,7 +54,7 @@ public sealed class DxvkService
                 }
                 await DeployAsync(gamePath, progress, token);
                 AppSettings.EnableDxvk = true;
-                return new(true, "DXVK 极速优化已启用（DX11 → Vulkan）。");
+                return new(true, "DXVK 已启用（DX11 → Vulkan）；建议在相同场景与原生 D3D11 对比帧率和稳定性。");
             }
 
             MoveToBackup(d3d11);

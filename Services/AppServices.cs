@@ -12,6 +12,7 @@ public sealed class AppServices : IDisposable
     public CommunityAuthService Authentication { get; } = new();
     public CommunityCacheService CommunityCache { get; } = new();
     public CommunityModInstaller CommunityInstaller { get; } = new();
+    public OperationTaskCenter Tasks { get; } = new();
     public IUserDialogService Dialogs { get; } = new UserDialogService();
     public GamePathService GamePaths { get; } = new();
     public IFolderPickerService FolderPicker { get; } = new WindowsFolderPickerService();
@@ -21,11 +22,13 @@ public sealed class AppServices : IDisposable
     public GameLaunchService GameLauncher { get; }
     public DiagnosticService Diagnostics { get; } = new();
     public LocalModService LocalMods { get; }
+    public PluginProfileService PluginProfiles { get; }
     public AppNavigationService Navigation => AppNavigationService.Current;
 
     public AppServices()
     {
         LocalMods = new LocalModService(CommunityInstaller);
+        PluginProfiles = new PluginProfileService(LocalMods);
         BepInEx = new BepInExService(Downloads);
         Dxvk = new DxvkService(Downloads);
         GameLauncher = new GameLaunchService(BepInEx, Dxvk);
@@ -35,7 +38,8 @@ public sealed class AppServices : IDisposable
         new CommunityApiClient(CommunityCache),
         CommunityInstaller,
         LocalMods,
-        Dialogs);
+        Dialogs,
+        PluginProfiles);
 
     public CommunityViewModel CreateCommunityViewModel() => new(new CommunityApiClient(CommunityCache));
 
@@ -44,7 +48,10 @@ public sealed class AppServices : IDisposable
         new CommunityApiClient(CommunityCache),
         CommunityInstaller,
         Dialogs,
-        Authentication);
+        Authentication,
+        Tasks);
+
+    public TaskCenterViewModel CreateTaskCenterViewModel() => new(Tasks);
 
     public SettingsViewModel CreateSettingsViewModel() => new(
         GamePaths,

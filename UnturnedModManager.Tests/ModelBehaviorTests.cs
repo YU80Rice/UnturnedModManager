@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Net;
 using System.Net.Http;
+using UnturnedModManager.Helpers;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
 using Xunit;
@@ -115,6 +116,124 @@ public sealed class ModelBehaviorTests
         item.RemoteVersion = "1.1.0";
 
         Assert.True(item.HasUpdate);
+    }
+
+    [Fact]
+    public void GpuDetector_PrefersActivePhysicalDgpuOverVirtualAndIntegratedAdapters()
+    {
+        var virtualAdapter = GpuDetector.Classify("OrayIddDriver Device");
+        virtualAdapter.IsVirtualAdapter = true;
+        var integrated = GpuDetector.Classify("AMD Radeon(TM) Graphics");
+        integrated.IsIntegratedAdapter = true;
+        var discrete = GpuDetector.Classify("AMD Radeon RX 6850M XT");
+        discrete.IsActiveAdapter = true;
+
+        var primary = GpuDetector.SelectPrimary([virtualAdapter, integrated, discrete]);
+
+        Assert.Equal("AMD Radeon RX 6850M XT", primary.Name);
+        Assert.Equal(GpuVendor.Amd, primary.Vendor);
+        Assert.Equal(GpuArchitecture.Rdna2, primary.Architecture);
+        Assert.Equal(DxvkRecommendation.Recommended, primary.DxvkRecommendation);
+    }
+
+    [Theory]
+    [InlineData("Fluent", ThemePalette.Fluent)]
+    [InlineData("warmPaper", ThemePalette.WarmPaper)]
+    [InlineData("MistyForest", ThemePalette.MistyForest)]
+    [InlineData("OceanDusk", ThemePalette.OceanDusk)]
+    [InlineData("Lavender", ThemePalette.Lavender)]
+    [InlineData("KleinBlue", ThemePalette.KleinBlue)]
+    public void ThemeService_ParsesEveryPublishedPalette(string value, ThemePalette expected) =>
+        Assert.Equal(expected, ThemeService.ParsePalette(value));
+
+    [Fact]
+    public void PluginProfiles_SaveAndAtomicallyRestorePluginEnablement()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-plugin-profile-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var gameRoot = Path.Combine(root, "Unturned");
+            var plugins = Path.Combine(gameRoot, "BepInEx", "plugins");
+            Directory.CreateDirectory(plugins);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            File.WriteAllText(Path.Combine(plugins, "Alpha.dll"), "alpha");
+            File.WriteAllText(Path.Combine(plugins, "Beta.dll.disabled"), "beta");
+
+            var installer = new CommunityModInstaller(Path.Combine(root, "community-state"));
+            var localMods = new LocalModService(installer, () => gameRoot);
+            var profiles = new PluginProfileService(localMods, () => gameRoot, Path.Combine(root, "profile-state"));
+
+            var created = profiles.CreateFromCurrent("联机优化", localMods.Scan());
+
+            Assert.True(created.Success);
+            Assert.NotNull(created.Profile);
+            Assert.Equal(2, created.Profile!.Plugins.Count);
+            Assert.Contains(created.Profile.Plugins, item => item.RelativePath == "Alpha.dll" && item.Enabled);
+            Assert.Contains(created.Profile.Plugins, item => item.RelativePath == "Beta.dll" && !item.Enabled);
+
+            var changed = localMods.Scan();
+            Assert.True(localMods.SetEnabled(changed.Single(item => item.FileName == "Alpha.dll"), false).Success);
+            Assert.True(localMods.SetEnabled(changed.Single(item => item.FileName == "Beta.dll"), true).Success);
+
+            var applied = profiles.Apply(created.Profile.Id);
+
+            Assert.True(applied.Success);
+            Assert.True(File.Exists(Path.Combine(plugins, "Alpha.dll")));
+            Assert.True(File.Exists(Path.Combine(plugins, "Beta.dll.disabled")));
+            Assert.Equal(created.Profile.Id, profiles.GetActiveProfileId());
+
+            var deleted = profiles.Delete(created.Profile.Id);
+            Assert.True(deleted.Success);
+            Assert.Empty(profiles.GetProfiles());
+            Assert.True(File.Exists(Path.Combine(plugins, "Alpha.dll")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void DiagnosticService_ReportsFatalLogEvidence()
+    {
+        var gameRoot = Path.Combine(Path.GetTempPath(), "umm-diagnostic-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var logs = Path.Combine(gameRoot, "Logs");
+            Directory.CreateDirectory(logs);
+            File.WriteAllText(Path.Combine(logs, "Client_Prev.log"), "normal line\nFatal error: access violation in UnityPlayer\n");
+
+            var analysis = new DiagnosticService(gameRoot).Analyze(gameRoot);
+
+            Assert.Equal(DiagnosticSeverity.Error, analysis.Severity);
+            Assert.Contains("异常退出", analysis.Title);
+            Assert.Contains(analysis.Evidence, item => item.Contains("Fatal error", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            if (Directory.Exists(gameRoot)) Directory.Delete(gameRoot, true);
+        }
+    }
+
+    [Fact]
+    public void DiagnosticService_ReportsDxvkInitializationEvidence()
+    {
+        var gameRoot = Path.Combine(Path.GetTempPath(), "umm-dxvk-diagnostic-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned_d3d11.log"), "warn: dxvk: failed to create Vulkan device\n");
+
+            var analysis = new DiagnosticService(gameRoot).Analyze(gameRoot);
+
+            Assert.Equal(DiagnosticSeverity.Warning, analysis.Severity);
+            Assert.Contains("DXVK", analysis.Title);
+            Assert.Contains(analysis.Evidence, item => item.Contains("Unturned_d3d11.log"));
+        }
+        finally
+        {
+            if (Directory.Exists(gameRoot)) Directory.Delete(gameRoot, true);
+        }
     }
 
     [Fact]

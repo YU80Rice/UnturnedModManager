@@ -7,6 +7,9 @@ public sealed class GameLaunchService
 {
     private readonly BepInExService _bepInEx;
     private readonly DxvkService _dxvk;
+    private readonly object _processLock = new();
+    // 保持对子进程的引用，确保 UMM 运行期间 Exited 事件不会因 Process 被 GC 而丢失。
+    private Process? _launchedProcess;
 
     public GameLaunchService(BepInExService bepInEx, DxvkService dxvk)
     {
@@ -14,7 +17,9 @@ public sealed class GameLaunchService
         _dxvk = dxvk;
     }
 
-    public bool IsRunning() =>
+    public bool IsRunning() => IsUnturnedRunning();
+
+    public static bool IsUnturnedRunning() =>
         Process.GetProcessesByName("Unturned").Length > 0
         || Process.GetProcessesByName("Unturned_BE").Length > 0;
 
@@ -46,15 +51,33 @@ public sealed class GameLaunchService
             startInfo.EnvironmentVariables["SteamOverlayGameId"] = "304930";
             var process = Process.Start(startInfo)
                 ?? throw new InvalidOperationException("Windows 未能创建游戏进程。");
-            if (modsEnabled)
+            AppSettings.LastSessionCrashed = false;
+            AppSettings.LastSessionExitCode = null;
+            AppSettings.LastSessionUsedMods = modsEnabled;
+            AppSettings.LastSessionUsedDxvk = dxvkEnabled;
+            AppSettings.LastSessionEndedUtc = null;
+            process.Exited += (_, _) =>
             {
-                process.EnableRaisingEvents = true;
-                process.Exited += (_, _) =>
+                try
                 {
-                    try { AppSettings.LastSessionCrashed = process.ExitCode != 0; } catch { }
+                    AppSettings.LastSessionExitCode = process.ExitCode;
+                    AppSettings.LastSessionCrashed = process.ExitCode != 0;
+                    AppSettings.LastSessionEndedUtc = DateTime.UtcNow;
+                }
+                catch { }
+                finally
+                {
+                    lock (_processLock)
+                    {
+                        if (ReferenceEquals(_launchedProcess, process))
+                            _launchedProcess = null;
+                    }
                     process.Dispose();
-                };
-            }
+                }
+            };
+            lock (_processLock) _launchedProcess = process;
+            // 订阅完成后再开启事件，避免极快退出的进程在回调注册前被漏记。
+            process.EnableRaisingEvents = true;
 
             var mode = modsEnabled ? "模组模式 · 已跳过 BattlEye" : "纯净模式 · BattlEye 已启用";
             return new(true, $"正在启动游戏（{mode}{(dxvkEnabled ? " · DXVK" : "")}）…");

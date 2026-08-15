@@ -15,13 +15,13 @@
                     BorderThickness="0,3,0,0"
                     Visibility="{Binding HasCrashAlert, Converter={StaticResource BoolToVisibility}}">
                 <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                     <StackPanel>
                         <TextBlock Text="检测到上次游戏异常退出" FontWeight="SemiBold" FontSize="15" />
                         <TextBlock Text="可以一键导出 Unity 与 BepInEx 日志，便于排查插件或运行环境问题。"
                                    Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
                         <ui:Button Content="导出诊断日志" Icon="{ui:SymbolIcon FolderArrowRight24}"
                                    Appearance="Primary" Command="{Binding ExportLogsCommand}" />
                         <ui:Button Content="忽略" Margin="8,0,0,0" Command="{Binding IgnoreCrashCommand}" />
@@ -121,8 +121,8 @@
                         <ui:SymbolIcon Symbol="TopSpeed24" FontSize="22" Margin="0,0,12,0" VerticalAlignment="Center"
                                        Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
                         <StackPanel Grid.Column="1">
-                            <TextBlock Text="DXVK 极速优化" FontSize="15" FontWeight="SemiBold" />
-                            <TextBlock Text="将 DX11 转换为 Vulkan；是否推荐取决于显卡架构。"
+                            <TextBlock Text="DXVK 渲染测试" FontSize="15" FontWeight="SemiBold" />
+                            <TextBlock Text="将 DX11 转换为 Vulkan；适用性取决于显卡、驱动和游戏版本。"
                                        Margin="0,3,0,0" TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
@@ -142,6 +142,38 @@
                         <TextBlock Text="{Binding GpuName}" FontWeight="SemiBold" />
                         <TextBlock Text="{Binding GpuRecommendation}" Margin="0,3,0,0" TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border CornerRadius="12" Padding="18" Margin="0,0,0,20"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <ui:SymbolIcon Symbol="DocumentError24" FontSize="22" Margin="0,0,14,0" VerticalAlignment="Top"
+                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding DiagnosticTitle}" FontSize="15" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding DiagnosticSummary}" Margin="0,4,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="{Binding DiagnosticDetail}" Margin="0,10,0,0" TextWrapping="Wrap"
+                                   FontFamily="Cascadia Mono, Consolas, monospace" FontSize="11"
+                                   Visibility="{Binding HasDiagnosticDetail, Converter={StaticResource BoolToVisibility}}"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <ui:Button Content="分析最近日志" Icon="{ui:SymbolIcon Search24}"
+                                   Command="{Binding AnalyzeLogsCommand}" />
+                        <ui:Button Content="导出诊断包" Icon="{ui:SymbolIcon FolderArrowRight24}"
+                                   Margin="8,0,0,0" Command="{Binding ExportLogsCommand}" />
                     </StackPanel>
                 </Grid>
             </Border>

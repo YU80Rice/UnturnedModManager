@@ -16,9 +16,10 @@ public sealed class CommunityModInstaller
         "Unturned.exe", "Unturned_BE.exe", "UnityPlayer.dll"
     };
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-    private readonly string _stateRoot = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "UnturnedModManager", "community-mods");
+    private readonly string _stateRoot;
+
+    public CommunityModInstaller(string? stateRoot = null) => _stateRoot = stateRoot
+        ?? Path.Combine(AppDataPaths.RootDirectory, "community-mods");
 
     public bool IsInstalled(int remoteId) => File.Exists(ManifestPath(remoteId));
 
@@ -27,19 +28,51 @@ public sealed class CommunityModInstaller
         CommunityModDetail mod,
         string gameRoot,
         Action<string>? progress = null,
+        CancellationToken token = default) =>
+        await InstallWithDependenciesDetailedAsync(
+            api,
+            mod,
+            gameRoot,
+            progress is null ? null : new Progress<TaskOperationProgress>(value => progress(value.Stage)),
+            token);
+
+    /// <summary>安装 Mod 与依赖，并将下载、校验和写入过程作为结构化进度上报。</summary>
+    public async Task InstallWithDependenciesDetailedAsync(
+        CommunityApiClient api,
+        CommunityModDetail mod,
+        string gameRoot,
+        IProgress<TaskOperationProgress>? progress = null,
         CancellationToken token = default)
     {
         ValidateGameRoot(gameRoot);
         Directory.CreateDirectory(_stateRoot);
+        progress?.Report(TaskOperationProgress.At(1, "正在验证游戏目录…"));
         await InstallRecursiveAsync(api, mod, gameRoot, new HashSet<int>(), progress, token);
+        progress?.Report(TaskOperationProgress.At(100, "插件及依赖已写入游戏目录"));
     }
 
-    public async Task UpdateAsync(CommunityApiClient api, CommunityModDetail mod, string gameRoot, Action<string>? progress = null, CancellationToken token = default)
+    public async Task UpdateAsync(CommunityApiClient api, CommunityModDetail mod, string gameRoot, Action<string>? progress = null, CancellationToken token = default) =>
+        await UpdateDetailedAsync(
+            api,
+            mod,
+            gameRoot,
+            progress is null ? null : new Progress<TaskOperationProgress>(value => progress(value.Stage)),
+            token);
+
+    /// <summary>更新社区 Mod；失败时由原有安装器恢复更新前的文件快照。</summary>
+    public async Task UpdateDetailedAsync(
+        CommunityApiClient api,
+        CommunityModDetail mod,
+        string gameRoot,
+        IProgress<TaskOperationProgress>? progress = null,
+        CancellationToken token = default)
     {
         ValidateGameRoot(gameRoot);
         var previous = LoadManifest(mod.Id) ?? throw new InvalidOperationException("未找到该插件的社区安装记录。");
-        progress?.Invoke($"正在下载新版本：{mod.DisplayTitle}");
-        var package = await api.DownloadAsync(mod.Id, token);
+        progress?.Report(TaskOperationProgress.At(3, "正在确认现有安装记录…"));
+        progress?.Report(TaskOperationProgress.At(8, $"正在下载新版本：{mod.DisplayTitle}"));
+        var package = await api.DownloadAsync(mod.Id, CreateDownloadProgress(progress, 8, 70, mod.DisplayTitle), token);
+        progress?.Report(TaskOperationProgress.At(74, "正在备份当前版本…"));
         var snapshots = previous.Files.Select(file =>
         {
             var path = SafeDestination(gameRoot, file.RelativePath);
@@ -48,7 +81,12 @@ public sealed class CommunityModInstaller
         }).ToList();
         var removed = Uninstall(mod.Id, gameRoot);
         if (!removed.Success) throw new InvalidOperationException(removed.Message);
-        try { InstallPackage(mod, package, gameRoot); }
+        try
+        {
+            progress?.Report(TaskOperationProgress.At(82, "正在安全写入新版本…"));
+            await Task.Run(() => InstallPackage(mod, package, gameRoot), token);
+            progress?.Report(TaskOperationProgress.At(100, "更新完成"));
+        }
         catch
         {
             foreach (var snapshot in snapshots.Where(s => s.Content is not null))
@@ -65,7 +103,7 @@ public sealed class CommunityModInstaller
 
     private async Task InstallRecursiveAsync(
         CommunityApiClient api, CommunityModDetail mod, string gameRoot,
-        HashSet<int> visiting, Action<string>? progress, CancellationToken token)
+        HashSet<int> visiting, IProgress<TaskOperationProgress>? progress, CancellationToken token)
     {
         if (IsInstalled(mod.Id)) return;
         if (!visiting.Add(mod.Id)) throw new InvalidOperationException("检测到循环依赖。");
@@ -73,17 +111,44 @@ public sealed class CommunityModInstaller
         foreach (var dependency in mod.Dependencies)
         {
             if (IsInstalled(dependency.Id)) continue;
-            progress?.Invoke($"正在解析依赖：{dependency.Title.Pick()}");
+            progress?.Report(TaskOperationProgress.At(5, $"正在解析依赖：{dependency.Title.Pick()}"));
             var detail = await api.GetModAsync(dependency.Id, token);
             await InstallRecursiveAsync(api, detail, gameRoot, visiting, progress, token);
         }
 
-        progress?.Invoke($"正在下载：{mod.DisplayTitle}");
-        var download = await api.DownloadAsync(mod.Id, token);
-        progress?.Invoke($"正在安全安装：{mod.DisplayTitle}");
+        progress?.Report(TaskOperationProgress.At(12, $"正在下载：{mod.DisplayTitle}"));
+        var download = await api.DownloadAsync(mod.Id, CreateDownloadProgress(progress, 12, 75, mod.DisplayTitle), token);
+        progress?.Report(TaskOperationProgress.At(80, $"正在校验并安全安装：{mod.DisplayTitle}"));
         await Task.Run(() => InstallPackage(mod, download, gameRoot), token);
+        progress?.Report(TaskOperationProgress.At(96, $"已安装：{mod.DisplayTitle}"));
         visiting.Remove(mod.Id);
     }
+
+    private static IProgress<DownloadProgress>? CreateDownloadProgress(
+        IProgress<TaskOperationProgress>? progress,
+        double start,
+        double end,
+        string title)
+    {
+        if (progress is null) return null;
+        return new Progress<DownloadProgress>(value =>
+        {
+            var percent = value.Percent;
+            var mapped = percent is null ? start : start + (end - start) * percent.Value / 100d;
+            var size = value.TotalBytes is > 0
+                ? $"{FormatBytes(value.ReceivedBytes)} / {FormatBytes(value.TotalBytes.Value)}"
+                : $"已接收 {FormatBytes(value.ReceivedBytes)}";
+            progress.Report(TaskOperationProgress.At(mapped, $"正在下载：{title}（{size}）"));
+        });
+    }
+
+    private static string FormatBytes(long bytes) => bytes switch
+    {
+        >= 1024L * 1024 * 1024 => $"{bytes / 1024d / 1024d / 1024d:0.0} GB",
+        >= 1024L * 1024 => $"{bytes / 1024d / 1024d:0.0} MB",
+        >= 1024 => $"{bytes / 1024d:0.0} KB",
+        _ => $"{bytes} B"
+    };
 
     private void InstallPackage(CommunityModDetail mod, DownloadedMod package, string gameRoot)
     {

@@ -41,6 +41,9 @@ public class GpuInfo
     public GpuVendor Vendor { get; set; }
     public GpuArchitecture Architecture { get; set; }
     public DxvkRecommendation DxvkRecommendation { get; set; }
+    public bool IsVirtualAdapter { get; set; }
+    public bool IsIntegratedAdapter { get; set; }
+    public bool IsActiveAdapter { get; set; }
 
     public string VendorName => Vendor switch
     {
@@ -70,16 +73,16 @@ public class GpuInfo
 
     public string RecommendationText => DxvkRecommendation switch
     {
-        DxvkRecommendation.Recommended => "✅ 推荐 DXVK",
-        DxvkRecommendation.Neutral => "⚠️ DXVK 兼容性一般",
+        DxvkRecommendation.Recommended => "✅ 可测试 DXVK",
+        DxvkRecommendation.Neutral => "⚠️ DXVK 效果待验证",
         DxvkRecommendation.NotRecommended => "❌ 不推荐 DXVK",
         _ => "未知"
     };
 
     public string RecommendationDetail => DxvkRecommendation switch
     {
-        DxvkRecommendation.Recommended => "您的显卡架构对 Vulkan 支持良好，DXVK 可带来性能提升",
-        DxvkRecommendation.Neutral => "DXVK 可启用但提升有限，建议对比测试后决定",
+        DxvkRecommendation.Recommended => "显卡具备较好的 Vulkan 支持，可作为性能与稳定性对比选项；Windows 原生 D3D11 不一定更慢",
+        DxvkRecommendation.Neutral => "DXVK 可以测试，但实际提升并不确定，建议在相同场景中对比帧率与稳定性",
         DxvkRecommendation.NotRecommended => "您的显卡架构较老，Vulkan 扩展支持不完整，DXVK 可能严重降帧。建议使用原生 D3D11",
         _ => string.Empty
     };

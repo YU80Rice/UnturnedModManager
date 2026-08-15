@@ -43,7 +43,7 @@ public partial class App : System.Windows.Application
         {
             try
             {
-                var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UnturnedModManager");
+                var folder = AppDataPaths.RootDirectory;
                 Directory.CreateDirectory(folder);
                 File.WriteAllText(Path.Combine(folder, "startup-error.log"), ex.ToString());
             }
@@ -179,7 +179,7 @@ public partial class App : System.Windows.Application
     {
         try
         {
-            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UnturnedModManager");
+            var folder = AppDataPaths.RootDirectory;
             Directory.CreateDirectory(folder);
             File.WriteAllText(Path.Combine(folder, fileName), exception.ToString());
         }

@@ -27,6 +27,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     private string _operationText = "";
     private BepInExStatus _bepStatus = new(false, false, false, null, "BepInEx 未安装", "尚未检测");
     private GpuInfo? _gpu;
+    private DiagnosticAnalysis _diagnosticAnalysis = DiagnosticAnalysis.Empty;
 
     public HomeViewModel(
         BepInExService bepInEx,
@@ -52,6 +53,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         ToggleDxvkCommand = new AsyncRelayCommand(ToggleDxvkAsync, () => !IsBusy);
         CancelOperationCommand = new RelayCommand(CancelOperation, () => IsBusy);
         ExportLogsCommand = new AsyncRelayCommand(ExportLogsAsync, () => !IsBusy);
+        AnalyzeLogsCommand = new AsyncRelayCommand(AnalyzeLogsAsync, () => !IsBusy);
         IgnoreCrashCommand = new RelayCommand(IgnoreCrash);
         _runtimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _runtimeTimer.Tick += (_, _) => RefreshRuntimeState();
@@ -71,6 +73,10 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public string GpuName => _gpu is null ? "" : $"{_gpu.Name} · {_gpu.VendorName} {_gpu.ArchitectureName}";
     public string GpuRecommendation => _gpu is null ? "" : $"{_gpu.RecommendationText} — {_gpu.RecommendationDetail}";
     public bool HasCrashAlert => AppSettings.LastSessionCrashed;
+    public string DiagnosticTitle => _diagnosticAnalysis.Title;
+    public string DiagnosticSummary => _diagnosticAnalysis.Summary;
+    public string DiagnosticDetail => _diagnosticAnalysis.Detail;
+    public bool HasDiagnosticDetail => _diagnosticAnalysis.Evidence.Count > 0;
     public bool IsBusy
     {
         get => _isBusy;
@@ -106,6 +112,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public ICommand ToggleDxvkCommand { get; }
     public ICommand CancelOperationCommand { get; }
     public ICommand ExportLogsCommand { get; }
+    public ICommand AnalyzeLogsCommand { get; }
     public ICommand IgnoreCrashCommand { get; }
     public event Action<UserNotice>? NoticeRaised;
 
@@ -130,6 +137,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(CanInstallBepInEx));
         OnPropertyChanged(nameof(BepInExRepairButtonText));
         OnPropertyChanged(nameof(HasCrashAlert));
+        RefreshDiagnosticProperties();
         RefreshRuntimeState();
         RaiseCommandStates();
     }
@@ -151,8 +159,12 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(HasGpuInfo));
         OnPropertyChanged(nameof(GpuName));
         OnPropertyChanged(nameof(GpuRecommendation));
-        if (_gpu is null || AppSettings.DxvkRecommendedByGpu is not null) return;
+        if (_gpu is null || string.IsNullOrWhiteSpace(_gpu.Name)) return;
+        if (string.Equals(AppSettings.DxvkRecommendationGpuName, _gpu.Name, StringComparison.Ordinal)) return;
         AppSettings.DxvkRecommendedByGpu = _gpu.DxvkRecommendation != DxvkRecommendation.NotRecommended;
+        AppSettings.DxvkRecommendationGpuName = _gpu.Name;
+        // 显卡已变化时，不能沿用针对旧显卡展示过的兼容性确认。
+        AppSettings.HasShownDxvkCompatWarning = false;
         if (AppSettings.DxvkRecommendedByGpu == false && !AppSettings.EnableDxvk)
             DxvkEnabled = false;
     }
@@ -289,12 +301,32 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         IsBusy = true;
         try
         {
-            var folder = await Task.Run(() => _diagnostics.ExportLogs(AppSettings.UnturnedInstallPath));
+            _diagnosticAnalysis = await Task.Run(() => _diagnostics.Analyze(AppSettings.UnturnedInstallPath));
+            var folder = await Task.Run(() => _diagnostics.ExportLogs(AppSettings.UnturnedInstallPath, _diagnosticAnalysis));
             AppSettings.LastSessionCrashed = false;
             OnPropertyChanged(nameof(HasCrashAlert));
+            RefreshDiagnosticProperties();
             RaiseNotice($"诊断日志已导出：{Path.GetFileName(folder)}", UserNoticeSeverity.Success);
         }
         catch (Exception ex) { RaiseNotice($"导出失败：{ex.Message}", UserNoticeSeverity.Error); }
+        finally { IsBusy = false; }
+    }
+
+    private async Task AnalyzeLogsAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            _diagnosticAnalysis = await Task.Run(() => _diagnostics.Analyze(AppSettings.UnturnedInstallPath));
+            RefreshDiagnosticProperties();
+            var severity = _diagnosticAnalysis.Severity switch
+            {
+                DiagnosticSeverity.Error => UserNoticeSeverity.Error,
+                DiagnosticSeverity.Warning => UserNoticeSeverity.Warning,
+                _ => UserNoticeSeverity.Information
+            };
+            RaiseNotice(_diagnosticAnalysis.Title, severity);
+        }
         finally { IsBusy = false; }
     }
 
@@ -330,7 +362,20 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     });
 
     private void CancelOperation() => _operationCts?.Cancel();
-    private void RefreshRuntimeState() => IsGameRunning = _launcher.IsRunning();
+    private void RefreshRuntimeState()
+    {
+        IsGameRunning = _launcher.IsRunning();
+        // 游戏退出后的 Process.Exited 回调会更新持久化状态；这里让仍打开着的首页
+        // 也能立即呈现异常退出提示，而不必等待重新进入页面。
+        OnPropertyChanged(nameof(HasCrashAlert));
+    }
+    private void RefreshDiagnosticProperties()
+    {
+        OnPropertyChanged(nameof(DiagnosticTitle));
+        OnPropertyChanged(nameof(DiagnosticSummary));
+        OnPropertyChanged(nameof(DiagnosticDetail));
+        OnPropertyChanged(nameof(HasDiagnosticDetail));
+    }
     private void RaiseNotice(string message, UserNoticeSeverity severity) =>
         NoticeRaised?.Invoke(new UserNotice(message, severity));
 
@@ -344,6 +389,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         ((AsyncRelayCommand)ToggleDxvkCommand).RaiseCanExecuteChanged();
         ((RelayCommand)CancelOperationCommand).RaiseCanExecuteChanged();
         ((AsyncRelayCommand)ExportLogsCommand).RaiseCanExecuteChanged();
+        ((AsyncRelayCommand)AnalyzeLogsCommand).RaiseCanExecuteChanged();
     }
 
     public void Dispose()

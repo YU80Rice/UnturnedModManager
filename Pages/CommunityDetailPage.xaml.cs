@@ -21,6 +21,7 @@ public partial class CommunityDetailPage : Page
         _viewModel.NoticeRaised += OnNoticeRaised;
         _viewModel.SignInRequested += OpenSignIn;
         _viewModel.DependencyRequested += OpenDependency;
+        _viewModel.ImagePreviewRequested += OpenImagePreview;
         Loaded += async (_, _) => { Focus(); await _viewModel.LoadAsync(); };
     }
     private void OpenSignIn()
@@ -31,6 +32,14 @@ public partial class CommunityDetailPage : Page
 
     private void OpenDependency(int id) =>
         AppNavigationService.Current.OpenCommunityDetail(this, id);
+    private void OpenImagePreview(string imageUrl)
+    {
+        if (!Uri.TryCreate(imageUrl, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            return;
+        var owner = System.Windows.Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+        new ImagePreviewWindow(uri.AbsoluteUri) { Owner = owner }.ShowDialog();
+    }
     private void OnNoticeRaised(UserNotice notice)
     {
         if (!Dispatcher.CheckAccess()) { Dispatcher.Invoke(() => OnNoticeRaised(notice)); return; }

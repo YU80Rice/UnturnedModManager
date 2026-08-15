@@ -15,6 +15,7 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     private readonly IUserDialogService _dialogs;
     private string _gamePath = "";
     private ThemeChoice? _selectedTheme;
+    private ThemePaletteChoice? _selectedPalette;
     private bool _isBusy;
 
     public SettingsViewModel(
@@ -35,6 +36,15 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
             new(ThemePreference.Dark, "深色"),
             new(ThemePreference.System, "跟随系统")
         ];
+        PaletteChoices =
+        [
+            new(ThemePalette.Fluent, "默认 Fluent"),
+            new(ThemePalette.WarmPaper, "暖米白 · UMM 蓝"),
+            new(ThemePalette.MistyForest, "松林雾绿"),
+            new(ThemePalette.OceanDusk, "深海雾蓝"),
+            new(ThemePalette.Lavender, "夜雾紫"),
+            new(ThemePalette.KleinBlue, "克莱因蓝")
+        ];
         BrowseCommand = new RelayCommand(Browse);
         DetectCommand = new AsyncRelayCommand(DetectAsync, () => !IsBusy);
         SaveCommand = new RelayCommand(Save, () => !IsBusy);
@@ -45,6 +55,7 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     }
 
     public ObservableCollection<ThemeChoice> ThemeChoices { get; }
+    public ObservableCollection<ThemePaletteChoice> PaletteChoices { get; }
     public string GamePath { get => _gamePath; set => SetProperty(ref _gamePath, value); }
     public ThemeChoice? SelectedTheme
     {
@@ -53,6 +64,15 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         {
             if (!SetProperty(ref _selectedTheme, value) || value is null) return;
             _themes.Apply(value.Value);
+        }
+    }
+    public ThemePaletteChoice? SelectedPalette
+    {
+        get => _selectedPalette;
+        set
+        {
+            if (!SetProperty(ref _selectedPalette, value) || value is null) return;
+            _themes.ApplyPalette(value.Value);
         }
     }
     public bool IsBusy
@@ -90,6 +110,8 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         var preference = ThemeService.Parse(AppSettings.CommunityThemeMode);
         _selectedTheme = ThemeChoices.First(choice => choice.Value == preference);
         OnPropertyChanged(nameof(SelectedTheme));
+        _selectedPalette = PaletteChoices.First(choice => choice.Value == ThemeService.ParsePalette(AppSettings.CommunityColorPalette));
+        OnPropertyChanged(nameof(SelectedPalette));
         RefreshAccount();
     }
 

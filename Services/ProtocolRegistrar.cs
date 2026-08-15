@@ -16,6 +16,9 @@ public static class ProtocolRegistrar
     {
         if (!OperatingSystem.IsWindows())
             return;
+        // 隔离验收实例不应覆盖正式用户的 umm:// 注册表指向。
+        if (AppDataPaths.IsIsolatedProfile)
+            return;
 
         try
         {

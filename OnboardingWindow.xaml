@@ -86,6 +86,13 @@
                                   SelectedItem="{Binding SelectedTheme}"
                                   DisplayMemberPath="Label"
                                   HorizontalAlignment="Stretch" />
+                        <TextBlock Text="配色方案"
+                                   Margin="0,18,0,8"
+                                   FontWeight="SemiBold" />
+                        <ComboBox ItemsSource="{Binding PaletteChoices}"
+                                  SelectedItem="{Binding SelectedPalette}"
+                                  DisplayMemberPath="Label"
+                                  HorizontalAlignment="Stretch" />
                     </StackPanel>
                 </Border>
                 <TextBlock Text="社区账户登录不是必需步骤。需要安装和更新 unmod.online 插件时，再从侧栏账户入口登录即可。"

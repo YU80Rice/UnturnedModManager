@@ -14,11 +14,12 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <controls:PageHeader Title="本地插件"
-                             Subtitle="管理启停、卸载和社区更新；点击已匹配的条目可打开社区详情。"
+                             Subtitle="管理启停、卸载、插件方案和社区更新；点击已匹配的条目可打开社区详情。"
                              Margin="0,0,0,16" />
 
         <ui:InfoBar x:Name="StatusInfoBar" Grid.Row="1" IsOpen="False" Margin="0,0,0,12" />
@@ -41,6 +42,60 @@
         </Grid>
 
         <Border Grid.Row="3"
+                Padding="16"
+                Margin="0,0,0,12"
+                CornerRadius="10"
+                Background="{DynamicResource ControlFillColorDefaultBrush}">
+            <StackPanel>
+                <TextBlock Text="插件方案"
+                           FontSize="16"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="保存一套已安装插件的启停状态。例如“联机优化（ABC）”与“开发调试（XYZ）”。切换只改名 .dll/.disabled，不复制或删除插件文件。"
+                           Margin="0,4,0,12"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                <WrapPanel>
+                    <ComboBox Width="260"
+                              MinWidth="180"
+                              Margin="0,0,8,8"
+                              ItemsSource="{Binding PluginProfiles}"
+                              SelectedItem="{Binding SelectedProfile}"
+                              DisplayMemberPath="Name"
+                              ToolTip="选择要应用或保存的插件方案" />
+                    <ui:Button Content="应用方案"
+                               Icon="{ui:SymbolIcon CheckmarkCircle24}"
+                               Appearance="Primary"
+                               Margin="0,0,8,8"
+                               Command="{Binding ApplyProfileCommand}" />
+                    <ui:Button Content="保存当前状态"
+                               Icon="{ui:SymbolIcon Save24}"
+                               Margin="0,0,8,8"
+                               Command="{Binding SaveProfileCommand}" />
+                    <ui:Button Content="删除方案"
+                               Icon="{ui:SymbolIcon Delete24}"
+                               Margin="0,0,8,8"
+                               Command="{Binding DeleteProfileCommand}" />
+                </WrapPanel>
+                <WrapPanel Margin="0,2,0,0">
+                    <ui:TextBox Width="260"
+                                MinWidth="180"
+                                Margin="0,0,8,8"
+                                PlaceholderText="新方案名称，例如：联机优化"
+                                Text="{Binding NewProfileName, UpdateSourceTrigger=PropertyChanged}" />
+                    <ui:Button Content="从当前状态创建"
+                               Icon="{ui:SymbolIcon Add24}"
+                               Margin="0,0,8,8"
+                               Command="{Binding CreateProfileCommand}" />
+                </WrapPanel>
+                <TextBlock Text="{Binding ProfileStatusText}"
+                           Margin="0,2,0,0"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="4"
                 CornerRadius="10"
                 Background="{DynamicResource ControlFillColorDefaultBrush}">
             <Grid>

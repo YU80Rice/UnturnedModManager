@@ -140,18 +140,43 @@ public sealed class CommunityApiClient : IDisposable
 
     private static string NormalizeIdentity(string value) => new(value.Where(char.IsLetterOrDigit).Select(char.ToLowerInvariant).ToArray());
 
-    public async Task<DownloadedMod> DownloadAsync(int id, CancellationToken token = default)
+    public Task<DownloadedMod> DownloadAsync(int id, CancellationToken token = default) =>
+        DownloadAsync(id, null, token);
+
+    /// <summary>以流方式读取社区包，避免下载时没有进度且为完整响应额外缓冲一次内存。</summary>
+    public async Task<DownloadedMod> DownloadAsync(
+        int id,
+        IProgress<DownloadProgress>? progress,
+        CancellationToken token = default)
     {
         RefreshAuthentication();
-        using var response = await _http.GetAsync($"api/mods/{id}/file", token);
+        using var response = await _http.GetAsync(
+            $"api/mods/{id}/file",
+            HttpCompletionOption.ResponseHeadersRead,
+            token);
         if (!response.IsSuccessStatusCode)
         {
             var message = await response.Content.ReadAsStringAsync(token);
             throw new HttpRequestException($"下载失败（{(int)response.StatusCode}）：{message}");
         }
-        var bytes = await response.Content.ReadAsByteArrayAsync(token);
-        if (bytes.Length == 0) throw new InvalidDataException("下载文件为空。");
-        return new DownloadedMod(ParseFileName(response.Content.Headers.ContentDisposition) ?? $"mod-{id}.zip", bytes);
+        var totalBytes = response.Content.Headers.ContentLength;
+        await using var source = await response.Content.ReadAsStreamAsync(token);
+        using var target = totalBytes is > 0 && totalBytes <= int.MaxValue
+            ? new MemoryStream((int)totalBytes.Value)
+            : new MemoryStream();
+        var buffer = new byte[80 * 1024];
+        long received = 0;
+        int count;
+        progress?.Report(new DownloadProgress(0, totalBytes));
+        while ((count = await source.ReadAsync(buffer.AsMemory(0, buffer.Length), token)) > 0)
+        {
+            await target.WriteAsync(buffer.AsMemory(0, count), token);
+            received += count;
+            progress?.Report(new DownloadProgress(received, totalBytes));
+        }
+
+        if (received == 0) throw new InvalidDataException("下载文件为空。");
+        return new DownloadedMod(ParseFileName(response.Content.Headers.ContentDisposition) ?? $"mod-{id}.zip", target.ToArray());
     }
 
     private static string? ParseFileName(ContentDispositionHeaderValue? value) =>

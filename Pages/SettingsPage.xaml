@@ -64,6 +64,15 @@
                               DisplayMemberPath="Label"
                               Width="220"
                               HorizontalAlignment="Left" />
+                    <TextBlock Text="配色方案" FontSize="14" FontWeight="SemiBold" Margin="0,20,0,0" />
+                    <TextBlock Text="按喜好选择低饱和纸张、自然、海洋或夜色配色；切换会立即生效。"
+                               Margin="0,3,0,10"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <ComboBox ItemsSource="{Binding PaletteChoices}"
+                              SelectedItem="{Binding SelectedPalette}"
+                              DisplayMemberPath="Label"
+                              Width="220"
+                              HorizontalAlignment="Left" />
                 </StackPanel>
             </Border>
 

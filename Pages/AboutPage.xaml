@@ -48,7 +48,7 @@
                         Margin="0,16,0,20"
                         HorizontalAlignment="Stretch"
                         Background="{DynamicResource AccentFillColorDefaultBrush}">
-                    <TextBlock Text="v2.0.0 · Stable · 2026-08-14"
+                    <TextBlock Text="v2.1.0 · Stable · 2026-08-15"
                                FontSize="12"
                                FontWeight="SemiBold"
                                FontFamily="Cascadia Mono, Consolas, monospace"
@@ -137,11 +137,11 @@
                                FontSize="16"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                    <TextBlock Text="v2.0 开发协作者"
+                    <TextBlock Text="v2.0–v2.1 开发协作者"
                                Margin="0,6,0,12"
                                FontSize="12"
                                Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
-                    <TextBlock Text="参与架构重构、交互完善、社区缓存、账户会话可靠性、自动化测试、发布验证，以及 README、更新日志和关于页的严谨化校订。"
+                    <TextBlock Text="参与架构重构、交互完善、社区缓存、账户会话可靠性、任务中心与图片预览、自动化测试、发布验证，以及 README、更新日志和关于页的严谨化校订。"
                                FontSize="12"
                                TextWrapping="Wrap"
                                LineHeight="19"
@@ -246,7 +246,7 @@
                            Margin="0,14,0,0"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
 
-                <TextBlock Text="v2.0 的持续升级包含首次启动引导、社区详情 Markdown 排版、依赖条目跳转和更宽的折叠侧栏。UMM 不采用 WinFsp 虚拟盘或挂载式多 profile，以避免 Unity 对虚拟文件系统读取不兼容的风险。"
+                <TextBlock Text="v2.1 在此基础上增加封面与详情图片预览，以及可记录进度、失败原因和重试的插件任务中心。UMM 不采用 WinFsp 虚拟盘或挂载式多 profile，以避免 Unity 对虚拟文件系统读取不兼容的风险。"
                            FontSize="13"
                            TextWrapping="Wrap"
                            LineHeight="23"

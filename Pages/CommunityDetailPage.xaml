@@ -21,115 +21,121 @@
                            Padding="14,6"
                            Click="BackButton_Click"
                            ToolTip="返回上一级（Esc）" />
-
                 <ui:InfoBar x:Name="StatusInfoBar" IsOpen="False" Margin="0,14,0,0" />
 
-                <Border Margin="0,16,0,0"
-                        Padding="20"
-                        CornerRadius="12"
-                        Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <StackPanel Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" Margin="0,22,0,0">
+                    <ProgressBar IsIndeterminate="True" Height="4" />
+                    <TextBlock Text="正在加载插件详情…" Margin="0,8,0,0" />
+                </StackPanel>
+                <StackPanel Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" Margin="0,22,0,0">
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#E74C3C" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <ui:Button Content="重新加载" Appearance="Primary" Icon="{ui:SymbolIcon ArrowSync24}" Command="{Binding RetryCommand}" />
+                        <ui:Button x:Name="ErrorBackButton" Content="返回上一级" Click="BackButton_Click" Margin="10,0,0,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Border Margin="0,16,0,0" Padding="22" CornerRadius="12"
+                        Background="{DynamicResource ControlFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                     <StackPanel>
-                        <Image Source="{Binding CoverUrl}"
-                               Height="260"
-                               Stretch="UniformToFill"
-                               Margin="0,0,0,20"
-                               Visibility="{Binding HasCover, Converter={StaticResource BoolToVisibility}}" />
-                        <TextBlock Text="{Binding Title}"
-                                   FontSize="30"
-                                   FontWeight="SemiBold"
-                                   TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding Meta}"
-                                   Margin="0,8,0,0"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                   TextWrapping="Wrap" />
-                        <Border Margin="0,16,0,0"
-                                Padding="12"
-                                CornerRadius="8"
-                                Background="{DynamicResource ControlFillColorSecondaryBrush}">
-                            <StackPanel>
-                                <TextBlock Text="依赖"
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,0,8" />
-                                <ItemsControl ItemsSource="{Binding DependencyItems}"
-                                              Visibility="{Binding HasDependencies, Converter={StaticResource BoolToVisibility}}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <ui:Button Content="{Binding DisplayTitle}"
-                                                       HorizontalContentAlignment="Left"
-                                                       Appearance="Secondary"
-                                                       Margin="0,0,0,6"
-                                                       Command="{Binding DataContext.OpenDependencyCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}"
-                                                       CommandParameter="{Binding}" />
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                                <TextBlock Text="无额外依赖"
-                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                           Visibility="{Binding HasDependencies, Converter={StaticResource InverseBoolToVisibility}}" />
+                        <DockPanel LastChildFill="True">
+                            <ui:Button DockPanel.Dock="Left" Width="350" Height="270" Padding="0" Margin="0,0,24,0"
+                                       Appearance="Secondary" Command="{Binding OpenCoverPreviewCommand}"
+                                       ToolTip="点击查看原始尺寸封面"
+                                       Visibility="{Binding HasCover, Converter={StaticResource BoolToVisibility}}">
+                                <Grid ClipToBounds="True">
+                                    <Image Source="{Binding CoverUrl}" Stretch="UniformToFill" />
+                                    <Border Background="#99000000" VerticalAlignment="Bottom" Padding="10,7">
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <ui:SymbolIcon Symbol="FullScreenMaximize24" Foreground="White" />
+                                            <TextBlock Text="点击查看大图" Foreground="White" Margin="6,0,0,0" FontSize="12" />
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </ui:Button>
+                            <StackPanel VerticalAlignment="Top">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Padding="8,3" CornerRadius="8" Background="{DynamicResource AccentFillColorDefaultBrush}">
+                                        <TextBlock Text="{Binding CategoryText}" Foreground="White" FontSize="12" />
+                                    </Border>
+                                    <Border Padding="8,3" CornerRadius="8" Margin="8,0,0,0" Background="{DynamicResource ControlFillColorSecondaryBrush}">
+                                        <TextBlock Text="{Binding InstallationStatusText}" FontSize="12" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="{Binding Title}" FontSize="30" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,13,0,0" />
+                                <TextBlock Text="{Binding Meta}" Margin="0,8,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                <UniformGrid Columns="3" Margin="0,18,0,0">
+                                    <StackPanel Margin="0,0,10,10"><TextBlock Text="作者" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" /><TextBlock Text="{Binding AuthorText}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" /></StackPanel>
+                                    <StackPanel Margin="0,0,10,10"><TextBlock Text="版本" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" /><TextBlock Text="{Binding VersionText}" Margin="0,3,0,0" /></StackPanel>
+                                    <StackPanel Margin="0,0,10,10"><TextBlock Text="文件大小" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" /><TextBlock Text="{Binding FileSizeText}" Margin="0,3,0,0" /></StackPanel>
+                                    <StackPanel Margin="0,0,10,0"><TextBlock Text="下载量" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" /><TextBlock Text="{Binding DownloadsText}" Margin="0,3,0,0" /></StackPanel>
+                                    <StackPanel Margin="0,0,10,0"><TextBlock Text="点赞" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" /><TextBlock Text="{Binding LikesText}" Margin="0,3,0,0" /></StackPanel>
+                                    <StackPanel><TextBlock Text="依赖" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" /><TextBlock Text="{Binding DependencyCountText}" Margin="0,3,0,0" /></StackPanel>
+                                </UniformGrid>
                             </StackPanel>
-                        </Border>
-
-                        <StackPanel Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}"
-                                    Margin="0,18,0,0">
-                            <ProgressBar IsIndeterminate="True" Height="4" />
-                            <TextBlock Text="正在加载插件详情…" Margin="0,8,0,0" />
-                        </StackPanel>
-
-                        <StackPanel Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}"
-                                    Margin="0,18,0,0">
-                            <TextBlock Text="{Binding ErrorMessage}"
-                                       Foreground="#E74C3C"
-                                       TextWrapping="Wrap" />
-                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                <ui:Button Content="重新加载"
-                                           Appearance="Primary"
-                                           Icon="{ui:SymbolIcon ArrowSync24}"
-                                           Command="{Binding RetryCommand}" />
-                                <ui:Button x:Name="ErrorBackButton"
-                                           Content="返回上一级"
-                                           Click="BackButton_Click"
-                                           Margin="10,0,0,0" />
-                            </StackPanel>
-                        </StackPanel>
-
-                        <Separator Margin="0,20" />
-                        <TextBlock Text="简介" FontWeight="SemiBold" FontSize="17" />
-                        <controls:MarkdownTextBlock Markdown="{Binding Body}"
-                                                     Margin="0,10,0,0"
-                                                     TextWrapping="Wrap"
-                                                     FontSize="14"
-                                                     LineHeight="23"
-                                                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        </DockPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,22,0,0">
-                            <ui:Button Content="登录社区账户后安装"
-                                       Icon="{ui:SymbolIcon Person24}"
-                                       Appearance="Primary"
-                                       Command="{Binding SignInCommand}"
-                                       Visibility="{Binding RequiresLogin, Converter={StaticResource BoolToVisibility}}" />
-                            <ui:Button Content="安装到当前游戏"
-                                       Icon="{ui:SymbolIcon ArrowDownload24}"
-                                       Appearance="Primary"
-                                       Command="{Binding InstallCommand}"
-                                       IsEnabled="{Binding CanInstall}"
-                                       Margin="10,0,0,0" />
-                            <ui:Button Content="更新到社区版本"
-                                       Icon="{ui:SymbolIcon ArrowSync24}"
-                                       Appearance="Primary"
-                                       Margin="10,0,0,0"
-                                       Command="{Binding UpdateCommand}"
-                                       Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}" />
-                            <ui:Button Content="卸载插件"
-                                       Icon="{ui:SymbolIcon Delete24}"
-                                       Appearance="Secondary"
-                                       Margin="10,0,0,0"
-                                       Command="{Binding UninstallCommand}"
-                                       Visibility="{Binding IsInstalled, Converter={StaticResource BoolToVisibility}}" />
+                            <ui:Button Content="登录社区账户后安装" Icon="{ui:SymbolIcon Person24}" Appearance="Primary" Command="{Binding SignInCommand}" Visibility="{Binding RequiresLogin, Converter={StaticResource BoolToVisibility}}" />
+                            <ui:Button Content="安装到当前游戏" Icon="{ui:SymbolIcon ArrowDownload24}" Appearance="Primary" Command="{Binding InstallCommand}" IsEnabled="{Binding CanInstall}" Margin="10,0,0,0" />
+                            <ui:Button Content="更新到社区版本" Icon="{ui:SymbolIcon ArrowSync24}" Appearance="Primary" Margin="10,0,0,0" Command="{Binding UpdateCommand}" Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}" />
+                            <ui:Button Content="卸载插件" Icon="{ui:SymbolIcon Delete24}" Appearance="Secondary" Margin="10,0,0,0" Command="{Binding UninstallCommand}" Visibility="{Binding IsInstalled, Converter={StaticResource BoolToVisibility}}" />
                         </StackPanel>
-                        <TextBlock Text="安装和更新使用真实游戏目录；覆盖旧文件前会备份，卸载前会校验文件是否被修改。"
-                                   Margin="0,14,0,0"
-                                   FontSize="11"
+                        <TextBlock Text="操作会写入“任务中心”：可查看实时进度、安装阶段和失败原因；覆盖旧文件前会备份，卸载前会校验文件是否被修改。"
+                                   Margin="0,12,0,0" FontSize="11" TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Margin="0,16,0,0" Padding="22" CornerRadius="12"
+                        Background="{DynamicResource ControlFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="详情" FontWeight="SemiBold" FontSize="18" />
+                        <controls:MarkdownTextBlock Markdown="{Binding Body}" Margin="0,12,0,0" TextWrapping="Wrap"
+                                                     FontSize="14" LineHeight="23"
+                                                     Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Margin="0,16,0,0" Padding="22" CornerRadius="12"
+                        Background="{DynamicResource ControlFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="依赖" FontWeight="SemiBold" FontSize="18" />
+                        <TextBlock Text="{Binding Dependencies}" Margin="0,5,0,12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <ItemsControl ItemsSource="{Binding DependencyItems}" Visibility="{Binding HasDependencies, Converter={StaticResource BoolToVisibility}}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <ui:Button Content="{Binding DisplayTitle}" HorizontalContentAlignment="Left" Appearance="Secondary" Margin="0,0,0,7"
+                                               Command="{Binding DataContext.OpenDependencyCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}"
+                                               CommandParameter="{Binding}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border Margin="0,16,0,0" Padding="22" CornerRadius="12"
+                        Background="{DynamicResource ControlFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
+                        Visibility="{Binding HasGalleryImages, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="详情图片" FontWeight="SemiBold" FontSize="18" />
+                        <TextBlock Text="图片来自插件作者在详情正文中发布的 HTTPS 图片；点击可放大预览。" Margin="0,5,0,14" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <ItemsControl ItemsSource="{Binding GalleryImages}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <ui:Button Width="164" Height="108" Margin="0,0,12,12" Padding="0" Appearance="Secondary"
+                                               Command="{Binding DataContext.OpenImagePreviewCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}"
+                                               CommandParameter="{Binding}">
+                                        <Image Source="{Binding}" Stretch="UniformToFill" />
+                                    </ui:Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </Border>
             </StackPanel>
