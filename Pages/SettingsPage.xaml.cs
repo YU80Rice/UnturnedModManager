@@ -17,6 +17,7 @@ public partial class SettingsPage : Page
         DataContext = _viewModel;
         _viewModel.NoticeRaised += OnNoticeRaised;
         _viewModel.AccountManagementRequested += OpenAccountManagement;
+        _viewModel.OnboardingRequested += RestartOnboarding;
         Loaded += (_, _) => _viewModel.Load();
     }
 
@@ -24,6 +25,12 @@ public partial class SettingsPage : Page
     {
         var owner = System.Windows.Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
         new AccountWindow { Owner = owner }.ShowDialog();
+    }
+
+    private static void RestartOnboarding()
+    {
+        if (System.Windows.Application.Current is App app)
+            app.RestartOnboarding();
     }
 
     private void OnNoticeRaised(UserNotice notice)

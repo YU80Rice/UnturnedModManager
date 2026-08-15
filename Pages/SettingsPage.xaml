@@ -64,6 +64,21 @@
                 </StackPanel>
             </Border>
 
+            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="首次设置" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="可重新选择游戏目录和主题；不会删除插件、账户或现有配置。"
+                                   Margin="0,3,0,0"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <ui:Button Grid.Column="1" Content="重新运行向导" Icon="{ui:SymbolIcon ArrowReset24}"
+                               VerticalAlignment="Center" Command="{Binding RestartOnboardingCommand}" />
+                </Grid>
+            </Border>
+
             <ui:Button Content="保存设置" Icon="{ui:SymbolIcon Save24}"
                        Appearance="Primary" HorizontalAlignment="Left"
                        Command="{Binding SaveCommand}" />

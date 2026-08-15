@@ -12,6 +12,7 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     private readonly IFolderPickerService _folderPicker;
     private readonly ThemeService _themes;
     private readonly CommunityAuthService _authentication;
+    private readonly IUserDialogService _dialogs;
     private string _gamePath = "";
     private ThemeChoice? _selectedTheme;
     private bool _isBusy;
@@ -20,12 +21,14 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         GamePathService gamePaths,
         IFolderPickerService folderPicker,
         ThemeService themes,
-        CommunityAuthService authentication)
+        CommunityAuthService authentication,
+        IUserDialogService dialogs)
     {
         _gamePaths = gamePaths;
         _folderPicker = folderPicker;
         _themes = themes;
         _authentication = authentication;
+        _dialogs = dialogs;
         ThemeChoices =
         [
             new(ThemePreference.Light, "浅色"),
@@ -36,6 +39,7 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         DetectCommand = new AsyncRelayCommand(DetectAsync, () => !IsBusy);
         SaveCommand = new RelayCommand(Save, () => !IsBusy);
         ManageAccountCommand = new RelayCommand(() => AccountManagementRequested?.Invoke());
+        RestartOnboardingCommand = new AsyncRelayCommand(RestartOnboardingAsync, () => !IsBusy);
         _authentication.SessionChanged += OnSessionChanged;
         Load();
     }
@@ -58,6 +62,7 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         {
             if (!SetProperty(ref _isBusy, value)) return;
             ((AsyncRelayCommand)DetectCommand).RaiseCanExecuteChanged();
+            ((AsyncRelayCommand)RestartOnboardingCommand).RaiseCanExecuteChanged();
             ((RelayCommand)SaveCommand).RaiseCanExecuteChanged();
         }
     }
@@ -74,8 +79,10 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     public ICommand DetectCommand { get; }
     public ICommand SaveCommand { get; }
     public ICommand ManageAccountCommand { get; }
+    public ICommand RestartOnboardingCommand { get; }
     public event Action<UserNotice>? NoticeRaised;
     public event Action? AccountManagementRequested;
+    public event Action? OnboardingRequested;
 
     public void Load()
     {
@@ -120,6 +127,23 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         AppSettings.UnturnedInstallPath = path;
         GamePath = path;
         RaiseNotice("设置已保存，插件页和启动页会自动使用新路径。", UserNoticeSeverity.Success);
+    }
+
+    private async Task RestartOnboardingAsync()
+    {
+        IsBusy = true;
+        try
+        {
+            var confirmed = await _dialogs.ConfirmAsync(
+                "重新运行首次设置",
+                "将重新打开游戏目录和主题设置向导。不会删除插件、账户或当前游戏配置。是否继续？");
+            if (!confirmed)
+                return;
+
+            OnboardingRequested?.Invoke();
+            RaiseNotice("首次设置向导已关闭，当前设置已保留。", UserNoticeSeverity.Success);
+        }
+        finally { IsBusy = false; }
     }
 
     private void OnSessionChanged() => RefreshAccount();

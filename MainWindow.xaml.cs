@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using Wpf.Ui.Controls;
 using UnturnedModManager.Services;
@@ -9,6 +10,8 @@ public partial class MainWindow : FluentWindow
 {
     private readonly ThemeService _themeService = App.Services.Theme;
     private readonly CommunityAuthService _authService = App.Services.Authentication;
+    private Page? _currentPage;
+    private int? _pendingCommunityDetailId;
     public MainWindow()
     {
         InitializeComponent();
@@ -27,6 +30,7 @@ public partial class MainWindow : FluentWindow
         _authService.RestoreCachedUser();
         UpdateAccountVisual();
         NavigationView.Navigate(typeof(Pages.HomePage));
+        ConsumePendingCommunityDetail();
         _ = RestoreAccountAsync();
     }
     private void RestoreWindowBounds()
@@ -60,6 +64,7 @@ public partial class MainWindow : FluentWindow
     public void ApplyThemeFromSettings() { _themeService.Initialize(AppSettings.CommunityThemeMode); UpdateThemeButton(_themeService.AppliedTheme); }
     private void NavigationView_PaneOpened(object sender, RoutedEventArgs e) { AppSettings.IsNavigationPaneOpen = true; ApplyPaneVisualState(true); }
     private void NavigationView_PaneClosed(object sender, RoutedEventArgs e) { AppSettings.IsNavigationPaneOpen = false; ApplyPaneVisualState(false); }
+    private void NavigationView_Navigated(object sender, NavigatedEventArgs e) => _currentPage = e.Page as Page;
     private void ApplyPaneVisualState(bool isOpen)
     {
         ThemeToggleText.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
@@ -108,5 +113,53 @@ public partial class MainWindow : FluentWindow
     {
         var mode = _themeService.CurrentPreference == ThemePreference.Light ? ThemePreference.Dark : ThemePreference.Light;
         _themeService.Apply(mode); UpdateThemeButton(mode);
+    }
+
+    /// <summary>
+    /// Opens a community detail as a list → detail flow, so Back always returns to the community
+    /// list rather than dropping the user onto an unrelated top-level page.
+    /// </summary>
+    public void OpenCommunityDetail(int modId)
+    {
+        if (modId <= 0)
+            return;
+
+        if (!IsLoaded)
+        {
+            _pendingCommunityDetailId = modId;
+            return;
+        }
+
+        if (_currentPage is Pages.CommunityPage currentCommunity)
+        {
+            AppNavigationService.Current.OpenCommunityDetail(currentCommunity, modId);
+            return;
+        }
+
+        void OpenWhenCommunityIsReady(object? _, NavigatedEventArgs args)
+        {
+            if (args.Page is not Pages.CommunityPage community)
+                return;
+
+            NavigationView.Navigated -= OpenWhenCommunityIsReady;
+            _currentPage = community;
+            AppNavigationService.Current.OpenCommunityDetail(community, modId);
+        }
+
+        NavigationView.Navigated += OpenWhenCommunityIsReady;
+        if (!NavigationView.Navigate(typeof(Pages.CommunityPage)))
+        {
+            NavigationView.Navigated -= OpenWhenCommunityIsReady;
+            _pendingCommunityDetailId = modId;
+        }
+    }
+
+    private void ConsumePendingCommunityDetail()
+    {
+        if (_pendingCommunityDetailId is not { } modId)
+            return;
+
+        _pendingCommunityDetailId = null;
+        OpenCommunityDetail(modId);
     }
 }

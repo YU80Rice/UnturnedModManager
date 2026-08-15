@@ -50,7 +50,8 @@ public sealed class AppServices : IDisposable
         GamePaths,
         FolderPicker,
         Theme,
-        Authentication);
+        Authentication,
+        Dialogs);
 
     public AccountViewModel CreateAccountViewModel() => new(Authentication, Dialogs);
 

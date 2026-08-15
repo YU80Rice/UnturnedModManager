@@ -62,6 +62,41 @@ public sealed class ModelBehaviorTests
     }
 
     [Fact]
+    public async Task SingleInstanceService_ForwardsSecondaryActivationToPrimary()
+    {
+        var suffix = Guid.NewGuid().ToString("N");
+        var mutexName = $"Local\\UnturnedModManager.Tests.{suffix}";
+        var pipeName = $"UnturnedModManager.Tests.{suffix}";
+        using var primary = new SingleInstanceService(mutexName, pipeName);
+        var activated = new TaskCompletionSource<string[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+        primary.Activated += args => activated.TrySetResult(args);
+
+        Assert.True(primary.TryAcquire([]));
+        primary.StartListening();
+
+        using var secondary = new SingleInstanceService(mutexName, pipeName);
+        Assert.False(secondary.TryAcquire(["umm://install/42"]));
+
+        var args = await activated.Task.WaitAsync(TimeSpan.FromSeconds(4));
+        Assert.Equal(["umm://install/42"], args);
+    }
+
+    [Fact]
+    public void ProtocolRegistrar_ParsesOnlySafePositiveInstallIntents()
+    {
+        Assert.True(ProtocolRegistrar.TryParseInstallIntent("umm://install/42?source=web", out var uriId));
+        Assert.Equal(42, uriId);
+        Assert.True(ProtocolRegistrar.TryParseInstallIntent("UMM:install/7", out var compactId));
+        Assert.Equal(7, compactId);
+        Assert.Equal(99, ProtocolRegistrar.FindInstallIntent(["--install", "99"]));
+
+        Assert.False(ProtocolRegistrar.TryParseInstallIntent("unmod://install/42", out _));
+        Assert.False(ProtocolRegistrar.TryParseInstallIntent("umm://remove/42", out _));
+        Assert.False(ProtocolRegistrar.TryParseInstallIntent("umm://install/0", out _));
+        Assert.False(ProtocolRegistrar.TryParseInstallIntent("umm://install/not-a-number", out _));
+    }
+
+    [Fact]
     public void ModItem_DetectsUpdatesWithoutTreatingVersionPrefixAsChange()
     {
         var item = new ModItem

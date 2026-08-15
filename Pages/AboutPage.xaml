@@ -237,6 +237,13 @@
                            LineHeight="23"
                            Margin="0,14,0,0"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+                <TextBlock Text="UMM 使用自身的 umm:// 协议打开社区详情，并通过单实例唤醒避免多个窗口同时修改游戏插件目录；不会覆盖 UML 的 unmod:// 协议。"
+                           FontSize="13"
+                           TextWrapping="Wrap"
+                           LineHeight="23"
+                           Margin="0,14,0,0"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
             </StackPanel>
         </ui:Card>
 
