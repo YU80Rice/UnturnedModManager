@@ -43,6 +43,24 @@
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <StackPanel>
+                        <TextBlock Text="首页欢迎与版本公告" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="在“游戏启动”页显示 Q 版吉祥物和版本更新摘要。升级到新版本后，公告会再次出现；关闭后不会后台联网或执行自动更新。"
+                                   Margin="0,3,0,0"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="1"
+                                     IsChecked="{Binding IsHomeWelcomeEnabled}"
+                                     VerticalAlignment="Center"
+                                     Margin="16,0,0,0" />
+                </Grid>
+            </Border>
+
+            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                    <StackPanel>
                         <TextBlock Text="社区账户" FontSize="16" FontWeight="SemiBold" />
                         <TextBlock Text="{Binding AccountStatus}" Margin="0,3,0,0"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />

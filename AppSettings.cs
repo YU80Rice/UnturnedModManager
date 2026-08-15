@@ -165,6 +165,26 @@ public static class AppSettings
         get => _data.IsOnboardingCompleted;
         set { _data.IsOnboardingCompleted = value; Save(); }
     }
+
+    /// <summary>首页是否展示可选的吉祥物欢迎区与版本公告。</summary>
+    public static bool IsHomeWelcomeEnabled
+    {
+        get => _data.IsHomeWelcomeEnabled;
+        set { _data.IsHomeWelcomeEnabled = value; Save(); }
+    }
+
+    /// <summary>
+    /// 最近已确认过的首页公告版本。程序版本变更时，欢迎区会再次展示对应版本的更新摘要；
+    /// 这是本地版本提示，不会在后台联网读取或执行自更新。
+    /// </summary>
+    public static string? LastAcknowledgedHomeAnnouncementVersion
+    {
+        get => _data.LastAcknowledgedHomeAnnouncementVersion;
+        set { _data.LastAcknowledgedHomeAnnouncementVersion = value; Save(); }
+    }
+
+    public static string CurrentHomeAnnouncementVersion =>
+        typeof(AppSettings).Assembly.GetName().Version?.ToString(3) ?? "2.1.0";
     public static double WindowWidth { get => _data.WindowWidth; set { _data.WindowWidth = value; Save(); } }
     public static double WindowHeight { get => _data.WindowHeight; set { _data.WindowHeight = value; Save(); } }
     // WPF 用 NaN 表示“没有保存的位置”。JSON 不支持 NaN，因此持久化层使用 null，
@@ -396,6 +416,8 @@ public static class AppSettings
         public string? DxvkRecommendationGpuName { get; set; }
         public bool IsNavigationPaneOpen { get; set; } = true;
         public bool IsOnboardingCompleted { get; set; }
+        public bool IsHomeWelcomeEnabled { get; set; } = true;
+        public string? LastAcknowledgedHomeAnnouncementVersion { get; set; }
         public double WindowWidth { get; set; } = 1280;
         public double WindowHeight { get; set; } = 820;
         public double? WindowLeft { get; set; }

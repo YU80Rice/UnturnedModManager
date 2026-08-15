@@ -26,4 +26,8 @@
     <Compile Remove="UnturnedModManager.Tests\**\*.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="Assets\umm-mascot-chibi-v2.png" />
+  </ItemGroup>
+
 </Project>

@@ -16,6 +16,7 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     private string _gamePath = "";
     private ThemeChoice? _selectedTheme;
     private ThemePaletteChoice? _selectedPalette;
+    private bool _isHomeWelcomeEnabled;
     private bool _isBusy;
 
     public SettingsViewModel(
@@ -57,6 +58,15 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     public ObservableCollection<ThemeChoice> ThemeChoices { get; }
     public ObservableCollection<ThemePaletteChoice> PaletteChoices { get; }
     public string GamePath { get => _gamePath; set => SetProperty(ref _gamePath, value); }
+    public bool IsHomeWelcomeEnabled
+    {
+        get => _isHomeWelcomeEnabled;
+        set
+        {
+            if (!SetProperty(ref _isHomeWelcomeEnabled, value)) return;
+            AppSettings.IsHomeWelcomeEnabled = value;
+        }
+    }
     public ThemeChoice? SelectedTheme
     {
         get => _selectedTheme;
@@ -112,6 +122,8 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(SelectedTheme));
         _selectedPalette = PaletteChoices.First(choice => choice.Value == ThemeService.ParsePalette(AppSettings.CommunityColorPalette));
         OnPropertyChanged(nameof(SelectedPalette));
+        _isHomeWelcomeEnabled = AppSettings.IsHomeWelcomeEnabled;
+        OnPropertyChanged(nameof(IsHomeWelcomeEnabled));
         RefreshAccount();
     }
 

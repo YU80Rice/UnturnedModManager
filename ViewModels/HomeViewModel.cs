@@ -1,4 +1,5 @@
 using System.IO;
+using System.Diagnostics;
 using System.Windows.Input;
 using System.Windows.Threading;
 using UnturnedModManager.Helpers;
@@ -55,6 +56,9 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         ExportLogsCommand = new AsyncRelayCommand(ExportLogsAsync, () => !IsBusy);
         AnalyzeLogsCommand = new AsyncRelayCommand(AnalyzeLogsAsync, () => !IsBusy);
         IgnoreCrashCommand = new RelayCommand(IgnoreCrash);
+        AcknowledgeAnnouncementCommand = new RelayCommand(AcknowledgeAnnouncement);
+        HideHomeWelcomeCommand = new RelayCommand(HideHomeWelcome);
+        OpenReleaseNotesCommand = new RelayCommand(OpenReleaseNotes);
         _runtimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _runtimeTimer.Tick += (_, _) => RefreshRuntimeState();
         _runtimeTimer.Start();
@@ -73,6 +77,20 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public string GpuName => _gpu is null ? "" : $"{_gpu.Name} · {_gpu.VendorName} {_gpu.ArchitectureName}";
     public string GpuRecommendation => _gpu is null ? "" : $"{_gpu.RecommendationText} — {_gpu.RecommendationDetail}";
     public bool HasCrashAlert => AppSettings.LastSessionCrashed;
+    public bool IsHomeWelcomeEnabled => AppSettings.IsHomeWelcomeEnabled;
+    public bool HasNewReleaseAnnouncement => IsHomeWelcomeEnabled
+        && !string.Equals(
+            AppSettings.LastAcknowledgedHomeAnnouncementVersion,
+            AppSettings.CurrentHomeAnnouncementVersion,
+            StringComparison.Ordinal);
+    public string HomeAnnouncementVersion => $"v{AppSettings.CurrentHomeAnnouncementVersion}";
+    public string HomeAnnouncementTitle => $"{HomeAnnouncementVersion} 已准备就绪";
+    public IReadOnlyList<string> HomeAnnouncementHighlights { get; } =
+    [
+        "详情页支持封面与正文图片预览，可缩放查看插件内容。",
+        "任务中心会显示安装、更新、卸载的实时进度、失败原因和重试入口。",
+        "本地插件方案、安全回滚与真实游戏目录管理保持可见、可恢复。"
+    ];
     public string DiagnosticTitle => _diagnosticAnalysis.Title;
     public string DiagnosticSummary => _diagnosticAnalysis.Summary;
     public string DiagnosticDetail => _diagnosticAnalysis.Detail;
@@ -114,6 +132,9 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public ICommand ExportLogsCommand { get; }
     public ICommand AnalyzeLogsCommand { get; }
     public ICommand IgnoreCrashCommand { get; }
+    public ICommand AcknowledgeAnnouncementCommand { get; }
+    public ICommand HideHomeWelcomeCommand { get; }
+    public ICommand OpenReleaseNotesCommand { get; }
     public event Action<UserNotice>? NoticeRaised;
 
     public async Task ActivateAsync()
@@ -137,6 +158,10 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(CanInstallBepInEx));
         OnPropertyChanged(nameof(BepInExRepairButtonText));
         OnPropertyChanged(nameof(HasCrashAlert));
+        OnPropertyChanged(nameof(IsHomeWelcomeEnabled));
+        OnPropertyChanged(nameof(HasNewReleaseAnnouncement));
+        OnPropertyChanged(nameof(HomeAnnouncementVersion));
+        OnPropertyChanged(nameof(HomeAnnouncementTitle));
         RefreshDiagnosticProperties();
         RefreshRuntimeState();
         RaiseCommandStates();
@@ -334,6 +359,32 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     {
         AppSettings.LastSessionCrashed = false;
         OnPropertyChanged(nameof(HasCrashAlert));
+    }
+
+    private void AcknowledgeAnnouncement()
+    {
+        AppSettings.LastAcknowledgedHomeAnnouncementVersion = AppSettings.CurrentHomeAnnouncementVersion;
+        OnPropertyChanged(nameof(HasNewReleaseAnnouncement));
+    }
+
+    private void HideHomeWelcome()
+    {
+        AppSettings.IsHomeWelcomeEnabled = false;
+        OnPropertyChanged(nameof(IsHomeWelcomeEnabled));
+        OnPropertyChanged(nameof(HasNewReleaseAnnouncement));
+    }
+
+    private void OpenReleaseNotes()
+    {
+        try
+        {
+            var url = $"https://github.com/YU80Rice/UnturnedModManager/releases/tag/v{AppSettings.CurrentHomeAnnouncementVersion}";
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception exception)
+        {
+            RaiseNotice($"无法打开更新日志：{exception.Message}", UserNoticeSeverity.Warning);
+        }
     }
 
     private void BeginOperation(string text)
