@@ -1,0 +1,52 @@
+name: publish-release-asset
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build and upload (for example v2.1.1)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout requested tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore .\UnturnedModManager.csproj
+
+      - name: Publish self-contained single-file launcher
+        run: >
+          dotnet publish .\UnturnedModManager.csproj -c Release -r win-x64
+          --self-contained true -p:PublishSingleFile=true
+          -p:EnableCompressionInSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true --no-restore --nologo
+
+      - name: Upload launcher to the existing GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          $version = $env:RELEASE_TAG.TrimStart('v')
+          $assetName = "UnturnedModManager-v$version-win-x64.exe"
+          $assetPath = ".\bin\Release\net8.0-windows\win-x64\publish\UnturnedModManager.exe"
+          if (-not (Test-Path -LiteralPath $assetPath -PathType Leaf)) {
+            throw "发布产物缺失：$assetPath"
+          }
+
+          Copy-Item -LiteralPath $assetPath -Destination $assetName -Force
+          gh release upload $env:RELEASE_TAG $assetName --clobber
