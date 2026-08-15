@@ -1,8 +1,10 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.Collections.ObjectModel;
 using Wpf.Ui.Controls;
 using UnturnedModManager.Services;
+using UnturnedModManager.ViewModels;
 
 namespace UnturnedModManager;
 
@@ -10,15 +12,23 @@ public partial class MainWindow : FluentWindow
 {
     private readonly ThemeService _themeService = App.Services.Theme;
     private readonly CommunityAuthService _authService = App.Services.Authentication;
+    private readonly UserNotificationService _notifications = App.Services.Notifications;
+    private readonly ObservableCollection<ToastNotification> _toasts = [];
     private Page? _currentPage;
     private int? _pendingCommunityDetailId;
     public MainWindow()
     {
         InitializeComponent();
+        ToastHost.ItemsSource = _toasts;
         _authService.SessionChanged += UpdateAccountVisual;
+        _notifications.NoticePublished += OnNoticePublished;
         Loaded += OnLoaded;
         Closing += OnClosing;
-        Closed += (_, _) => _authService.SessionChanged -= UpdateAccountVisual;
+        Closed += (_, _) =>
+        {
+            _authService.SessionChanged -= UpdateAccountVisual;
+            _notifications.NoticePublished -= OnNoticePublished;
+        };
     }
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
@@ -76,13 +86,23 @@ public partial class MainWindow : FluentWindow
         AccountButton.Margin = isOpen ? new Thickness(12, 4, 12, 4) : new Thickness(0, 4, 0, 4);
         AccountButton.HorizontalAlignment = isOpen ? System.Windows.HorizontalAlignment.Stretch : System.Windows.HorizontalAlignment.Center;
     }
-    private async Task RestoreAccountAsync() { await _authService.RestoreAsync(); UpdateAccountVisual(); }
+    private async Task RestoreAccountAsync()
+    {
+        var restored = await _authService.RestoreAsync();
+        UpdateAccountVisual();
+        if (restored && _authService.CurrentUser is { } user)
+            _notifications.Publish(new UserNotice($"欢迎回来，{user.DisplayIdentity}", UserNoticeSeverity.Success));
+    }
     private void UpdateAccountVisual()
     {
         var username = _authService.CurrentUser?.Username ?? AppSettings.CommunityUsername;
-        AccountNameText.Text = string.IsNullOrWhiteSpace(username) ? "登录社区账户" : username;
+        var role = _authService.CurrentUser?.Role ?? AppSettings.CommunityRole;
+        var identity = string.IsNullOrWhiteSpace(username)
+            ? "登录社区账户"
+            : $"{CommunityUser.DescribeRole(role)} · {username}";
+        AccountNameText.Text = identity;
         AccountAvatarText.Text = string.IsNullOrWhiteSpace(username) ? "?" : username[..1].ToUpperInvariant();
-        AccountButton.ToolTip = string.IsNullOrWhiteSpace(username) ? "登录社区账户" : $"社区账户：{username}";
+        AccountButton.ToolTip = string.IsNullOrWhiteSpace(username) ? "登录社区账户" : $"社区账户：{identity}";
         var avatarUrl = _authService.CurrentUser?.AvatarUrl ?? AppSettings.CommunityAvatarUrl;
         if (!string.IsNullOrWhiteSpace(avatarUrl))
         {
@@ -101,6 +121,31 @@ public partial class MainWindow : FluentWindow
         AccountAvatarImage.Source = null;
         AccountAvatarImage.Visibility = Visibility.Collapsed;
         AccountAvatarText.Visibility = Visibility.Visible;
+    }
+    private void OnNoticePublished(UserNotice notice)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            _ = Dispatcher.BeginInvoke(new Action(() => OnNoticePublished(notice)));
+            return;
+        }
+
+        var toast = ToastNotification.From(notice);
+        while (_toasts.Count >= 3)
+            _toasts.RemoveAt(0);
+        _toasts.Add(toast);
+        _ = DismissToastAsync(toast);
+    }
+
+    private async Task DismissToastAsync(ToastNotification toast)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(toast.Severity == UserNoticeSeverity.Error ? 8 : 5));
+            if (!Dispatcher.HasShutdownStarted && !Dispatcher.HasShutdownFinished)
+                await Dispatcher.InvokeAsync(() => _toasts.Remove(toast));
+        }
+        catch { }
     }
     private async void AccountButton_Click(object sender, RoutedEventArgs e)
     {

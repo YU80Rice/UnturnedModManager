@@ -21,8 +21,6 @@
                            Padding="14,6"
                            Click="BackButton_Click"
                            ToolTip="返回上一级（Esc）" />
-                <ui:InfoBar x:Name="StatusInfoBar" IsOpen="False" Margin="0,14,0,0" />
-
                 <StackPanel Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}" Margin="0,22,0,0">
                     <ProgressBar IsIndeterminate="True" Height="4" />
                     <TextBlock Text="正在加载插件详情…" Margin="0,8,0,0" />

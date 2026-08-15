@@ -153,6 +153,7 @@ public static class AppSettings
     }
     public static int? CommunityUserId { get => _data.CommunityUserId; set { _data.CommunityUserId = value; Save(); } }
     public static string? CommunityUsername { get => _data.CommunityUsername; set { _data.CommunityUsername = value; Save(); } }
+    public static string? CommunityRole { get => _data.CommunityRole; set { _data.CommunityRole = value; Save(); } }
     public static string? CommunityAvatarUrl { get => _data.CommunityAvatarUrl; set { _data.CommunityAvatarUrl = value; Save(); } }
 
     public static bool IsNavigationPaneOpen
@@ -184,7 +185,7 @@ public static class AppSettings
     }
 
     public static string CurrentHomeAnnouncementVersion =>
-        typeof(AppSettings).Assembly.GetName().Version?.ToString(3) ?? "2.1.1";
+        typeof(AppSettings).Assembly.GetName().Version?.ToString(3) ?? "2.1.2";
     public static double WindowWidth { get => _data.WindowWidth; set { _data.WindowWidth = value; Save(); } }
     public static double WindowHeight { get => _data.WindowHeight; set { _data.WindowHeight = value; Save(); } }
     // WPF 用 NaN 表示“没有保存的位置”。JSON 不支持 NaN，因此持久化层使用 null，
@@ -427,6 +428,7 @@ public static class AppSettings
         public string? CommunityAuthTokenProtected { get; set; }
         public int? CommunityUserId { get; set; }
         public string? CommunityUsername { get; set; }
+        public string? CommunityRole { get; set; }
         public string? CommunityAvatarUrl { get; set; }
     }
 }

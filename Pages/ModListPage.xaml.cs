@@ -31,23 +31,7 @@ public partial class ModListPage : Page
         AppNavigationService.Current.OpenCommunityDetail(this, id);
 
     private void OnNoticeRaised(UserNotice notice)
-    {
-        if (!Dispatcher.CheckAccess())
-        {
-            Dispatcher.Invoke(() => OnNoticeRaised(notice));
-            return;
-        }
-
-        StatusInfoBar.Message = notice.Message;
-        StatusInfoBar.Severity = notice.Severity switch
-        {
-            UserNoticeSeverity.Success => InfoBarSeverity.Success,
-            UserNoticeSeverity.Warning => InfoBarSeverity.Warning,
-            UserNoticeSeverity.Error => InfoBarSeverity.Error,
-            _ => InfoBarSeverity.Informational
-        };
-        StatusInfoBar.IsOpen = true;
-    }
+        => App.Services.Notifications.Publish(notice);
 
     private void ModsList_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {

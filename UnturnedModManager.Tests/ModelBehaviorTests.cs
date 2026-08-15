@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using UnturnedModManager.Helpers;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
@@ -49,6 +51,68 @@ public sealed class ModelBehaviorTests
         Assert.NotNull(dependency);
         Assert.Equal("核心前置", dependency!.DisplayTitle);
         Assert.Equal("1.0.0", dependency.Version);
+    }
+
+    [Theory]
+    [InlineData("moderator", "社区管理员")]
+    [InlineData("creator", "创作者")]
+    [InlineData("admin|creator", "社区管理员 · 创作者")]
+    [InlineData("", "社区成员")]
+    public void CommunityUser_MapsOnlyServerRoleToLocalizedIdentity(string role, string expected)
+    {
+        var user = new CommunityUser { Username = "YU80Rice", Role = role };
+
+        Assert.Equal(expected, user.RoleDisplay);
+        Assert.Equal($"{expected} · YU80Rice", user.DisplayIdentity);
+    }
+
+    [Theory]
+    [InlineData("v2.1.2", "2.1.2")]
+    [InlineData("2.3", "2.3.0")]
+    [InlineData("not-a-version", null)]
+    public void LauncherUpdateService_ParsesOnlyValidReleaseVersions(string tag, string? expected)
+    {
+        var parsed = LauncherUpdateService.TryParseReleaseVersion(tag, out var version);
+
+        Assert.Equal(expected is not null, parsed);
+        if (expected is not null)
+            Assert.Equal(expected, version.ToString(3));
+    }
+
+    [Theory]
+    [InlineData("sha256:1b6f406dd6a350f26731417dbed53a089d2a70f0b0049825f5c1eebf14400297", "1B6F406DD6A350F26731417DBED53A089D2A70F0B0049825F5C1EEBF14400297")]
+    [InlineData("sha256:invalid", null)]
+    [InlineData("", null)]
+    public void LauncherUpdateService_AcceptsOnlyCompleteSha256Digests(string digest, string? expected) =>
+        Assert.Equal(expected, LauncherUpdateService.NormalizeSha256Digest(digest));
+
+    [Fact]
+    public async Task LauncherUpdateService_DownloadsOnlyAValidatedOfficialReleaseAsset()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "umm-launcher-update-" + Guid.NewGuid().ToString("N"));
+        var content = Encoding.UTF8.GetBytes("validated-launcher");
+        var digest = Convert.ToHexString(SHA256.HashData(content));
+        const string assetName = "UnturnedModManager-v2.1.2-win-x64.exe";
+        var assetUrl = "https://github.com/YU80Rice/UnturnedModManager/releases/download/v2.1.2/" + assetName;
+        var releaseJson = $$"""
+        {"tag_name":"v2.1.2","name":"UMM v2.1.2","assets":[{"name":"{{assetName}}","browser_download_url":"{{assetUrl}}","size":{{content.Length}},"digest":"sha256:{{digest}}"}]}
+        """;
+
+        try
+        {
+            using var client = new HttpClient(new ReleaseHandler(releaseJson, assetUrl, content));
+            using var updates = new LauncherUpdateService(client, directory);
+            var update = await updates.CheckForUpdateAsync(new Version(2, 1, 1, 0));
+
+            Assert.NotNull(update);
+            Assert.Equal("v2.1.2", update!.DisplayVersion);
+            var downloaded = await updates.DownloadAsync(update);
+            Assert.Equal(content, await File.ReadAllBytesAsync(downloaded));
+        }
+        finally
+        {
+            if (Directory.Exists(directory)) Directory.Delete(directory, true);
+        }
     }
 
     [Fact]
@@ -369,6 +433,26 @@ public sealed class ModelBehaviorTests
             {
                 RequestMessage = request,
                 Content = new StringContent(responseBody)
+            });
+        }
+    }
+
+    private sealed class ReleaseHandler(string releaseJson, string assetUrl, byte[] assetContent) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (request.RequestUri?.AbsoluteUri.EndsWith("/releases/latest", StringComparison.Ordinal) == true)
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(releaseJson, Encoding.UTF8, "application/json")
+                });
+            }
+
+            Assert.Equal(assetUrl, request.RequestUri?.AbsoluteUri);
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(assetContent)
             });
         }
     }

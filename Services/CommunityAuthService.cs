@@ -56,7 +56,13 @@ public sealed class CommunityAuthService : IDisposable
     public void RestoreCachedUser()
     {
         if (!string.IsNullOrWhiteSpace(AppSettings.CommunityUsername))
-            CurrentUser = new CommunityUser { Id = AppSettings.CommunityUserId ?? 0, Username = AppSettings.CommunityUsername, AvatarUrl = AppSettings.CommunityAvatarUrl };
+            CurrentUser = new CommunityUser
+            {
+                Id = AppSettings.CommunityUserId ?? 0,
+                Username = AppSettings.CommunityUsername,
+                Role = AppSettings.CommunityRole ?? "",
+                AvatarUrl = AppSettings.CommunityAvatarUrl
+            };
         _sessionValidated = false;
         SessionChanged?.Invoke();
     }
@@ -95,7 +101,9 @@ public sealed class CommunityAuthService : IDisposable
             }
             SaveToken(tokenValue);
             var restored = await RestoreAsync(token);
-            return restored ? (true, $"已登录：{CurrentUser?.Username}") : (false, "登录成功，但无法读取账户信息");
+            return restored
+                ? (true, $"欢迎回来，{CurrentUser!.DisplayIdentity}")
+                : (false, "登录成功，但无法读取账户信息");
         }
         catch (OperationCanceledException) { return (false, "登录已取消"); }
         catch (Exception ex) { return (false, ex.Message); }
@@ -111,14 +119,53 @@ public sealed class CommunityAuthService : IDisposable
         CurrentUser = null;
         _sessionValidated = false;
         AppSettings.CommunityAuthToken = null; AppSettings.CommunityUserId = null;
-        AppSettings.CommunityUsername = null; AppSettings.CommunityAvatarUrl = null;
+        AppSettings.CommunityUsername = null; AppSettings.CommunityRole = null; AppSettings.CommunityAvatarUrl = null;
         SessionChanged?.Invoke();
     }
     private void SaveToken(string value) { _sessionValidated = false; AppSettings.CommunityAuthToken = value; _cookies.SetCookies(new Uri(CommunityApiClient.BaseUrl), $"token={value}; path=/"); }
     private void RestoreToken() { if (!string.IsNullOrWhiteSpace(AppSettings.CommunityAuthToken)) _cookies.SetCookies(new Uri(CommunityApiClient.BaseUrl), $"token={AppSettings.CommunityAuthToken}; path=/"); }
-    private static void SaveUser(CommunityUser user) { AppSettings.CommunityUserId = user.Id; AppSettings.CommunityUsername = user.Username; AppSettings.CommunityAvatarUrl = user.AvatarUrl; }
+    private static void SaveUser(CommunityUser user)
+    {
+        AppSettings.CommunityUserId = user.Id;
+        AppSettings.CommunityUsername = user.Username;
+        AppSettings.CommunityRole = user.Role;
+        AppSettings.CommunityAvatarUrl = user.AvatarUrl;
+    }
     public void Dispose() => _http.Dispose();
     private sealed class MeResponse { public CommunityUser? User { get; set; } }
 }
 
-public sealed class CommunityUser { public int Id { get; set; } public string Username { get; set; } = ""; public string Email { get; set; } = ""; public string Role { get; set; } = ""; public string? AvatarUrl { get; set; } public string? Bio { get; set; } }
+public sealed class CommunityUser
+{
+    public int Id { get; set; }
+    public string Username { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string Role { get; set; } = "";
+    public string? AvatarUrl { get; set; }
+    public string? Bio { get; set; }
+
+    /// <summary>只本地化服务端实际提供的 role，不根据昵称或本地插件推断特权身份。</summary>
+    public string RoleDisplay => DescribeRole(Role);
+    public string DisplayIdentity => string.IsNullOrWhiteSpace(Username)
+        ? RoleDisplay
+        : $"{RoleDisplay} · {Username}";
+
+    public static string DescribeRole(string? role)
+    {
+        if (string.IsNullOrWhiteSpace(role))
+            return "社区成员";
+
+        var labels = role.Split([',', ';', '|', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(value => value.ToLowerInvariant() switch
+            {
+                "owner" or "admin" or "administrator" => "社区管理员",
+                "moderator" or "mod" => "社区管理员",
+                "creator" or "author" or "developer" or "publisher" => "创作者",
+                "user" or "member" => "社区成员",
+                _ => value
+            })
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        return labels.Length == 0 ? "社区成员" : string.Join(" · ", labels);
+    }
+}

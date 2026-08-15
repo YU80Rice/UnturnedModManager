@@ -41,18 +41,7 @@ public partial class CommunityDetailPage : Page
         new ImagePreviewWindow(uri.AbsoluteUri) { Owner = owner }.ShowDialog();
     }
     private void OnNoticeRaised(UserNotice notice)
-    {
-        if (!Dispatcher.CheckAccess()) { Dispatcher.Invoke(() => OnNoticeRaised(notice)); return; }
-        StatusInfoBar.Message = notice.Message;
-        StatusInfoBar.Severity = notice.Severity switch
-        {
-            UserNoticeSeverity.Success => Wpf.Ui.Controls.InfoBarSeverity.Success,
-            UserNoticeSeverity.Warning => Wpf.Ui.Controls.InfoBarSeverity.Warning,
-            UserNoticeSeverity.Error => Wpf.Ui.Controls.InfoBarSeverity.Error,
-            _ => Wpf.Ui.Controls.InfoBarSeverity.Informational
-        };
-        StatusInfoBar.IsOpen = true;
-    }
+        => App.Services.Notifications.Publish(notice);
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
         AppNavigationService.Current.ReturnToOrigin(this, _origin);

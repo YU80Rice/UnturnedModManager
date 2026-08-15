@@ -13,6 +13,8 @@ public sealed class AppServices : IDisposable
     public CommunityCacheService CommunityCache { get; } = new();
     public CommunityModInstaller CommunityInstaller { get; } = new();
     public OperationTaskCenter Tasks { get; } = new();
+    public UserNotificationService Notifications { get; } = new();
+    public LauncherUpdateService LauncherUpdates { get; } = new();
     public IUserDialogService Dialogs { get; } = new UserDialogService();
     public GamePathService GamePaths { get; } = new();
     public IFolderPickerService FolderPicker { get; } = new WindowsFolderPickerService();
@@ -73,11 +75,14 @@ public sealed class AppServices : IDisposable
         GameLauncher,
         Diagnostics,
         GamePaths,
-        Dialogs);
+        Dialogs,
+        Authentication,
+        LauncherUpdates);
 
     public void Dispose()
     {
         Authentication.Dispose();
+        LauncherUpdates.Dispose();
         SingleInstance.Dispose();
     }
 }

@@ -16,6 +16,8 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     private readonly DiagnosticService _diagnostics;
     private readonly GamePathService _gamePaths;
     private readonly IUserDialogService _dialogs;
+    private readonly CommunityAuthService _authentication;
+    private readonly LauncherUpdateService _launcherUpdates;
     private readonly DispatcherTimer _runtimeTimer;
     private CancellationTokenSource? _operationCts;
     private bool _initialized;
@@ -29,6 +31,11 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     private BepInExStatus _bepStatus = new(false, false, false, null, "BepInEx 未安装", "尚未检测");
     private GpuInfo? _gpu;
     private DiagnosticAnalysis _diagnosticAnalysis = DiagnosticAnalysis.Empty;
+    private LauncherUpdateInfo? _availableLauncherUpdate;
+    private bool _updateCheckRequested;
+    private bool _isDownloadingLauncherUpdate;
+    private int _launcherUpdatePercentage;
+    private string _launcherUpdateText = "";
 
     public HomeViewModel(
         BepInExService bepInEx,
@@ -36,7 +43,9 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         GameLaunchService launcher,
         DiagnosticService diagnostics,
         GamePathService gamePaths,
-        IUserDialogService dialogs)
+        IUserDialogService dialogs,
+        CommunityAuthService authentication,
+        LauncherUpdateService launcherUpdates)
     {
         _bepInEx = bepInEx;
         _dxvk = dxvk;
@@ -44,6 +53,8 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         _diagnostics = diagnostics;
         _gamePaths = gamePaths;
         _dialogs = dialogs;
+        _authentication = authentication;
+        _launcherUpdates = launcherUpdates;
         LaunchCommand = new AsyncRelayCommand(LaunchAsync, () => CanLaunch);
         InstallCommand = new AsyncRelayCommand(() => DeployBepInExAsync("安装", requireConfirmation: true), () => !IsBusy);
         RepairCommand = new AsyncRelayCommand(
@@ -59,6 +70,8 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         AcknowledgeAnnouncementCommand = new RelayCommand(AcknowledgeAnnouncement);
         HideHomeWelcomeCommand = new RelayCommand(HideHomeWelcome);
         OpenReleaseNotesCommand = new RelayCommand(OpenReleaseNotes);
+        DownloadLauncherUpdateCommand = new AsyncRelayCommand(DownloadAndInstallLauncherUpdateAsync, () => HasAvailableLauncherUpdate && !IsBusy);
+        _authentication.SessionChanged += OnAccountSessionChanged;
         _runtimeTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _runtimeTimer.Tick += (_, _) => RefreshRuntimeState();
         _runtimeTimer.Start();
@@ -78,20 +91,54 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public string GpuRecommendation => _gpu is null ? "" : $"{_gpu.RecommendationText} — {_gpu.RecommendationDetail}";
     public bool HasCrashAlert => AppSettings.LastSessionCrashed;
     public bool IsHomeWelcomeEnabled => AppSettings.IsHomeWelcomeEnabled;
+    public string WelcomeGreeting => _authentication.IsSignedIn && _authentication.CurrentUser is { } user
+        ? $"欢迎回来，{user.DisplayIdentity}"
+        : "你好，幸存者！";
     public bool HasNewReleaseAnnouncement => IsHomeWelcomeEnabled
         && !string.Equals(
             AppSettings.LastAcknowledgedHomeAnnouncementVersion,
             AppSettings.CurrentHomeAnnouncementVersion,
             StringComparison.Ordinal);
-    public string HomeAnnouncementVersion => $"v{AppSettings.CurrentHomeAnnouncementVersion}";
-    public string HomeAnnouncementTitle => $"{HomeAnnouncementVersion} 已准备就绪";
-    public IReadOnlyList<string> HomeAnnouncementHighlights { get; } =
-    [
-        "首页新增可开关的 Q 版吉祥物欢迎区与版本公告，不会后台下载或静默更新。",
-        "详情页支持封面与正文图片预览，可缩放查看插件内容。",
-        "任务中心会显示安装、更新、卸载的实时进度、失败原因和重试入口。",
-        "本地插件方案、安全回滚与真实游戏目录管理保持可见、可恢复。"
-    ];
+    public bool HasAvailableLauncherUpdate => _availableLauncherUpdate is not null;
+    public bool HasHomeAnnouncement => IsHomeWelcomeEnabled && (HasNewReleaseAnnouncement || HasAvailableLauncherUpdate);
+    public string HomeAnnouncementVersion => HasAvailableLauncherUpdate
+        ? _availableLauncherUpdate!.DisplayVersion
+        : $"v{AppSettings.CurrentHomeAnnouncementVersion}";
+    public string HomeAnnouncementTitle => HasAvailableLauncherUpdate
+        ? $"发现 {HomeAnnouncementVersion} 新版本"
+        : $"{HomeAnnouncementVersion} 已准备就绪";
+    public IReadOnlyList<string> HomeAnnouncementHighlights => HasAvailableLauncherUpdate
+        ?
+        [
+            "新版本已由 UMM 官方 GitHub Release 发布，可由你确认后下载。",
+            "下载完成后会校验 GitHub 提供的 SHA-256；校验失败不会安装。",
+            "确认安装时，UMM 才会退出并替换 EXE，同时保留旧版本 .bak 备份。"
+        ]
+        :
+        [
+            "首页新增可开关的 Q 版吉祥物欢迎区与版本公告，不会后台下载或静默更新。",
+            "详情页支持封面与正文图片预览，可缩放查看插件内容。",
+            "任务中心会显示安装、更新、卸载的实时进度、失败原因和重试入口。",
+            "本地插件方案、安全回滚与真实游戏目录管理保持可见、可恢复。"
+        ];
+    public bool IsDownloadingLauncherUpdate
+    {
+        get => _isDownloadingLauncherUpdate;
+        private set
+        {
+            if (!SetProperty(ref _isDownloadingLauncherUpdate, value)) return;
+            OnPropertyChanged(nameof(UpdateDownloadButtonText));
+            RaiseCommandStates();
+        }
+    }
+    public int LauncherUpdatePercentage { get => _launcherUpdatePercentage; private set => SetProperty(ref _launcherUpdatePercentage, value); }
+    public string LauncherUpdateText { get => _launcherUpdateText; private set => SetProperty(ref _launcherUpdateText, value); }
+    public string UpdateDownloadButtonText => IsDownloadingLauncherUpdate
+        ? $"正在下载 {LauncherUpdatePercentage}%"
+        : $"下载并安装 {HomeAnnouncementVersion}";
+    public string LauncherUpdateDetail => HasAvailableLauncherUpdate
+        ? $"{_availableLauncherUpdate!.ReleaseName} · {_availableLauncherUpdate.Size / 1024d / 1024d:F1} MB · GitHub SHA-256 校验"
+        : "";
     public string DiagnosticTitle => _diagnosticAnalysis.Title;
     public string DiagnosticSummary => _diagnosticAnalysis.Summary;
     public string DiagnosticDetail => _diagnosticAnalysis.Detail;
@@ -136,6 +183,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public ICommand AcknowledgeAnnouncementCommand { get; }
     public ICommand HideHomeWelcomeCommand { get; }
     public ICommand OpenReleaseNotesCommand { get; }
+    public ICommand DownloadLauncherUpdateCommand { get; }
     public event Action<UserNotice>? NoticeRaised;
 
     public async Task ActivateAsync()
@@ -143,6 +191,11 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         RefreshAll();
         if (_initialized) return;
         _initialized = true;
+        if (!_updateCheckRequested)
+        {
+            _updateCheckRequested = true;
+            _ = CheckForLauncherUpdateAsync();
+        }
         await DetectGpuAsync();
         await TryDetectGamePathAsync();
         RefreshAll();
@@ -160,9 +213,15 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(BepInExRepairButtonText));
         OnPropertyChanged(nameof(HasCrashAlert));
         OnPropertyChanged(nameof(IsHomeWelcomeEnabled));
+        OnPropertyChanged(nameof(WelcomeGreeting));
         OnPropertyChanged(nameof(HasNewReleaseAnnouncement));
+        OnPropertyChanged(nameof(HasAvailableLauncherUpdate));
+        OnPropertyChanged(nameof(HasHomeAnnouncement));
         OnPropertyChanged(nameof(HomeAnnouncementVersion));
         OnPropertyChanged(nameof(HomeAnnouncementTitle));
+        OnPropertyChanged(nameof(HomeAnnouncementHighlights));
+        OnPropertyChanged(nameof(LauncherUpdateDetail));
+        OnPropertyChanged(nameof(UpdateDownloadButtonText));
         RefreshDiagnosticProperties();
         RefreshRuntimeState();
         RaiseCommandStates();
@@ -366,6 +425,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     {
         AppSettings.LastAcknowledgedHomeAnnouncementVersion = AppSettings.CurrentHomeAnnouncementVersion;
         OnPropertyChanged(nameof(HasNewReleaseAnnouncement));
+        OnPropertyChanged(nameof(HasHomeAnnouncement));
     }
 
     private void HideHomeWelcome()
@@ -373,13 +433,17 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         AppSettings.IsHomeWelcomeEnabled = false;
         OnPropertyChanged(nameof(IsHomeWelcomeEnabled));
         OnPropertyChanged(nameof(HasNewReleaseAnnouncement));
+        OnPropertyChanged(nameof(HasHomeAnnouncement));
     }
 
     private void OpenReleaseNotes()
     {
         try
         {
-            var url = $"https://github.com/YU80Rice/UnturnedModManager/releases/tag/v{AppSettings.CurrentHomeAnnouncementVersion}";
+            var url = HasAvailableLauncherUpdate
+                ? _availableLauncherUpdate!.DownloadUrl.AbsoluteUri.Replace("/download/", "/tag/", StringComparison.Ordinal)
+                    .Replace($"/{_availableLauncherUpdate.AssetName}", "", StringComparison.Ordinal)
+                : $"https://github.com/YU80Rice/UnturnedModManager/releases/tag/v{AppSettings.CurrentHomeAnnouncementVersion}";
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
         catch (Exception exception)
@@ -387,6 +451,84 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
             RaiseNotice($"无法打开更新日志：{exception.Message}", UserNoticeSeverity.Warning);
         }
     }
+
+    private async Task CheckForLauncherUpdateAsync()
+    {
+        try
+        {
+            var current = typeof(HomeViewModel).Assembly.GetName().Version ?? new Version(0, 0, 0);
+            _availableLauncherUpdate = await _launcherUpdates.CheckForUpdateAsync(current);
+            OnPropertyChanged(nameof(HasAvailableLauncherUpdate));
+            OnPropertyChanged(nameof(HasHomeAnnouncement));
+            OnPropertyChanged(nameof(HomeAnnouncementVersion));
+            OnPropertyChanged(nameof(HomeAnnouncementTitle));
+            OnPropertyChanged(nameof(HomeAnnouncementHighlights));
+            OnPropertyChanged(nameof(LauncherUpdateDetail));
+            OnPropertyChanged(nameof(UpdateDownloadButtonText));
+            RaiseCommandStates();
+        }
+        catch
+        {
+            // 检查失败不会打断正常启动；用户仍可从“查看完整更新日志”手动访问 Release。
+        }
+    }
+
+    private async Task DownloadAndInstallLauncherUpdateAsync()
+    {
+        var update = _availableLauncherUpdate;
+        if (update is null)
+            return;
+
+        var confirmed = await _dialogs.ConfirmAsync(
+            "下载 UMM 更新",
+            $"将从 UMM 官方 GitHub Release 下载 {update.DisplayVersion}（{update.Size / 1024d / 1024d:F1} MB）。\n\n"
+            + "下载完成后会校验 GitHub 发布的 SHA-256。只有你再次确认安装时，启动器才会退出并替换 EXE。是否开始下载？");
+        if (!confirmed)
+            return;
+
+        IsBusy = true;
+        IsDownloadingLauncherUpdate = true;
+        LauncherUpdatePercentage = 0;
+        LauncherUpdateText = "正在准备下载…";
+        try
+        {
+            var progress = new Progress<OperationProgress>(value =>
+            {
+                LauncherUpdatePercentage = value.Percentage;
+                LauncherUpdateText = value.Message;
+                OnPropertyChanged(nameof(UpdateDownloadButtonText));
+            });
+            var downloadedPath = await _launcherUpdates.DownloadAsync(update, progress);
+            var install = await _dialogs.ConfirmAsync(
+                "更新已下载并校验",
+                $"{update.DisplayVersion} 已下载并通过 SHA-256 校验。\n\n"
+                + "现在安装会关闭 UMM，替换当前 EXE，并保留旧版本的 .bak 备份。若当前目录没有写入权限，已校验的新 EXE 会直接启动，不会删除旧版本。\n\n是否现在安装？");
+            if (!install)
+            {
+                RaiseNotice($"更新已下载并校验，可稍后从此处再次下载或手动运行：{Path.GetFileName(downloadedPath)}", UserNoticeSeverity.Information);
+                return;
+            }
+
+            LauncherUpdateService.ScheduleInstallAndRestart(downloadedPath);
+            RaiseNotice("更新安装程序已启动，UMM 即将关闭并重新打开新版本。", UserNoticeSeverity.Success);
+            System.Windows.Application.Current?.Shutdown();
+        }
+        catch (OperationCanceledException)
+        {
+            RaiseNotice("启动器更新下载已取消。", UserNoticeSeverity.Warning);
+        }
+        catch (Exception ex)
+        {
+            RaiseNotice($"启动器更新未完成：{ex.Message}", UserNoticeSeverity.Error);
+        }
+        finally
+        {
+            IsDownloadingLauncherUpdate = false;
+            IsBusy = false;
+        }
+    }
+
+    private void OnAccountSessionChanged() => OnPropertyChanged(nameof(WelcomeGreeting));
 
     private void BeginOperation(string text)
     {
@@ -442,11 +584,13 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         ((RelayCommand)CancelOperationCommand).RaiseCanExecuteChanged();
         ((AsyncRelayCommand)ExportLogsCommand).RaiseCanExecuteChanged();
         ((AsyncRelayCommand)AnalyzeLogsCommand).RaiseCanExecuteChanged();
+        ((AsyncRelayCommand)DownloadLauncherUpdateCommand).RaiseCanExecuteChanged();
     }
 
     public void Dispose()
     {
         _runtimeTimer.Stop();
+        _authentication.SessionChanged -= OnAccountSessionChanged;
         _operationCts?.Cancel();
         _operationCts?.Dispose();
     }

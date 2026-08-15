@@ -1,6 +1,5 @@
 using System.Windows;
 using UnturnedModManager.ViewModels;
-using Wpf.Ui.Controls;
 
 namespace UnturnedModManager;
 
@@ -18,15 +17,5 @@ public partial class AccountWindow : Window
     }
 
     private void OnNoticeRaised(UserNotice notice)
-    {
-        StatusBar.Message = notice.Message;
-        StatusBar.Severity = notice.Severity switch
-        {
-            UserNoticeSeverity.Success => InfoBarSeverity.Success,
-            UserNoticeSeverity.Warning => InfoBarSeverity.Warning,
-            UserNoticeSeverity.Error => InfoBarSeverity.Error,
-            _ => InfoBarSeverity.Informational
-        };
-        StatusBar.IsOpen = true;
-    }
+        => App.Services.Notifications.Publish(notice);
 }

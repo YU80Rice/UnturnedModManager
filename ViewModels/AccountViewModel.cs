@@ -39,7 +39,7 @@ public sealed class AccountViewModel : ViewModelBase, IDisposable
     public bool CanLogin => !IsBusy && !IsSignedIn;
     public string Username => _authentication.CurrentUser?.Username ?? "未登录";
     public string AccountHint => IsSignedIn
-        ? "已连接 unmod.online 社区账户"
+        ? $"{_authentication.CurrentUser!.RoleDisplay} · 已连接 unmod.online 社区账户"
         : IsSessionPending
             ? "已保存账户，等待网络验证后即可使用社区功能。"
         : IsBusy

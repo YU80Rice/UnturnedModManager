@@ -11,8 +11,6 @@
         <Grid Margin="32,24,32,40">
         <StackPanel HorizontalAlignment="Stretch">
             <controls:PageHeader Title="设置" Subtitle="配置游戏路径、社区账户与界面外观" Margin="0,0,0,22" />
-            <ui:InfoBar x:Name="StatusInfoBar" IsOpen="False" Margin="0,0,0,16" />
-
             <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
                     Background="{DynamicResource ControlFillColorDefaultBrush}">
                 <StackPanel>

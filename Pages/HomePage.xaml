@@ -81,7 +81,7 @@
                                     Background="{DynamicResource AccentFillColorDefaultBrush}">
                                 <TextBlock Text="UMM 欢迎区" Foreground="White" FontSize="11" FontWeight="SemiBold" />
                             </Border>
-                            <TextBlock Text="你好，幸存者！"
+                            <TextBlock Text="{Binding WelcomeGreeting}"
                                        Margin="9,0,0,0"
                                        VerticalAlignment="Center"
                                        FontSize="13"
@@ -100,7 +100,7 @@
                                 Padding="13,11"
                                 CornerRadius="10"
                                 Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                Visibility="{Binding HasNewReleaseAnnouncement, Converter={StaticResource BoolToVisibility}}">
+                                Visibility="{Binding HasHomeAnnouncement, Converter={StaticResource BoolToVisibility}}">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding HomeAnnouncementTitle}" FontWeight="SemiBold" />
@@ -128,13 +128,35 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                                 <StackPanel Orientation="Horizontal" Margin="0,11,0,0">
-                                    <ui:Button Content="查看完整更新日志"
+                                    <ui:Button Content="{Binding UpdateDownloadButtonText}"
                                                Appearance="Primary"
+                                               Visibility="{Binding HasAvailableLauncherUpdate, Converter={StaticResource BoolToVisibility}}"
+                                               Command="{Binding DownloadLauncherUpdateCommand}" />
+                                    <ui:Button Content="查看完整更新日志"
+                                               Margin="8,0,0,0"
+                                               Appearance="Secondary"
                                                Command="{Binding OpenReleaseNotesCommand}" />
                                     <ui:Button Content="本次不再提示"
                                                Margin="8,0,0,0"
                                                Appearance="Secondary"
                                                Command="{Binding AcknowledgeAnnouncementCommand}" />
+                                </StackPanel>
+                                <StackPanel Margin="0,9,0,0"
+                                            Visibility="{Binding HasAvailableLauncherUpdate, Converter={StaticResource BoolToVisibility}}">
+                                    <TextBlock Text="{Binding LauncherUpdateDetail}"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                    <ProgressBar Height="4"
+                                                 Margin="0,7,0,0"
+                                                 Minimum="0"
+                                                 Maximum="100"
+                                                 Value="{Binding LauncherUpdatePercentage}"
+                                                 Visibility="{Binding IsDownloadingLauncherUpdate, Converter={StaticResource BoolToVisibility}}" />
+                                    <TextBlock Text="{Binding LauncherUpdateText}"
+                                               Margin="0,5,0,0"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                               Visibility="{Binding IsDownloadingLauncherUpdate, Converter={StaticResource BoolToVisibility}}" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -154,8 +176,6 @@
                            IsHitTestVisible="False" />
                 </Grid>
             </Border>
-
-            <ui:InfoBar x:Name="StatusInfoBar" IsOpen="False" IsClosable="True" Margin="0,0,0,16" />
 
             <Border CornerRadius="12" Padding="20" Margin="0,0,0,16"
                     Background="{DynamicResource ControlFillColorDefaultBrush}"

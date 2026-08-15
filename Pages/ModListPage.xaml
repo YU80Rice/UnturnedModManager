@@ -15,16 +15,13 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <controls:PageHeader Title="本地插件"
                              Subtitle="管理启停、卸载、插件方案和社区更新；点击已匹配的条目可打开社区详情。"
                              Margin="0,0,0,16" />
 
-        <ui:InfoBar x:Name="StatusInfoBar" Grid.Row="1" IsOpen="False" Margin="0,0,0,12" />
-
-        <Grid Grid.Row="2" Margin="0,0,0,12">
+        <Grid Grid.Row="1" Margin="0,0,0,12">
             <StackPanel Orientation="Horizontal">
                 <ui:Button Content="刷新并同步"
                            Icon="{ui:SymbolIcon ArrowSync24}"
@@ -41,7 +38,7 @@
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
         </Grid>
 
-        <Border Grid.Row="3"
+        <Border Grid.Row="2"
                 Padding="16"
                 Margin="0,0,0,12"
                 CornerRadius="10"
@@ -95,7 +92,7 @@
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="4"
+        <Border Grid.Row="3"
                 CornerRadius="10"
                 Background="{DynamicResource ControlFillColorDefaultBrush}">
             <Grid>

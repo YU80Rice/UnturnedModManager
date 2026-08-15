@@ -4,7 +4,6 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using UnturnedModManager.Helpers;
 using UnturnedModManager.ViewModels;
-using Wpf.Ui.Controls;
 
 namespace UnturnedModManager.Pages;
 
@@ -40,17 +39,7 @@ public partial class SettingsPage : Page
     }
 
     private void OnNoticeRaised(UserNotice notice)
-    {
-        StatusInfoBar.Message = notice.Message;
-        StatusInfoBar.Severity = notice.Severity switch
-        {
-            UserNoticeSeverity.Success => InfoBarSeverity.Success,
-            UserNoticeSeverity.Warning => InfoBarSeverity.Warning,
-            UserNoticeSeverity.Error => InfoBarSeverity.Error,
-            _ => InfoBarSeverity.Informational
-        };
-        StatusInfoBar.IsOpen = true;
-    }
+        => App.Services.Notifications.Publish(notice);
 
     private void CardPanel_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         => ScrollWheelRouter.RouteToNearestScrollViewer(sender, e);

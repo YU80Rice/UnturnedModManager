@@ -1,4 +1,4 @@
-# Unturned Mod Manager v2.1.1
+# Unturned Mod Manager v2.1.2
 
 > 面向 Windows 的 Unturned 启动、BepInEx 插件管理与 [unmod.online](https://unmod.online/) 社区客户端。
 
@@ -6,7 +6,7 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![WPF-UI](https://img.shields.io/badge/WPF--UI-3.0.5-CA1E1E)](https://github.com/lepoco/wpfui)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?logo=windows)](https://www.microsoft.com/windows)
-[![Release](https://img.shields.io/badge/Release-v2.1.1-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
+[![Release](https://img.shields.io/badge/Release-v2.1.2-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
 [![Build and test](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml/badge.svg)](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml)
 
 **仓库：** [github.com/YU80Rice/UnturnedModManager](https://github.com/YU80Rice/UnturnedModManager)
@@ -45,7 +45,7 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 
 ---
 
-## v2.1.1 能做什么
+## v2.1.2 能做什么
 
 ### 游戏与插件环境
 
@@ -112,6 +112,7 @@ UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerf
 - 侧边栏展开状态、窗口尺寸和位置持久化；
 - 折叠侧栏显示账户头像和完整主题图标；
 - 社区账户昵称、头像与登录令牌在本地保存，以便下次启动恢复会话；
+- 社区账户会保存并展示 unmod.online 服务端返回的身份标识（例如社区管理员、创作者）；本地不会根据昵称或已安装插件推断、伪造身份；
 - 页面加载、空状态、错误状态和缓存状态使用独立反馈。
 - 设置、列表和详情页会将滚轮交给鼠标下方最近的可滚动区域；本地插件条目可用 Enter 键进入其社区详情。
 - 首次启动提供三步引导：游戏目录、主题偏好和功能说明；已经配置过游戏目录的旧版本升级不会被重复打断。
@@ -119,6 +120,8 @@ UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerf
 - 注册独立的 `umm://install/{社区插件 ID}` 协议入口；它只打开对应插件详情供用户确认安装，不会抢占 UML 使用的 `unmod://` 协议。
 - 提供六套可持久化配色；非默认配色会同时更新按钮、开关、导航选中、进度条和焦点等交互状态，而不只是改变页面背景。
 - 首页提供可在设置中关闭的 Q 版吉祥物欢迎区与版本公告；每次升级后会重新展示对应摘要，只在本地识别程序版本，不会后台下载或静默安装更新。
+- 登录、插件环境切换、安装与诊断等操作结果会集中显示为主窗口右下角的短暂通知；同一时刻最多保留三条，避免遮挡主界面。
+- 欢迎区会查询 UMM 官方 GitHub Release 的最新稳定版；发现更高版本后提供“下载并安装”按钮。下载、SHA-256 校验、替换当前 EXE 均需要用户明确确认，替换前保留 `.bak`，无写入权限时只启动已校验的新 EXE。
 
 社区令牌当前保存在 `%AppData%\UnturnedModManager\config.json`；插件方案保存在同一数据根目录的 `plugin-profiles` 下，任务历史保存在 `task-history.json`，并按游戏安装目录隔离。请将该目录视为敏感数据，不要公开上传或附在 Issue 中。
 

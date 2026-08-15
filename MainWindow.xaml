@@ -18,6 +18,47 @@
     </StackPanel>
    </ui:NavigationView.PaneFooter>
   </ui:NavigationView>
+  <ItemsControl x:Name="ToastHost"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,26,26"
+                Panel.ZIndex="100"
+                IsHitTestVisible="False">
+   <ItemsControl.ItemsPanel>
+    <ItemsPanelTemplate><StackPanel /></ItemsPanelTemplate>
+   </ItemsControl.ItemsPanel>
+   <ItemsControl.ItemTemplate>
+    <DataTemplate>
+     <Border Width="360"
+             Margin="0,0,0,10"
+             Padding="16,13"
+             CornerRadius="12"
+             Opacity="0"
+             Background="{DynamicResource ControlFillColorDefaultBrush}"
+             BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+             BorderThickness="4,1,1,1">
+      <Border.RenderTransform><TranslateTransform X="28" /></Border.RenderTransform>
+      <Border.Triggers>
+       <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+        <BeginStoryboard>
+         <Storyboard>
+          <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.18" />
+          <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.X)" From="28" To="0" Duration="0:0:0.18" />
+         </Storyboard>
+        </BeginStoryboard>
+       </EventTrigger>
+      </Border.Triggers>
+      <StackPanel>
+       <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" />
+       <TextBlock Text="{Binding Message}"
+                  Margin="0,4,0,0"
+                  TextWrapping="Wrap"
+                  Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+      </StackPanel>
+     </Border>
+    </DataTemplate>
+   </ItemsControl.ItemTemplate>
+  </ItemsControl>
   <ui:TitleBar Title="Unturned Mod Manager" ShowMaximize="True" ShowMinimize="True" ShowClose="True"/>
  </Grid>
 </ui:FluentWindow>
