@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using System.Collections.ObjectModel;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
 
@@ -42,6 +43,7 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         _uninstallCommand = new AsyncRelayCommand(UninstallAsync, () => CanUninstall);
         _retryCommand = new AsyncRelayCommand(LoadAsync, () => !IsBusy);
         SignInCommand = new RelayCommand(() => SignInRequested?.Invoke());
+        OpenDependencyCommand = new RelayCommand<CommunityDependency>(dependency => DependencyRequested?.Invoke(dependency.Id));
         _authentication.SessionChanged += OnAuthenticationChanged;
     }
 
@@ -51,6 +53,8 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         : $"{_mod.Meta}\n分类：{_mod.CategoryDisplay}  ·  文件：{FormatSize(_mod.FileSize)}";
     public string Body => _mod?.DisplayBody ?? "";
     public string Dependencies => _mod?.DependencySummary ?? "正在读取依赖信息…";
+    public ObservableCollection<CommunityDependency> DependencyItems { get; } = [];
+    public bool HasDependencies => DependencyItems.Count > 0;
     public string? CoverUrl => _mod?.CoverUrl;
     public bool IsLoading => State == ViewState.Loading;
     public bool HasError => State == ViewState.Error;
@@ -106,8 +110,10 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
     public ICommand UninstallCommand => _uninstallCommand;
     public ICommand RetryCommand => _retryCommand;
     public ICommand SignInCommand { get; }
+    public ICommand OpenDependencyCommand { get; }
     public event Action<UserNotice>? NoticeRaised;
     public event Action? SignInRequested;
+    public event Action<int>? DependencyRequested;
 
     public async Task LoadAsync()
     {
@@ -117,6 +123,9 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         try
         {
             _mod = await _api.GetModAsync(_id);
+            DependencyItems.Clear();
+            foreach (var dependency in _mod.Dependencies)
+                DependencyItems.Add(dependency);
             NotifyModState();
             State = ViewState.Loaded;
         }
@@ -199,6 +208,7 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(Meta));
         OnPropertyChanged(nameof(Body));
         OnPropertyChanged(nameof(Dependencies));
+        OnPropertyChanged(nameof(HasDependencies));
         OnPropertyChanged(nameof(CoverUrl));
         NotifyInstallationState();
     }

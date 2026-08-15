@@ -13,9 +13,23 @@ public partial class App : System.Windows.Application
         try
         {
             base.OnStartup(e);
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
             Services = new AppServices();
+            if (!Services.SingleInstance.TryAcquire())
+            {
+                Shutdown(0);
+                return;
+            }
+
+            if (!AppSettings.IsOnboardingCompleted)
+            {
+                var onboarding = new OnboardingWindow();
+                onboarding.ShowDialog();
+            }
+
             var mainWindow = new MainWindow();
             MainWindow = mainWindow;
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
             mainWindow.Show();
         }
         catch (Exception ex)

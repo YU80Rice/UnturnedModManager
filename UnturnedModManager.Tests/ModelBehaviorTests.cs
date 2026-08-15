@@ -40,6 +40,28 @@ public sealed class ModelBehaviorTests
     }
 
     [Fact]
+    public void CommunityDependency_ExposesLocalizedDisplayTitle()
+    {
+        var dependency = JsonSerializer.Deserialize<CommunityDependency>(
+            "{\"id\":7,\"title\":{\"zh\":\"核心前置\",\"en\":\"Core dependency\"},\"version\":\"1.0.0\"}");
+
+        Assert.NotNull(dependency);
+        Assert.Equal("核心前置", dependency!.DisplayTitle);
+        Assert.Equal("1.0.0", dependency.Version);
+    }
+
+    [Fact]
+    public void SingleInstanceService_RejectsSecondOwner()
+    {
+        var mutexName = $"Local\\UnturnedModManager.Tests.{Guid.NewGuid():N}";
+        using var first = new SingleInstanceService(mutexName);
+        using var second = new SingleInstanceService(mutexName);
+
+        Assert.True(first.TryAcquire());
+        Assert.False(second.TryAcquire());
+    }
+
+    [Fact]
     public void ModItem_DetectsUpdatesWithoutTreatingVersionPrefixAsChange()
     {
         var item = new ModItem

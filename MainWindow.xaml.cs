@@ -64,10 +64,10 @@ public partial class MainWindow : FluentWindow
     {
         ThemeToggleText.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
         ThemeToggleButton.Margin = isOpen ? new Thickness(12, 4, 12, 12) : new Thickness(0, 4, 0, 12);
-        ThemeToggleButton.Width = isOpen ? double.NaN : 52;
+        ThemeToggleButton.Width = isOpen ? double.NaN : 64;
         ThemeToggleButton.HorizontalAlignment = isOpen ? System.Windows.HorizontalAlignment.Stretch : System.Windows.HorizontalAlignment.Center;
         AccountNameText.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
-        AccountButton.Width = isOpen ? double.NaN : 52;
+        AccountButton.Width = isOpen ? double.NaN : 64;
         AccountButton.Margin = isOpen ? new Thickness(12, 4, 12, 4) : new Thickness(0, 4, 0, 4);
         AccountButton.HorizontalAlignment = isOpen ? System.Windows.HorizontalAlignment.Stretch : System.Windows.HorizontalAlignment.Center;
     }

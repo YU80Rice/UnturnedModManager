@@ -8,6 +8,7 @@ namespace UnturnedModManager.Services;
 public sealed class AppServices : IDisposable
 {
     public ThemeService Theme { get; } = new();
+    public SingleInstanceService SingleInstance { get; } = new();
     public CommunityAuthService Authentication { get; } = new();
     public CommunityCacheService CommunityCache { get; } = new();
     public CommunityModInstaller CommunityInstaller { get; } = new();
@@ -53,6 +54,11 @@ public sealed class AppServices : IDisposable
 
     public AccountViewModel CreateAccountViewModel() => new(Authentication, Dialogs);
 
+    public OnboardingViewModel CreateOnboardingViewModel() => new(
+        GamePaths,
+        FolderPicker,
+        Theme);
+
     public HomeViewModel CreateHomeViewModel() => new(
         BepInEx,
         Dxvk,
@@ -61,5 +67,9 @@ public sealed class AppServices : IDisposable
         GamePaths,
         Dialogs);
 
-    public void Dispose() => Authentication.Dispose();
+    public void Dispose()
+    {
+        Authentication.Dispose();
+        SingleInstance.Dispose();
+    }
 }

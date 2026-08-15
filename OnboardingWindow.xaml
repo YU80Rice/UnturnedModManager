@@ -1,0 +1,131 @@
+<ui:FluentWindow x:Class="UnturnedModManager.OnboardingWindow"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                  Title="Unturned Mod Manager · 首次设置"
+                  Width="720"
+                  Height="560"
+                  MinWidth="640"
+                  MinHeight="500"
+                  ResizeMode="NoResize"
+                  WindowStartupLocation="CenterScreen"
+                  WindowBackdropType="Mica">
+    <Grid Margin="36,30,36,28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,22">
+            <TextBlock Text="欢迎使用 Unturned Mod Manager"
+                       FontSize="28"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+            <TextBlock Text="我们先完成几项基础设置，之后你可以在设置页随时修改。"
+                       Margin="0,8,0,0"
+                       FontSize="14"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            <TextBlock Text="{Binding StepText}"
+                       Margin="0,14,0,0"
+                       FontSize="12"
+                       Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+            <StackPanel Visibility="{Binding IsWelcomeStep, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource SurfaceCardStyle}" Padding="24" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="1 · 选择游戏目录"
+                                   FontSize="19"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="UMM 需要知道 Unturned.exe 所在的目录，才能管理插件环境和启动游戏。你也可以先跳过，稍后在设置中配置。"
+                                   Margin="0,8,0,18"
+                                   TextWrapping="Wrap"
+                                   LineHeight="22"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ui:TextBox Text="{Binding GamePath, UpdateSourceTrigger=PropertyChanged}"
+                                        PlaceholderText="例如：E:\Steam\steamapps\common\Unturned" />
+                            <ui:Button Grid.Column="1"
+                                       Content="浏览…"
+                                       Margin="10,0,0,0"
+                                       Command="{Binding BrowseCommand}" />
+                            <ui:Button Grid.Column="2"
+                                       Content="自动寻找"
+                                       Icon="{ui:SymbolIcon Search16}"
+                                       Margin="6,0,0,0"
+                                       Command="{Binding DetectCommand}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="{Binding Message}"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+
+            <StackPanel Visibility="{Binding IsThemeStep, Converter={StaticResource BoolToVisibility}}">
+                <Border Style="{StaticResource SurfaceCardStyle}" Padding="24" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="2 · 设置外观"
+                                   FontSize="19"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="选择适合你的主题。跟随系统会根据 Windows 的应用主题自动切换。"
+                                   Margin="0,8,0,18"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <ComboBox ItemsSource="{Binding ThemeChoices}"
+                                  SelectedItem="{Binding SelectedTheme}"
+                                  DisplayMemberPath="Label"
+                                  Width="240"
+                                  HorizontalAlignment="Left" />
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="社区账户登录不是必需步骤。需要安装和更新 unmod.online 插件时，再从侧栏账户入口登录即可。"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+
+            <StackPanel Visibility="{Binding IsFinishStep, Converter={StaticResource BoolToVisibility}}"
+                        VerticalAlignment="Center">
+                <Border Style="{StaticResource SurfaceCardStyle}" Padding="28">
+                    <StackPanel>
+                        <TextBlock Text="3 · 设置完成"
+                                   FontSize="22"
+                                   FontWeight="SemiBold" />
+                        <TextBlock Text="UMM 已准备好。你可以从“游戏启动”页安装 BepInEx，从“本地插件”页管理已有 DLL，或进入“插件社区”浏览 unmod.online。"
+                                   Margin="0,10,0,0"
+                                   TextWrapping="Wrap"
+                                   LineHeight="23"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="2" Margin="0,22,0,0">
+            <ui:Button Content="稍后设置"
+                       Appearance="Secondary"
+                       HorizontalAlignment="Left"
+                       Command="{Binding SkipCommand}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <ui:Button Content="上一步"
+                           Margin="0,0,8,0"
+                           Command="{Binding BackCommand}" />
+                <ui:Button Content="下一步"
+                           Appearance="Primary"
+                           Command="{Binding NextCommand}"
+                           Visibility="{Binding IsFinishStep, Converter={StaticResource InverseBoolToVisibility}}" />
+                <ui:Button Content="开始使用"
+                           Appearance="Primary"
+                           Command="{Binding FinishCommand}"
+                           Visibility="{Binding IsFinishStep, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</ui:FluentWindow>

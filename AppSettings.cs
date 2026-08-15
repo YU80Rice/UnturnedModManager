@@ -119,6 +119,11 @@ public static class AppSettings
         get => _data.IsNavigationPaneOpen;
         set { _data.IsNavigationPaneOpen = value; Save(); }
     }
+    public static bool IsOnboardingCompleted
+    {
+        get => _data.IsOnboardingCompleted;
+        set { _data.IsOnboardingCompleted = value; Save(); }
+    }
     public static double WindowWidth { get => _data.WindowWidth; set { _data.WindowWidth = value; Save(); } }
     public static double WindowHeight { get => _data.WindowHeight; set { _data.WindowHeight = value; Save(); } }
     public static double WindowLeft { get => _data.WindowLeft; set { _data.WindowLeft = value; Save(); } }
@@ -144,6 +149,14 @@ public static class AppSettings
                     Save();
                 }
                 else if (!string.Equals(sourcePath, ConfigPath, StringComparison.OrdinalIgnoreCase)) Save();
+
+                // Existing UMM installations already have a configured game path;
+                // do not interrupt them with the first-run wizard after upgrading.
+                if (!_data.IsOnboardingCompleted && !string.IsNullOrWhiteSpace(_data.UnturnedInstallPath))
+                {
+                    _data.IsOnboardingCompleted = true;
+                    Save();
+                }
             }
         }
         catch { }
@@ -323,6 +336,7 @@ public static class AppSettings
         public string ThemeMode { get; set; } = "Dark";
         public string CommunityThemeMode { get; set; } = "System";
         public bool IsNavigationPaneOpen { get; set; } = true;
+        public bool IsOnboardingCompleted { get; set; }
         public double WindowWidth { get; set; } = 1280;
         public double WindowHeight { get; set; } = 820;
         public double WindowLeft { get; set; } = double.NaN;

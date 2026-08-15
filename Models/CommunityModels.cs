@@ -101,6 +101,7 @@ public sealed class CommunityDependency
     [JsonPropertyName("id")] public int Id { get; set; }
     [JsonPropertyName("title")] public LocalizedText Title { get; set; } = new();
     [JsonPropertyName("version")] public string? Version { get; set; }
+    [JsonIgnore] public string DisplayTitle => Title.Pick();
 }
 
 public sealed class CommunityCategory

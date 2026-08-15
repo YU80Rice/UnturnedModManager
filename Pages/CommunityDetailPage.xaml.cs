@@ -19,6 +19,7 @@ public partial class CommunityDetailPage : Page
         _viewModel = App.Services.CreateCommunityDetailViewModel(id); DataContext = _viewModel;
         _viewModel.NoticeRaised += OnNoticeRaised;
         _viewModel.SignInRequested += OpenSignIn;
+        _viewModel.DependencyRequested += OpenDependency;
         Loaded += async (_, _) => { Focus(); await _viewModel.LoadAsync(); };
         Unloaded += (_, _) => _viewModel.Dispose();
     }
@@ -27,6 +28,9 @@ public partial class CommunityDetailPage : Page
         var owner = System.Windows.Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
         new AccountWindow { Owner = owner }.ShowDialog();
     }
+
+    private void OpenDependency(int id) =>
+        AppNavigationService.Current.OpenCommunityDetail(this, id);
     private void OnNoticeRaised(UserNotice notice)
     {
         if (!Dispatcher.CheckAccess()) { Dispatcher.Invoke(() => OnNoticeRaised(notice)); return; }
