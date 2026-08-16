@@ -1,4 +1,4 @@
-# Unturned Mod Manager v2.1.3
+# Unturned Mod Manager v2.1.4
 
 > 面向 Windows 的 Unturned 启动、BepInEx 插件管理与 [unmod.online](https://unmod.online/) 社区客户端。
 
@@ -6,7 +6,7 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![WPF-UI](https://img.shields.io/badge/WPF--UI-3.0.5-CA1E1E)](https://github.com/lepoco/wpfui)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?logo=windows)](https://www.microsoft.com/windows)
-[![Release](https://img.shields.io/badge/Release-v2.1.3-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
+[![Release](https://img.shields.io/badge/Release-v2.1.4-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
 [![Build and test](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml/badge.svg)](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml)
 
 **仓库：** [github.com/YU80Rice/UnturnedModManager](https://github.com/YU80Rice/UnturnedModManager)
@@ -45,7 +45,7 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 
 ---
 
-## v2.1.3 能做什么
+## v2.1.4 能做什么
 
 ### 游戏与插件环境
 
@@ -112,7 +112,7 @@ UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerf
 - 侧边栏展开状态、窗口尺寸和位置持久化；
 - 折叠侧栏显示账户头像和完整主题图标；
 - 社区账户昵称、头像与登录令牌在本地保存，以便下次启动恢复会话；
-- 社区账户会保存并展示 unmod.online 服务端返回的身份标识（例如社区管理员、创作者）；本地不会根据昵称或已安装插件推断、伪造身份；
+- 社区账户会保存并展示 unmod.online 服务端返回的身份标识（例如社区管理员、创作者）；侧栏展开时显示“头像 + 身份 + 用户名”，超长文本自动省略并可悬停查看完整内容；本地不会根据昵称或已安装插件推断、伪造身份；
 - 页面加载、空状态、错误状态和缓存状态使用独立反馈。
 - 设置、列表和详情页会将滚轮交给鼠标下方最近的可滚动区域；本地插件条目可用 Enter 键进入其社区详情。
 - 首次启动提供三步引导：游戏目录、主题偏好和功能说明；已经配置过游戏目录的旧版本升级不会被重复打断。

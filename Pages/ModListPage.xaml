@@ -120,12 +120,15 @@
                                             <TextBlock Text="{Binding DisplayTitle}"
                                                        FontSize="16"
                                                        FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                                        TextTrimming="CharacterEllipsis" />
                                             <Border Margin="10,0,0,0"
                                                     Padding="7,2"
                                                     CornerRadius="7"
                                                     Background="{DynamicResource ControlFillColorSecondaryBrush}">
-                                                <TextBlock Text="{Binding SourceText}" FontSize="11" />
+                                                <TextBlock Text="{Binding SourceText}"
+                                                           FontSize="11"
+                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Text="{Binding FileName}"

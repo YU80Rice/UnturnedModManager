@@ -10,12 +10,17 @@
    </ui:NavigationView.MenuItems>
    <ui:NavigationView.FooterMenuItems><ui:NavigationViewItem Content="关于" Icon="{ui:SymbolIcon Info24}" TargetPageType="{x:Type pages:AboutPage}" NavigationCacheMode="Required"/></ui:NavigationView.FooterMenuItems>
    <ui:NavigationView.PaneFooter>
-    <StackPanel>
-     <ui:Button x:Name="AccountButton" Margin="0,4" Padding="4" MinHeight="44" Appearance="Secondary" Click="AccountButton_Click" ToolTip="社区账户">
-      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><Border Width="36" Height="36" MinWidth="36" MinHeight="36" CornerRadius="18" Background="{DynamicResource AccentFillColorDefaultBrush}" ClipToBounds="True"><Grid><Image x:Name="AccountAvatarImage" Stretch="UniformToFill" Visibility="Collapsed"/><TextBlock x:Name="AccountAvatarText" Text="?" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/></Grid></Border><TextBlock x:Name="AccountNameText" Text="登录社区账户" VerticalAlignment="Center" Margin="8,0,0,0"/></StackPanel>
+    <Grid x:Name="PaneFooterGrid" HorizontalAlignment="Stretch">
+     <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+     <ui:Button x:Name="AccountButton" Grid.Row="0" Margin="0,4" Padding="4" MinHeight="44" Appearance="Secondary" HorizontalContentAlignment="Stretch" Click="AccountButton_Click" ToolTip="社区账户">
+      <Grid x:Name="AccountContentGrid" HorizontalAlignment="Stretch">
+       <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+       <Border Grid.Column="0" Width="36" Height="36" MinWidth="36" MinHeight="36" CornerRadius="18" Background="{DynamicResource AccentFillColorDefaultBrush}" ClipToBounds="True" HorizontalAlignment="Center"><Grid><Image x:Name="AccountAvatarImage" Stretch="UniformToFill" Visibility="Collapsed"/><TextBlock x:Name="AccountAvatarText" Text="?" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/></Grid></Border>
+       <TextBlock x:Name="AccountNameText" Grid.Column="1" Text="登录社区账户" VerticalAlignment="Center" Margin="8,0,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+      </Grid>
      </ui:Button>
-     <ui:Button x:Name="ThemeToggleButton" Margin="0,4,0,12" Width="40" MinHeight="44" Appearance="Secondary" Click="ThemeToggleButton_Click" ToolTip="切换深色/浅色主题"><StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><ui:SymbolIcon x:Name="ThemeToggleButtonIcon" Symbol="WeatherMoon24" FontSize="20"/><TextBlock x:Name="ThemeToggleText" Text="深色模式" VerticalAlignment="Center" Margin="8,0,0,0"/></StackPanel></ui:Button>
-    </StackPanel>
+     <ui:Button x:Name="ThemeToggleButton" Grid.Row="1" Margin="0,4,0,12" Width="40" MinHeight="44" Appearance="Secondary" Click="ThemeToggleButton_Click" ToolTip="切换深色/浅色主题"><StackPanel Orientation="Horizontal" HorizontalAlignment="Center"><ui:SymbolIcon x:Name="ThemeToggleButtonIcon" Symbol="WeatherMoon24" FontSize="20"/><TextBlock x:Name="ThemeToggleText" Text="深色模式" VerticalAlignment="Center" Margin="8,0,0,0"/></StackPanel></ui:Button>
+    </Grid>
    </ui:NavigationView.PaneFooter>
   </ui:NavigationView>
   <ItemsControl x:Name="ToastHost"
@@ -35,7 +40,7 @@
              CornerRadius="12"
              Opacity="0"
              Background="{DynamicResource ControlFillColorDefaultBrush}"
-             BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
+             BorderBrush="{DynamicResource ToastNotificationBorderBrush}"
              BorderThickness="4,1,1,1">
       <Border.RenderTransform><TranslateTransform X="28" /></Border.RenderTransform>
       <Border.Triggers>

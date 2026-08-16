@@ -48,6 +48,9 @@ public sealed class ThemeService
             var colors = GetPaletteColors(palette, AppliedTheme);
             foreach (var (key, color) in colors)
                 dictionary[key] = CreateBrush(color);
+            // 通知是自定义控件，不能依赖 WPF-UI 主题内部的 Accent 资源查找顺序；
+            // 在每次切换方案时显式写入自己的动态资源，确保边框始终同步当前配色。
+            dictionary["ToastNotificationBorderBrush"] = CreateBrush(ResolveAccentColor(application, colors));
             if (palette != ThemePalette.Fluent)
                 ApplyAccentControlResources(dictionary, colors, AppliedTheme == ThemePreference.Dark);
         }
@@ -72,6 +75,19 @@ public sealed class ThemeService
         new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex)!);
 
     private static SolidColorBrush CreateBrush(Color color) => new(color);
+
+    private static Color ResolveAccentColor(
+        System.Windows.Application application,
+        IReadOnlyList<(string Key, string Color)> colors)
+    {
+        var configured = colors.FirstOrDefault(item => item.Key == "AccentFillColorDefaultBrush").Color;
+        if (!string.IsNullOrWhiteSpace(configured))
+            return (Color)ColorConverter.ConvertFromString(configured)!;
+
+        return application.TryFindResource("SystemAccentColorPrimaryBrush") is SolidColorBrush systemAccent
+            ? systemAccent.Color
+            : Color.FromRgb(0, 120, 212);
+    }
 
     /// <summary>
     /// WPF-UI 的表面资源与其交互控件资源是两组不同的键。仅修改 AccentFillColor
