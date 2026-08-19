@@ -62,7 +62,7 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
     public string Title => _mod?.DisplayTitle ?? "插件详情";
     public string Meta => _mod is null
         ? ""
-        : $"{_mod.Meta}\n分类：{_mod.CategoryDisplay}  ·  文件：{FormatSize(_mod.FileSize)}";
+        : $"{_mod.Meta}\n分类：{_mod.CategoryDisplay}  ·  文件：{FormatSize(_mod.EffectiveFileSize)}";
     public string Body => _mod?.DisplayBody ?? "";
     public string Dependencies => _mod?.DependencySummary ?? "正在读取依赖信息…";
     public ObservableCollection<CommunityDependency> DependencyItems { get; } = [];
@@ -72,10 +72,11 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
     public string? CoverUrl => _mod?.CoverUrl;
     public bool HasCover => !string.IsNullOrWhiteSpace(CoverUrl);
     public string AuthorText => _mod?.AuthorName ?? "未知作者";
-    public string VersionText => _mod is null ? "—" : _mod.Version.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? _mod.Version : $"v{_mod.Version}";
+    public string VersionText => _mod is null ? "—" : _mod.EffectiveVersion.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? _mod.EffectiveVersion : $"v{_mod.EffectiveVersion}";
     public string DownloadsText => _mod is null ? "—" : $"{_mod.Downloads:N0}";
     public string LikesText => _mod is null ? "—" : $"{_mod.LikeCount:N0}";
-    public string FileSizeText => _mod is null ? "—" : FormatSize(_mod.FileSize);
+    public string FileSizeText => _mod is null ? "—" : FormatSize(_mod.EffectiveFileSize);
+    public string DownloadSourceText => _mod?.DownloadSourceText ?? "正在读取…";
     public string CategoryText => _mod?.CategoryDisplay ?? "其他";
     public string DependencyCountText => _mod is null ? "—" : _mod.Dependencies.Count.ToString();
     public string InstallationStatusText => _mod is null
@@ -90,8 +91,9 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         get
         {
             if (_mod is null) return false;
+            if (_mod.UsesGitHubRelease && !_mod.IsGitHubReleaseResolved) return false;
             var installed = _installer.GetInstalledMods().FirstOrDefault(item => item.RemoteId == _mod.Id);
-            return installed is not null && !VersionsEqual(installed.Version, _mod.Version);
+            return installed is not null && !VersionsEqual(installed.Version, _mod.EffectiveVersion);
         }
     }
     public bool IsBusy
@@ -206,7 +208,7 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
             NotifyInstallationState();
             RaiseNotice(
                 task.Status == OperationTaskStatus.Succeeded
-                    ? $"{_mod.DisplayTitle} 已更新至 {_mod.Version}。可在“任务中心”查看完整记录。"
+                    ? $"{_mod.DisplayTitle} 已更新至 {GetInstalledVersion(_mod)}。可在“任务中心”查看完整记录。"
                     : $"更新失败：{task.FailureReason}。可在“任务中心”重试。",
                 task.Status == OperationTaskStatus.Succeeded ? UserNoticeSeverity.Success : UserNoticeSeverity.Error);
         }
@@ -271,6 +273,7 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(DownloadsText));
         OnPropertyChanged(nameof(LikesText));
         OnPropertyChanged(nameof(FileSizeText));
+        OnPropertyChanged(nameof(DownloadSourceText));
         OnPropertyChanged(nameof(CategoryText));
         OnPropertyChanged(nameof(DependencyCountText));
         NotifyInstallationState();
@@ -312,6 +315,10 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         left.Trim().TrimStart('v', 'V').Equals(
             right.Trim().TrimStart('v', 'V'),
             StringComparison.OrdinalIgnoreCase);
+
+    private string GetInstalledVersion(CommunityModDetail mod) =>
+        _installer.GetInstalledMods().FirstOrDefault(item => item.RemoteId == mod.Id)?.Version
+        ?? mod.EffectiveVersion;
 
     private static string FormatSize(long bytes) => bytes >= 1048576
         ? $"{bytes / 1048576d:F1} MB"

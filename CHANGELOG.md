@@ -5,6 +5,18 @@
 
 ---
 
+## [v2.1.5] - 2026/08/19
+
+### 📦 GitHub latest Release 社区下载
+- 识别 unmod.online 社区条目的 `github_repo` 字段；这类条目会直接读取指定 GitHub 仓库的 `releases/latest`，而非依赖社区中保存的旧包副本。
+- 仅接受 latest Release 中唯一的 ZIP 资产，校验资产 URL 必须属于所声明仓库；GitHub API 返回 SHA-256 摘要时，下载完成后再以固定时间比较校验内容。
+- GitHub API 限流、网络短时故障或下载失败时，会自动回退到已登录社区账户的既有下载端点；SHA-256 或文件大小不匹配不会降级绕过。
+- 插件详情现在明确显示下载来源；解析成功后展示当前 GitHub latest Release 版本与资产大小。安装清单始终记录实际成功下载包的版本，回退社区包时不会误写 GitHub tag。
+
+### 🧪 验证
+- 新增 GitHub latest Release 的解析、ZIP 资产选择、下载、大小与 SHA-256 校验回归测试；继续覆盖社区包回退行为。
+
+
 ## [v2.1.4] - 2026/08/16
 
 ### 🎨 可读性与侧栏账户体验

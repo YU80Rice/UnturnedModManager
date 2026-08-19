@@ -70,18 +70,21 @@ public class CommunityMod
     [JsonPropertyName("author_name")] public string AuthorName { get; set; } = "";
     [JsonPropertyName("cover_url")] public string? CoverUrl { get; set; }
     [JsonPropertyName("has_file")] public bool HasFile { get; set; }
+    [JsonPropertyName("github_repo")] public string? GitHubRepository { get; set; }
     [JsonPropertyName("downloads")] public int Downloads { get; set; }
     [JsonPropertyName("like_count")] public int LikeCount { get; set; }
 
     [JsonIgnore] public string DisplayTitle => Title.Pick();
     [JsonIgnore] public string DisplayDescription => Description?.Pick() ?? "暂无简介";
-    [JsonIgnore] public string Meta => $"{AuthorName}  ·  {FormatVersion(Version)}  ·  {Downloads:N0} 次下载";
+    [JsonIgnore] public virtual string EffectiveVersion => Version;
+    [JsonIgnore] public string Meta => $"{AuthorName}  ·  {FormatVersion(EffectiveVersion)}  ·  {Downloads:N0} 次下载";
     [JsonIgnore] public string CategoryDisplay => Category switch
     {
         "weapon" => "武器", "survival" => "生存", "map" => "地图", "vehicle" => "载具",
         "interface" => "界面", "other" => "其他", _ => string.IsNullOrWhiteSpace(Category) ? "其他" : Category
     };
     [JsonIgnore] public string DownloadLabel => $"{Downloads:N0} 次下载";
+    [JsonIgnore] public bool UsesGitHubRelease => !string.IsNullOrWhiteSpace(GitHubRepository);
     private static string FormatVersion(string version) =>
         version.StartsWith("v", StringComparison.OrdinalIgnoreCase) ? version : $"v{version}";
 }
@@ -90,10 +93,28 @@ public sealed class CommunityModDetail : CommunityMod
 {
     [JsonPropertyName("dependencies")] public List<CommunityDependency> Dependencies { get; set; } = [];
     [JsonPropertyName("file_size")] public long FileSize { get; set; }
+    [JsonIgnore] public string? GitHubReleaseTag { get; private set; }
+    [JsonIgnore] public long GitHubReleaseAssetSize { get; private set; }
+    [JsonIgnore] public bool IsGitHubReleaseResolved { get; private set; }
+    [JsonIgnore] public override string EffectiveVersion => IsGitHubReleaseResolved ? GitHubReleaseTag! : Version;
+    [JsonIgnore] public long EffectiveFileSize => IsGitHubReleaseResolved ? GitHubReleaseAssetSize : FileSize;
     [JsonIgnore] public string DisplayBody => Body?.Pick() is { Length: > 0 } body ? body : DisplayDescription;
     [JsonIgnore] public string DependencySummary => Dependencies.Count == 0
         ? "无额外依赖"
         : $"需要 {Dependencies.Count} 个依赖，将自动安装";
+    [JsonIgnore] public string DownloadSourceText => UsesGitHubRelease
+        ? IsGitHubReleaseResolved
+            ? $"GitHub 最新 Release · {GitHubReleaseTag}"
+            : "GitHub Release（下载时读取 latest）"
+        : "unmod.online 社区包";
+
+    public void ApplyGitHubRelease(string tagName, long assetSize)
+    {
+        if (string.IsNullOrWhiteSpace(tagName)) return;
+        GitHubReleaseTag = tagName.Trim();
+        GitHubReleaseAssetSize = assetSize > 0 ? assetSize : FileSize;
+        IsGitHubReleaseResolved = true;
+    }
 }
 
 public sealed class CommunityDependency

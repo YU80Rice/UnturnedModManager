@@ -1,11 +1,13 @@
 using System.Text.Json;
 using System.Net;
 using System.Net.Http;
+using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using UnturnedModManager.Helpers;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
+using UnturnedModManager.ViewModels;
 using Xunit;
 
 namespace UnturnedModManager.Tests;
@@ -421,6 +423,242 @@ public sealed class ModelBehaviorTests
         }
     }
 
+    [Fact]
+    public async Task CommunityApi_DownloadsLatestGitHubReleaseForGitHubSource()
+    {
+        var cacheRoot = Path.Combine(Path.GetTempPath(), "umm-github-release-" + Guid.NewGuid().ToString("N"));
+        var package = Encoding.UTF8.GetBytes("github-release-package");
+        var digest = Convert.ToHexString(SHA256.HashData(package));
+        const string assetUrl = "https://github.com/example/mod/releases/download/v1.2.3/mod.zip";
+        var detailJson = """
+        {"mod":{"id":42,"title":{"zh":"GitHub 测试插件"},"version":"1.0.0","github_repo":"example/mod","has_file":true}}
+        """;
+        var releaseJson = $$"""
+        {"tag_name":"v1.2.3","assets":[{"name":"mod.zip","browser_download_url":"{{assetUrl}}","size":{{package.Length}},"digest":"sha256:{{digest}}"}]}
+        """;
+
+        try
+        {
+            var handler = new CommunityGitHubHandler(detailJson, releaseJson, package, assetUrl);
+            using var http = new HttpClient(handler) { BaseAddress = new Uri("https://unmod.online/") };
+            using var api = new CommunityApiClient(new CommunityCacheService(cacheRoot), http);
+
+            var detail = await api.GetModAsync(42);
+            var downloaded = await api.DownloadAsync(detail, null);
+
+            Assert.True(detail.IsGitHubReleaseResolved);
+            Assert.Equal("1.0.0", detail.Version);
+            Assert.Equal("v1.2.3", detail.EffectiveVersion);
+            Assert.Equal(package.Length, detail.EffectiveFileSize);
+            Assert.Equal("mod.zip", downloaded.FileName);
+            Assert.Equal(package, downloaded.Content);
+            Assert.Equal("GitHub 最新 Release", downloaded.Source);
+            Assert.Equal("v1.2.3", downloaded.SourceVersion);
+            Assert.Equal(0, handler.CommunityFallbackRequests);
+            Assert.Equal(2, handler.GitHubReleaseRequests);
+            Assert.Equal(1, handler.GitHubAssetRequests);
+        }
+        finally
+        {
+            if (Directory.Exists(cacheRoot)) Directory.Delete(cacheRoot, true);
+        }
+    }
+
+    [Fact]
+    public async Task CommunityApi_RejectsGitHubAssetWithInvalidDigestWithoutFallback()
+    {
+        var cacheRoot = Path.Combine(Path.GetTempPath(), "umm-github-integrity-" + Guid.NewGuid().ToString("N"));
+        var package = Encoding.UTF8.GetBytes("tampered-package");
+        const string assetUrl = "https://github.com/example/mod/releases/download/v1.2.3/mod.zip";
+        const string wrongDigest = "3B5D5C3712955042212316173CCF37BE800E6A0AE2DCD7A3E2D2028B0A680B56";
+        var releaseJson = $$"""
+        {"tag_name":"v1.2.3","assets":[{"name":"mod.zip","browser_download_url":"{{assetUrl}}","size":{{package.Length}},"digest":"sha256:{{wrongDigest}}"}]}
+        """;
+
+        try
+        {
+            var handler = new CommunityGitHubHandler("{}", releaseJson, package, assetUrl);
+            using var http = new HttpClient(handler) { BaseAddress = new Uri("https://unmod.online/") };
+            using var api = new CommunityApiClient(new CommunityCacheService(cacheRoot), http);
+            var detail = new CommunityModDetail { Id = 42, GitHubRepository = "example/mod" };
+
+            await Assert.ThrowsAnyAsync<IOException>(() => api.DownloadAsync(detail, null));
+
+            Assert.Equal(0, handler.CommunityFallbackRequests);
+            Assert.Equal(1, handler.GitHubReleaseRequests);
+            Assert.Equal(1, handler.GitHubAssetRequests);
+        }
+        finally
+        {
+            if (Directory.Exists(cacheRoot)) Directory.Delete(cacheRoot, true);
+        }
+    }
+
+    [Fact]
+    public async Task CommunityApi_FallsBackToCommunityPackageWhenGitHubReleaseIsUnavailable()
+    {
+        var cacheRoot = Path.Combine(Path.GetTempPath(), "umm-github-fallback-" + Guid.NewGuid().ToString("N"));
+        var fallbackPackage = Encoding.UTF8.GetBytes("community-package");
+
+        try
+        {
+            var handler = new CommunityGitHubHandler("{}", "{}", fallbackPackage, "", HttpStatusCode.ServiceUnavailable);
+            using var http = new HttpClient(handler) { BaseAddress = new Uri("https://unmod.online/") };
+            using var api = new CommunityApiClient(new CommunityCacheService(cacheRoot), http);
+            var detail = new CommunityModDetail { Id = 42, GitHubRepository = "example/mod" };
+
+            var downloaded = await api.DownloadAsync(detail, null);
+
+            Assert.Equal(fallbackPackage, downloaded.Content);
+            Assert.Equal("unmod.online 社区包", downloaded.Source);
+            Assert.Equal(1, handler.GitHubReleaseRequests);
+            Assert.Equal(1, handler.CommunityFallbackRequests);
+        }
+        finally
+        {
+            if (Directory.Exists(cacheRoot)) Directory.Delete(cacheRoot, true);
+        }
+    }
+
+    [Fact]
+    public async Task CommunityInstaller_RecordsCommunityVersionWhenGitHubAssetFallsBack()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-github-version-fallback-" + Guid.NewGuid().ToString("N"));
+        var cacheRoot = Path.Combine(root, "cache");
+        var stateRoot = Path.Combine(root, "state");
+        var gameRoot = Path.Combine(root, "game");
+        var package = CreateZipPackage("BepInEx/plugins/Example.dll", "community-v1");
+        const string assetUrl = "https://github.com/example/mod/releases/download/v2.0.0/mod.zip";
+        var digest = Convert.ToHexString(SHA256.HashData(package));
+        var detailJson = """
+        {"mod":{"id":42,"title":{"zh":"回退版本测试"},"version":"1.0.0","github_repo":"example/mod","has_file":true}}
+        """;
+        var releaseJson = $$"""
+        {"tag_name":"v2.0.0","assets":[{"name":"mod.zip","browser_download_url":"{{assetUrl}}","size":{{package.Length}},"digest":"sha256:{{digest}}"}]}
+        """;
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            var handler = new CommunityGitHubHandler(detailJson, releaseJson, package, assetUrl, assetStatus: HttpStatusCode.ServiceUnavailable);
+            using var http = new HttpClient(handler) { BaseAddress = new Uri("https://unmod.online/") };
+            using var api = new CommunityApiClient(new CommunityCacheService(cacheRoot), http);
+            var detail = await api.GetModAsync(42);
+            var installer = new CommunityModInstaller(stateRoot);
+
+            await installer.InstallWithDependenciesDetailedAsync(api, detail, gameRoot);
+
+            var installed = Assert.Single(installer.GetInstalledMods());
+            Assert.Equal("1.0.0", installed.Version);
+            Assert.Equal("v2.0.0", detail.EffectiveVersion);
+            Assert.NotEqual(installed.Version, detail.EffectiveVersion);
+            Assert.Equal(1, handler.CommunityFallbackRequests);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public async Task LocalMods_SynchronizesEffectiveGitHubVersionForUpdateState()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-local-github-version-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "game");
+        var stateRoot = Path.Combine(root, "state");
+        var cacheRoot = Path.Combine(root, "cache");
+        var pluginPath = Path.Combine(gameRoot, "BepInEx", "plugins", "Plugin.dll");
+        const string assetUrl = "https://github.com/example/mod/releases/download/v2.0.0/mod.zip";
+        const string detailJson = """
+        {"mod":{"id":42,"title":{"zh":"GitHub 同步测试"},"version":"1.0.0","github_repo":"example/mod","has_file":true}}
+        """;
+        const string releaseJson = """
+        {"tag_name":"v2.0.0","assets":[{"name":"mod.zip","browser_download_url":"https://github.com/example/mod/releases/download/v2.0.0/mod.zip","size":1}]}
+        """;
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(pluginPath)!);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            File.Copy(typeof(CommunityModInstaller).Assembly.Location, pluginPath);
+            Directory.CreateDirectory(stateRoot);
+            var manifest = new InstalledCommunityMod
+            {
+                RemoteId = 42,
+                Title = "GitHub 同步测试",
+                Version = "1.0.0",
+                Files = [new InstalledCommunityFile { RelativePath = "BepInEx/plugins/Plugin.dll" }]
+            };
+            File.WriteAllText(Path.Combine(stateRoot, "42.json"), JsonSerializer.Serialize(manifest));
+
+            var handler = new CommunityGitHubHandler(detailJson, releaseJson, [0], assetUrl);
+            using var http = new HttpClient(handler) { BaseAddress = new Uri("https://unmod.online/") };
+            var installer = new CommunityModInstaller(stateRoot);
+            var localMods = new LocalModService(installer, () => gameRoot);
+            using var viewModel = new LocalModsViewModel(
+                new CommunityApiClient(new CommunityCacheService(cacheRoot), http),
+                installer,
+                localMods,
+                new UserDialogService());
+
+            await viewModel.ActivateAsync();
+
+            var item = Assert.Single(viewModel.Mods);
+            Assert.Equal("v2.0.0", item.RemoteVersion);
+            Assert.True(item.HasUpdate);
+
+            item.InstalledVersion = "v2.0.0";
+            Assert.False(item.HasUpdate);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public async Task CommunityApi_RejectsMalformedGitHubDigestWithoutDownloadingOrFallback()
+    {
+        var cacheRoot = Path.Combine(Path.GetTempPath(), "umm-github-malformed-digest-" + Guid.NewGuid().ToString("N"));
+        var package = Encoding.UTF8.GetBytes("untrusted-package");
+        const string assetUrl = "https://github.com/example/mod/releases/download/v1.2.3/mod.zip";
+        const string malformedDigest = "sha256:not-a-valid-digest";
+        var releaseJson = $$"""
+        {"tag_name":"v1.2.3","assets":[{"name":"mod.zip","browser_download_url":"{{assetUrl}}","size":{{package.Length}},"digest":"{{malformedDigest}}"}]}
+        """;
+
+        try
+        {
+            var handler = new CommunityGitHubHandler("{}", releaseJson, package, assetUrl);
+            using var http = new HttpClient(handler) { BaseAddress = new Uri("https://unmod.online/") };
+            using var api = new CommunityApiClient(new CommunityCacheService(cacheRoot), http);
+            var detail = new CommunityModDetail { Id = 42, GitHubRepository = "example/mod" };
+
+            await Assert.ThrowsAnyAsync<IOException>(() => api.DownloadAsync(detail, null));
+
+            Assert.Equal(1, handler.GitHubReleaseRequests);
+            Assert.Equal(0, handler.GitHubAssetRequests);
+            Assert.Equal(0, handler.CommunityFallbackRequests);
+        }
+        finally
+        {
+            if (Directory.Exists(cacheRoot)) Directory.Delete(cacheRoot, true);
+        }
+    }
+
+    private static byte[] CreateZipPackage(string entryPath, string content)
+    {
+        using var memory = new MemoryStream();
+        using (var archive = new ZipArchive(memory, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            var entry = archive.CreateEntry(entryPath);
+            using var writer = new StreamWriter(entry.Open(), Encoding.UTF8, leaveOpen: false);
+            writer.Write(content);
+        }
+        return memory.ToArray();
+    }
+
     private sealed class RecordingHandler(ICollection<string> requestedUrls, string responseBody) : HttpMessageHandler
     {
         public HttpRequestMessage? LastRequest { get; private set; }
@@ -454,6 +692,60 @@ public sealed class ModelBehaviorTests
             {
                 Content = new ByteArrayContent(assetContent)
             });
+        }
+    }
+
+    private sealed class CommunityGitHubHandler(
+        string detailJson,
+        string releaseJson,
+        byte[] package,
+        string assetUrl,
+        HttpStatusCode latestReleaseStatus = HttpStatusCode.OK,
+        HttpStatusCode assetStatus = HttpStatusCode.OK) : HttpMessageHandler
+    {
+        public int GitHubReleaseRequests { get; private set; }
+        public int GitHubAssetRequests { get; private set; }
+        public int CommunityFallbackRequests { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var uri = request.RequestUri ?? throw new InvalidOperationException("请求 URL 缺失。");
+            if (uri.AbsoluteUri.EndsWith("/api/mods/42", StringComparison.Ordinal))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(detailJson, Encoding.UTF8, "application/json")
+                });
+            }
+
+            if (uri.AbsoluteUri.EndsWith("/releases/latest", StringComparison.Ordinal))
+            {
+                GitHubReleaseRequests++;
+                return Task.FromResult(new HttpResponseMessage(latestReleaseStatus)
+                {
+                    Content = new StringContent(releaseJson, Encoding.UTF8, "application/json")
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(assetUrl) && uri.AbsoluteUri.Equals(assetUrl, StringComparison.Ordinal))
+            {
+                GitHubAssetRequests++;
+                return Task.FromResult(new HttpResponseMessage(assetStatus)
+                {
+                    Content = new ByteArrayContent(package)
+                });
+            }
+
+            if (uri.AbsoluteUri.EndsWith("/api/mods/42/file", StringComparison.Ordinal))
+            {
+                CommunityFallbackRequests++;
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new ByteArrayContent(package)
+                });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
         }
     }
 }

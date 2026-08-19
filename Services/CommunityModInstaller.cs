@@ -71,7 +71,8 @@ public sealed class CommunityModInstaller
         var previous = LoadManifest(mod.Id) ?? throw new InvalidOperationException("未找到该插件的社区安装记录。");
         progress?.Report(TaskOperationProgress.At(3, "正在确认现有安装记录…"));
         progress?.Report(TaskOperationProgress.At(8, $"正在下载新版本：{mod.DisplayTitle}"));
-        var package = await api.DownloadAsync(mod.Id, CreateDownloadProgress(progress, 8, 70, mod.DisplayTitle), token);
+        var package = await api.DownloadAsync(mod, CreateDownloadProgress(progress, 8, 70, mod.DisplayTitle), token);
+        progress?.Report(TaskOperationProgress.At(72, $"下载完成：{package.Source}"));
         progress?.Report(TaskOperationProgress.At(74, "正在备份当前版本…"));
         var snapshots = previous.Files.Select(file =>
         {
@@ -117,7 +118,8 @@ public sealed class CommunityModInstaller
         }
 
         progress?.Report(TaskOperationProgress.At(12, $"正在下载：{mod.DisplayTitle}"));
-        var download = await api.DownloadAsync(mod.Id, CreateDownloadProgress(progress, 12, 75, mod.DisplayTitle), token);
+        var download = await api.DownloadAsync(mod, CreateDownloadProgress(progress, 12, 75, mod.DisplayTitle), token);
+        progress?.Report(TaskOperationProgress.At(77, $"下载完成：{download.Source}"));
         progress?.Report(TaskOperationProgress.At(80, $"正在校验并安全安装：{mod.DisplayTitle}"));
         await Task.Run(() => InstallPackage(mod, download, gameRoot), token);
         progress?.Report(TaskOperationProgress.At(96, $"已安装：{mod.DisplayTitle}"));
@@ -166,7 +168,9 @@ public sealed class CommunityModInstaller
         {
             RemoteId = mod.Id,
             Title = mod.DisplayTitle,
-            Version = mod.Version,
+            Version = string.IsNullOrWhiteSpace(package.SourceVersion)
+                ? mod.EffectiveVersion
+                : package.SourceVersion,
             InstalledAt = DateTimeOffset.Now
         };
 

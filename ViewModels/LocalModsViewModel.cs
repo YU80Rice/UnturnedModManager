@@ -203,7 +203,7 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
                 if (remote is null) continue;
                 item.CommunityModId = remote.Id;
                 item.CommunityTitle = remote.DisplayTitle;
-                item.RemoteVersion = remote.Version;
+                item.RemoteVersion = remote.EffectiveVersion;
             }
             catch (OperationCanceledException) { throw; }
             catch
