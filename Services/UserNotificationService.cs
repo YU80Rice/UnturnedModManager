@@ -19,7 +19,12 @@ public sealed class UserNotificationService
     }
 }
 
-public sealed record ToastNotification(string Title, string Message, UserNoticeSeverity Severity)
+public sealed record ToastNotification(
+    string Title,
+    string Message,
+    UserNoticeSeverity Severity,
+    Action? Action,
+    TimeSpan? DisplayDuration)
 {
     public static ToastNotification From(UserNotice notice) => new(
         notice.Severity switch
@@ -30,5 +35,10 @@ public sealed record ToastNotification(string Title, string Message, UserNoticeS
             _ => "提示"
         },
         notice.Message,
-        notice.Severity);
+        notice.Severity,
+        notice.Action,
+        notice.DisplayDuration);
+
+    public bool HasAction => Action is not null;
+    public void InvokeAction() => Action?.Invoke();
 }

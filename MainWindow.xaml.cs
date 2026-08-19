@@ -13,7 +13,9 @@ public partial class MainWindow : FluentWindow
     private readonly ThemeService _themeService = App.Services.Theme;
     private readonly CommunityAuthService _authService = App.Services.Authentication;
     private readonly UserNotificationService _notifications = App.Services.Notifications;
+    private readonly LocalModService _localMods = App.Services.LocalMods;
     private readonly ObservableCollection<ToastNotification> _toasts = [];
+    private readonly SemaphoreSlim _dropImportGate = new(1, 1);
     private Page? _currentPage;
     private int? _pendingCommunityDetailId;
     public MainWindow()
@@ -144,11 +146,92 @@ public partial class MainWindow : FluentWindow
     {
         try
         {
-            await Task.Delay(TimeSpan.FromSeconds(toast.Severity == UserNoticeSeverity.Error ? 8 : 5));
+            var duration = toast.DisplayDuration
+                ?? TimeSpan.FromSeconds(toast.Severity == UserNoticeSeverity.Error ? 8 : 5);
+            await Task.Delay(duration);
             if (!Dispatcher.HasShutdownStarted && !Dispatcher.HasShutdownFinished)
                 await Dispatcher.InvokeAsync(() => _toasts.Remove(toast));
         }
         catch { }
+    }
+
+    private void ToastBorder_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: ToastNotification toast } || !toast.HasAction)
+            return;
+
+        try
+        {
+            toast.InvokeAction();
+            _toasts.Remove(toast);
+            e.Handled = true;
+        }
+        catch (Exception exception)
+        {
+            _notifications.Publish(new UserNotice($"无法打开诊断包目录：{exception.Message}", UserNoticeSeverity.Error));
+        }
+    }
+
+    private void Window_PreviewDragEnter(object sender, System.Windows.DragEventArgs e) => UpdateDropEffect(e);
+
+    private void Window_PreviewDragOver(object sender, System.Windows.DragEventArgs e) => UpdateDropEffect(e);
+
+    private async void Window_PreviewDrop(object sender, System.Windows.DragEventArgs e)
+    {
+        if (!TryGetDroppedFiles(e, out var files))
+            return;
+
+        e.Handled = true;
+        if (!files.Any(LocalModService.IsSupportedImportFile))
+        {
+            _notifications.Publish(new UserNotice("仅支持拖入 .dll 或包含 BepInEx/plugins 结构的 .zip 插件包。", UserNoticeSeverity.Warning));
+            return;
+        }
+        if (!_dropImportGate.Wait(0))
+        {
+            _notifications.Publish(new UserNotice("已有插件导入任务正在进行，请稍候。", UserNoticeSeverity.Information));
+            return;
+        }
+
+        try
+        {
+            var result = await Task.Run(() => _localMods.Import(files));
+            _notifications.Publish(new UserNotice(
+                result.Message,
+                result.Imported > 0 ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning));
+
+            if (result.Imported > 0 && _currentPage is Pages.ModListPage localModsPage)
+                await localModsPage.RefreshAfterExternalImportAsync();
+        }
+        catch (Exception exception)
+        {
+            _notifications.Publish(new UserNotice($"拖放导入失败：{exception.Message}", UserNoticeSeverity.Error));
+        }
+        finally
+        {
+            _dropImportGate.Release();
+        }
+    }
+
+    private static void UpdateDropEffect(System.Windows.DragEventArgs e)
+    {
+        if (!TryGetDroppedFiles(e, out var files)) return;
+
+        e.Effects = files.Any(LocalModService.IsSupportedImportFile)
+            ? System.Windows.DragDropEffects.Copy
+            : System.Windows.DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private static bool TryGetDroppedFiles(System.Windows.DragEventArgs e, out string[] files)
+    {
+        files = [];
+        if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)
+            || e.Data.GetData(System.Windows.DataFormats.FileDrop) is not string[] dropped)
+            return false;
+
+        files = dropped;
+        return true;
     }
     private async void AccountButton_Click(object sender, RoutedEventArgs e)
     {

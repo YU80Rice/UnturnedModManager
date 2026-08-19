@@ -332,6 +332,145 @@ public sealed class ModelBehaviorTests
     }
 
     [Fact]
+    public void DiagnosticService_ExportsPackageBesideLauncher()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-diagnostic-export-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "game");
+        var userProfile = Path.Combine(root, "profile");
+        var launcherDirectory = Path.Combine(root, "launcher");
+
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(gameRoot, "Logs"));
+            Directory.CreateDirectory(launcherDirectory);
+            File.WriteAllText(Path.Combine(gameRoot, "Logs", "Client.log"), "diagnostic log");
+            var service = new DiagnosticService(userProfile, launcherDirectory);
+
+            var folder = service.ExportLogs(gameRoot);
+
+            Assert.Equal(Path.GetFullPath(launcherDirectory), Path.GetDirectoryName(folder));
+            Assert.StartsWith("UMM-诊断包_", Path.GetFileName(folder));
+            Assert.True(File.Exists(Path.Combine(folder, "Client.log")));
+            Assert.True(File.Exists(Path.Combine(folder, "UMM-诊断摘要.txt")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void LocalMods_ImportsDroppedDllIntoBepInExPlugins()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-drop-dll-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "game");
+        var source = Path.Combine(root, "Example.dll");
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            File.WriteAllText(source, "plugin");
+            var service = new LocalModService(new CommunityModInstaller(Path.Combine(root, "state")), () => gameRoot);
+
+            var result = service.Import([source]);
+
+            Assert.Equal(1, result.Imported);
+            Assert.Equal(0, result.Skipped);
+            Assert.Equal("plugin", File.ReadAllText(Path.Combine(gameRoot, "BepInEx", "plugins", "Example.dll")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void LocalMods_ImportsValidatedBepInExPackageWithSingleWrapper()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-drop-zip-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "game");
+        var archivePath = Path.Combine(root, "Example.zip");
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            File.WriteAllBytes(archivePath, CreateZipPackage(
+                ("ExamplePack/BepInEx/plugins/Example.dll", "plugin"),
+                ("ExamplePack/BepInEx/config/Example.cfg", "enabled=true")));
+            var service = new LocalModService(new CommunityModInstaller(Path.Combine(root, "state")), () => gameRoot);
+
+            var result = service.Import([archivePath]);
+
+            Assert.Equal(1, result.Imported);
+            Assert.Equal(0, result.Skipped);
+            Assert.Equal("plugin", File.ReadAllText(Path.Combine(gameRoot, "BepInEx", "plugins", "Example.dll")));
+            Assert.Equal("enabled=true", File.ReadAllText(Path.Combine(gameRoot, "BepInEx", "config", "Example.cfg")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Theory]
+    [InlineData("BepInEx/config/OnlyConfig.cfg", "config")]
+    [InlineData("BepInEx/core/Unsafe.dll", "core")]
+    [InlineData("BepInEx/plugins/../Escape.dll", "escape")]
+    public void LocalMods_RejectsInvalidBepInExPackageWithoutWriting(string entryPath, string content)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-drop-invalid-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "game");
+        var archivePath = Path.Combine(root, "Invalid.zip");
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            File.WriteAllBytes(archivePath, CreateZipPackage((entryPath, content)));
+            var service = new LocalModService(new CommunityModInstaller(Path.Combine(root, "state")), () => gameRoot);
+
+            var result = service.Import([archivePath]);
+
+            Assert.Equal(0, result.Imported);
+            Assert.True(result.Skipped > 0);
+            Assert.False(Directory.Exists(Path.Combine(gameRoot, "BepInEx")));
+            Assert.False(File.Exists(Path.Combine(gameRoot, "Escape.dll")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void LocalMods_RejectsActualArchiveStreamBeyondRemainingBudget()
+    {
+        using var input = new MemoryStream(Encoding.UTF8.GetBytes("12345"));
+        using var output = new MemoryStream();
+        long remaining = 4;
+
+        Assert.Throws<InvalidDataException>(() => LocalModService.CopyToWithArchiveLimit(input, output, ref remaining));
+        Assert.Equal(0, output.Length);
+        Assert.Equal(4, remaining);
+    }
+
+    [Fact]
+    public void ToastNotification_InvokesMappedNoticeAction()
+    {
+        var invoked = false;
+        var toast = ToastNotification.From(new UserNotice(
+            "诊断包已生成。",
+            UserNoticeSeverity.Success,
+            () => invoked = true));
+
+        Assert.True(toast.HasAction);
+        toast.InvokeAction();
+        Assert.True(invoked);
+    }
+
+    [Fact]
     public async Task CommunityCache_PreservesFreshAndStaleMetadata()
     {
         var directory = Path.Combine(Path.GetTempPath(), "umm-cache-" + Guid.NewGuid().ToString("N"));
@@ -677,13 +816,19 @@ public sealed class ModelBehaviorTests
     }
 
     private static byte[] CreateZipPackage(string entryPath, string content)
+        => CreateZipPackage((entryPath, content));
+
+    private static byte[] CreateZipPackage(params (string EntryPath, string Content)[] entries)
     {
         using var memory = new MemoryStream();
         using (var archive = new ZipArchive(memory, ZipArchiveMode.Create, leaveOpen: true))
         {
-            var entry = archive.CreateEntry(entryPath);
-            using var writer = new StreamWriter(entry.Open(), Encoding.UTF8, leaveOpen: false);
-            writer.Write(content);
+            foreach (var (entryPath, content) in entries)
+            {
+                var entry = archive.CreateEntry(entryPath);
+                using var writer = new StreamWriter(entry.Open(), Encoding.UTF8, leaveOpen: false);
+                writer.Write(content);
+            }
         }
         return memory.ToArray();
     }

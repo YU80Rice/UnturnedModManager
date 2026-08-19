@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using UnturnedModManager.Models;
 
@@ -10,6 +11,8 @@ namespace UnturnedModManager.Services;
 /// </summary>
 public sealed class LocalModService
 {
+    private const int MaxArchiveEntries = 4096;
+    private const long MaxExpandedArchiveBytes = 1024L * 1024 * 1024;
     private readonly CommunityModInstaller _installer;
     private readonly Func<string?> _gamePathProvider;
 
@@ -30,6 +33,11 @@ public sealed class LocalModService
         if (string.IsNullOrWhiteSpace(gamePath)) return null;
         return Path.Combine(gamePath, "BepInEx", "plugins");
     }
+
+    public static bool IsSupportedImportFile(string path) =>
+        path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".dll.disabled", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
 
     public IReadOnlyList<ModItem> Scan()
     {
@@ -174,18 +182,17 @@ public sealed class LocalModService
 
     public LocalModImportResult Import(IEnumerable<string> sourceFiles)
     {
-        var pluginsPath = GetPluginsPath();
-        if (pluginsPath is null)
+        var gameRoot = _gamePathProvider();
+        if (string.IsNullOrWhiteSpace(gameRoot) || !File.Exists(Path.Combine(gameRoot, "Unturned.exe")))
             return new(0, 0, "请先在设置中选择有效的 Unturned 游戏目录。");
 
-        Directory.CreateDirectory(pluginsPath);
-        var imported = 0;
+        var prepared = new List<ImportEntry>();
         var skipped = 0;
         var failures = new List<string>();
 
         foreach (var source in sourceFiles.Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            if (!File.Exists(source) || !IsPluginFile(source))
+            if (!File.Exists(source) || !IsSupportedImportFile(source))
             {
                 skipped++;
                 continue;
@@ -193,21 +200,96 @@ public sealed class LocalModService
 
             try
             {
-                File.Copy(source, Path.Combine(pluginsPath, Path.GetFileName(source)), overwrite: true);
-                imported++;
+                if (source.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                    prepared.AddRange(ReadBepInExPackage(source));
+                else
+                    prepared.Add(new ImportEntry(
+                        $"BepInEx/plugins/{Path.GetFileName(source)}",
+                        source,
+                        null,
+                        null,
+                        new FileInfo(source).Length,
+                        true));
             }
             catch (Exception ex)
             {
+                skipped++;
                 failures.Add($"{Path.GetFileName(source)}：{ex.Message}");
             }
         }
 
-        var message = imported > 0
-            ? $"已导入 {imported} 个插件，正在匹配社区信息。"
-            : "没有识别到可导入的 .dll 或 .dll.disabled 插件文件。";
-        if (skipped > 0) message += $" 已跳过 {skipped} 个不支持的文件。";
-        if (failures.Count > 0) message += "\n" + string.Join("\n", failures.Take(3));
-        return new(imported, skipped + failures.Count, message);
+        if (prepared.Count == 0)
+        {
+            var emptyMessage = "没有识别到可导入的 .dll 或有效的 BepInEx 插件包。";
+            if (skipped > 0) emptyMessage += $" 已跳过 {skipped} 个不支持或无效的文件。";
+            if (failures.Count > 0) emptyMessage += "\n" + string.Join("\n", failures.Take(3));
+            return new(0, skipped, emptyMessage);
+        }
+
+        var duplicates = prepared
+            .GroupBy(entry => entry.RelativePath, StringComparer.OrdinalIgnoreCase)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .Take(3)
+            .ToList();
+        if (duplicates.Count > 0)
+            return new(0, skipped + prepared.Count,
+                "导入被取消：拖入的文件存在重复安装目标，无法安全决定覆盖顺序：\n" + string.Join("\n", duplicates));
+
+        var stagingRoot = Path.Combine(gameRoot, $".umm-import-{Guid.NewGuid():N}");
+        var committed = new List<CommittedImport>();
+        try
+        {
+            var remainingArchiveBytes = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+            foreach (var entry in prepared)
+            {
+                var staged = SafeDestination(Path.Combine(stagingRoot, "files"), entry.RelativePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(staged)!);
+                if (entry.ArchivePath is null)
+                {
+                    File.Copy(entry.SourceFile!, staged, overwrite: false);
+                    continue;
+                }
+
+                var archivePath = Path.GetFullPath(entry.ArchivePath);
+                var remaining = remainingArchiveBytes.GetValueOrDefault(archivePath, MaxExpandedArchiveBytes);
+                WriteStagedArchiveEntry(entry, staged, ref remaining);
+                remainingArchiveBytes[archivePath] = remaining;
+            }
+
+            foreach (var entry in prepared)
+            {
+                var destination = SafeDestination(gameRoot, entry.RelativePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                string? backup = null;
+                if (File.Exists(destination))
+                {
+                    backup = SafeDestination(Path.Combine(stagingRoot, "backup"), entry.RelativePath);
+                    Directory.CreateDirectory(Path.GetDirectoryName(backup)!);
+                    File.Copy(destination, backup, overwrite: true);
+                }
+
+                var staged = SafeDestination(Path.Combine(stagingRoot, "files"), entry.RelativePath);
+                File.Move(staged, destination, overwrite: true);
+                committed.Add(new CommittedImport(destination, backup));
+            }
+
+            var pluginCount = prepared.Count(entry => entry.IsPlugin);
+            var message = $"已导入 {pluginCount} 个插件文件，共写入 {prepared.Count} 个 BepInEx 文件。";
+            if (skipped > 0) message += $" 已跳过 {skipped} 个不支持或无效的文件。";
+            if (failures.Count > 0) message += "\n" + string.Join("\n", failures.Take(3));
+            return new(pluginCount, skipped, message);
+        }
+        catch (Exception ex)
+        {
+            RollbackImports(committed);
+            return new(0, skipped + prepared.Count, $"导入失败，已尝试恢复原有文件：{ex.Message}");
+        }
+        finally
+        {
+            try { if (Directory.Exists(stagingRoot)) Directory.Delete(stagingRoot, recursive: true); }
+            catch { }
+        }
     }
 
     public LocalModOperationResult OpenPluginsFolder()
@@ -281,6 +363,137 @@ public sealed class LocalModService
     private static bool IsPluginFile(string path) =>
         path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
         || path.EndsWith(".dll.disabled", StringComparison.OrdinalIgnoreCase);
+
+    private static IReadOnlyList<ImportEntry> ReadBepInExPackage(string archivePath)
+    {
+        using var archive = ZipFile.OpenRead(archivePath);
+        if (archive.Entries.Count > MaxArchiveEntries)
+            throw new InvalidDataException($"插件包文件数量超过安全限制（{MaxArchiveEntries}）。");
+
+        var entries = new List<ImportEntry>();
+        string? wrapper = null;
+        long expandedBytes = 0;
+        var hasPluginDll = false;
+
+        foreach (var entry in archive.Entries)
+        {
+            if (string.IsNullOrEmpty(entry.Name)) continue;
+
+            var segments = SplitArchivePath(entry.FullName);
+            var bepinIndex = Array.FindIndex(segments, segment =>
+                segment.Equals("BepInEx", StringComparison.OrdinalIgnoreCase));
+            if (bepinIndex < 0)
+                throw new InvalidDataException("压缩包必须包含 BepInEx/plugins 目录结构。");
+
+            var currentWrapper = string.Join('/', segments.Take(bepinIndex));
+            if (wrapper is null) wrapper = currentWrapper;
+            else if (!wrapper.Equals(currentWrapper, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("压缩包包含多个不一致的 BepInEx 根目录。");
+
+            var relativeSegments = segments[bepinIndex..];
+            if (relativeSegments.Length < 3)
+                throw new InvalidDataException("BepInEx 包内文件必须位于 plugins 或 config 子目录。");
+
+            var area = relativeSegments[1];
+            if (!area.Equals("plugins", StringComparison.OrdinalIgnoreCase)
+                && !area.Equals("config", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException($"压缩包不允许写入 BepInEx/{area}。仅允许 plugins 与 config。");
+
+            if (entry.Length < 0 || entry.Length > MaxExpandedArchiveBytes - expandedBytes)
+                throw new InvalidDataException("压缩包解压后体积超过 1 GB 安全限制。");
+            expandedBytes += entry.Length;
+
+            var relativePath = string.Join('/', relativeSegments);
+            var isPluginDll = area.Equals("plugins", StringComparison.OrdinalIgnoreCase)
+                && relativePath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
+            hasPluginDll |= isPluginDll;
+            entries.Add(new ImportEntry(relativePath, null, archivePath, entry.FullName, entry.Length, isPluginDll));
+        }
+
+        if (!hasPluginDll)
+            throw new InvalidDataException("压缩包未包含 BepInEx/plugins 下的 .dll 插件文件。");
+
+        return entries;
+    }
+
+    private static string[] SplitArchivePath(string fullName)
+    {
+        var normalized = fullName.Replace('\\', '/').Trim('/');
+        if (string.IsNullOrWhiteSpace(normalized))
+            throw new InvalidDataException("压缩包包含空路径。");
+
+        var segments = normalized.Split('/', StringSplitOptions.None);
+        if (segments.Any(segment => string.IsNullOrWhiteSpace(segment)
+            || segment is "." or ".."
+            || segment.Contains(':')))
+            throw new InvalidDataException($"压缩包包含不安全路径：{fullName}");
+        return segments;
+    }
+
+    private static string SafeDestination(string root, string relativePath)
+    {
+        var fullRoot = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+        var destination = Path.GetFullPath(Path.Combine(fullRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+        if (!destination.StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException($"安装路径越界：{relativePath}");
+        return destination;
+    }
+
+    private static void WriteStagedArchiveEntry(ImportEntry entry, string destination, ref long remainingArchiveBytes)
+    {
+        using var archive = ZipFile.OpenRead(entry.ArchivePath!);
+        var source = archive.GetEntry(entry.ArchiveEntryName!)
+            ?? throw new InvalidDataException("压缩包内容在校验后发生变化，已取消导入。");
+        if (source.Length != entry.Length)
+            throw new InvalidDataException("压缩包内容大小在校验后发生变化，已取消导入。");
+        using var input = source.Open();
+        using var output = new FileStream(destination, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        CopyToWithArchiveLimit(input, output, ref remainingArchiveBytes);
+    }
+
+    internal static void CopyToWithArchiveLimit(Stream input, Stream output, ref long remainingArchiveBytes)
+    {
+        if (remainingArchiveBytes < 0)
+            throw new InvalidDataException("压缩包解压配额无效。");
+
+        var buffer = new byte[81920];
+        while (true)
+        {
+            var bytesRead = input.Read(buffer, 0, buffer.Length);
+            if (bytesRead == 0) return;
+            if (bytesRead > remainingArchiveBytes)
+                throw new InvalidDataException("压缩包实际解压体积超过 1 GB 安全限制。");
+
+            output.Write(buffer, 0, bytesRead);
+            remainingArchiveBytes -= bytesRead;
+        }
+    }
+
+    private static void RollbackImports(IEnumerable<CommittedImport> committed)
+    {
+        foreach (var item in committed.Reverse())
+        {
+            try
+            {
+                if (item.BackupPath is not null && File.Exists(item.BackupPath))
+                    File.Copy(item.BackupPath, item.Destination, overwrite: true);
+                else if (File.Exists(item.Destination))
+                    File.Delete(item.Destination);
+            }
+            catch { }
+        }
+    }
+
+    private sealed record ImportEntry(
+        string RelativePath,
+        string? SourceFile,
+        string? ArchivePath,
+        string? ArchiveEntryName,
+        long Length,
+        bool IsPlugin);
+
+    private sealed record CommittedImport(string Destination, string? BackupPath);
 }
 
 public sealed record LocalModOperationResult(bool Success, string Message);

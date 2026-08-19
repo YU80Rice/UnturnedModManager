@@ -387,7 +387,11 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
             AppSettings.LastSessionCrashed = false;
             OnPropertyChanged(nameof(HasCrashAlert));
             RefreshDiagnosticProperties();
-            RaiseNotice($"诊断日志已导出：{Path.GetFileName(folder)}", UserNoticeSeverity.Success);
+            NoticeRaised?.Invoke(new UserNotice(
+                $"诊断包已生成：{folder}\n点击此通知可打开所在目录。",
+                UserNoticeSeverity.Success,
+                () => _diagnostics.OpenExportFolder(folder),
+                TimeSpan.FromSeconds(12)));
         }
         catch (Exception ex) { RaiseNotice($"导出失败：{ex.Message}", UserNoticeSeverity.Error); }
         finally { IsBusy = false; }

@@ -10,10 +10,14 @@ public sealed class DiagnosticService
 {
     private const int MaximumBytesPerLog = 1_500_000;
     private readonly string _userProfileDirectory;
+    private readonly string _launcherDirectory;
 
-    public DiagnosticService(string? userProfileDirectory = null) =>
+    public DiagnosticService(string? userProfileDirectory = null, string? launcherDirectory = null)
+    {
         _userProfileDirectory = userProfileDirectory
             ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        _launcherDirectory = launcherDirectory ?? AppContext.BaseDirectory;
+    }
 
     public DiagnosticAnalysis Analyze(string? gamePath)
     {
@@ -90,14 +94,21 @@ public sealed class DiagnosticService
 
     public string ExportLogs(string? gamePath, DiagnosticAnalysis? analysis = null)
     {
-        var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-        var folder = Path.Combine(desktop, $"Unturned_模组崩溃诊断_{DateTime.Now:yyyyMMdd_HHmmss}");
+        var exportRoot = Path.GetFullPath(_launcherDirectory);
+        var folder = Path.Combine(exportRoot, $"UMM-诊断包_{DateTime.Now:yyyyMMdd_HHmmss}");
         Directory.CreateDirectory(folder);
         foreach (var source in GetLogSources(gamePath).Where(File.Exists))
             CopyIfExists(source, Path.Combine(folder, Path.GetFileName(source)));
         File.WriteAllText(Path.Combine(folder, "UMM-诊断摘要.txt"), (analysis ?? Analyze(gamePath)).ToReportText(), Encoding.UTF8);
-        Process.Start(new ProcessStartInfo("explorer.exe", folder) { UseShellExecute = true });
         return folder;
+    }
+
+    public void OpenExportFolder(string folder)
+    {
+        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+            throw new DirectoryNotFoundException($"诊断包目录不存在：{folder}");
+
+        Process.Start(new ProcessStartInfo("explorer.exe", folder) { UseShellExecute = true });
     }
 
     private IReadOnlyList<string> GetLogSources(string? gamePath)

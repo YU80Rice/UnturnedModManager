@@ -62,22 +62,7 @@ public partial class ModListPage : Page
         e.Handled = true;
     }
 
-    private void Page_DragOver(object sender, System.Windows.DragEventArgs e)
-    {
-        e.Effects = e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)
-            ? System.Windows.DragDropEffects.Copy
-            : System.Windows.DragDropEffects.None;
-        e.Handled = true;
-    }
-
-    private async void Page_Drop(object sender, System.Windows.DragEventArgs e)
-    {
-        e.Handled = true;
-        if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)
-            || e.Data.GetData(System.Windows.DataFormats.FileDrop) is not string[] files)
-            return;
-        await _viewModel.ImportAsync(files);
-    }
+    public Task RefreshAfterExternalImportAsync() => _viewModel.RefreshAfterExternalImportAsync();
 
     private static bool HasInteractiveAncestor(DependencyObject? current)
     {

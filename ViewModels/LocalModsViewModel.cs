@@ -6,7 +6,14 @@ using UnturnedModManager.Services;
 namespace UnturnedModManager.ViewModels;
 
 public enum UserNoticeSeverity { Information, Success, Warning, Error }
-public sealed record UserNotice(string Message, UserNoticeSeverity Severity);
+public sealed record UserNotice(
+    string Message,
+    UserNoticeSeverity Severity,
+    Action? Action = null,
+    TimeSpan? DisplayDuration = null)
+{
+    public bool HasAction => Action is not null;
+}
 
 /// <summary>
 /// 本地插件页的状态与用例协调器。文件操作位于 LocalModService，页面只负责显示和输入路由。
@@ -132,6 +139,8 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
         RaiseNotice(result.Message, result.Imported > 0 ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
         if (result.Imported > 0) await RefreshAsync(force: true);
     }
+
+    public Task RefreshAfterExternalImportAsync() => RefreshAsync(force: true);
 
     private async Task RefreshAsync(bool force)
     {

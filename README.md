@@ -1,4 +1,4 @@
-# Unturned Mod Manager v2.1.6
+# Unturned Mod Manager v2.1.7
 
 > 面向 Windows 的 Unturned 启动、BepInEx 插件管理与 [unmod.online](https://unmod.online/) 社区客户端。
 
@@ -6,7 +6,7 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![WPF-UI](https://img.shields.io/badge/WPF--UI-3.0.5-CA1E1E)](https://github.com/lepoco/wpfui)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?logo=windows)](https://www.microsoft.com/windows)
-[![Release](https://img.shields.io/badge/Release-v2.1.6-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
+[![Release](https://img.shields.io/badge/Release-v2.1.7-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
 [![Build and test](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml/badge.svg)](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml)
 
 **仓库：** [github.com/YU80Rice/UnturnedModManager](https://github.com/YU80Rice/UnturnedModManager)
@@ -45,7 +45,7 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 
 ---
 
-## v2.1.6 能做什么
+## v2.1.7 能做什么
 
 ### 游戏与插件环境
 
@@ -54,7 +54,7 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 - 通过 `winhttp.dll` / `winhttp.dll.disabled` 切换 BepInEx 注入状态；
 - 模组模式使用 `Unturned.exe -NoBattlEye`，原版模式使用 `Unturned_BE.exe`；
 - 可选部署 DXVK 2.4，并根据检测到的 GPU 架构给出兼容性提示。
-- 可在首页分析本机 Unity、Unturned、BepInEx 与 DXVK 日志，导出不上传的诊断包以协助排查异常退出。
+- 可在首页分析本机 Unity、Unturned、BepInEx 与 DXVK 日志；诊断包保存在启动器同级目录，右下角通知会显示路径，点击即可打开。
 
 配置默认保存于 `%AppData%\Roaming\UnturnedModManager\config.json`。发布包目录不保存用户配置；如需隔离验收或便携式调试，可在启动前设置 `UMM_DATA_DIRECTORY`，配置和社区缓存会一起写入该目录。
 
@@ -75,7 +75,7 @@ UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerf
 ### 本地插件管理
 
 - 递归扫描 `BepInEx/plugins` 下的 `.dll` 与 `.dll.disabled`；
-- 启用、停用、导入和卸载本地插件；
+- 启用、停用、导入和卸载本地插件；任意页面可拖入 `.dll` 或符合 `BepInEx/plugins` 结构的 ZIP 包自动安装；
 - 区分社区托管插件与玩家手动安装插件；
 - 将本地 DLL 名称、程序集信息与社区条目进行匹配；
 - 从本地插件跳转到对应社区详情，并支持社区版本更新；
@@ -97,8 +97,8 @@ UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerf
 
 ### 安装安全与可恢复性
 
-- 拒绝 ZIP 路径穿越和对游戏核心文件的直接覆盖；
-- 限制压缩包条目数量及解压后总体积；
+- 拒绝 ZIP 路径穿越、`BepInEx/core` 等加载器核心覆盖，以及对游戏核心文件的直接覆盖；
+- 仅允许 ZIP 写入 `BepInEx/plugins` 与 `BepInEx/config`，要求至少包含一个插件 DLL，并限制条目数量及实际解压总体积；
 - 记录社区插件文件所有权，阻止不同插件静默覆盖同一路径；
 - 更新失败时恢复旧文件；卸载前校验文件哈希，发现用户修改后停止删除；
 - 社区安装清单与备份位于 `%AppData%\UnturnedModManager\community-mods`。

@@ -6,9 +6,6 @@
       Title="本地插件"
       Background="{DynamicResource ApplicationBackgroundBrush}">
     <Grid Margin="28"
-          AllowDrop="True"
-          DragOver="Page_DragOver"
-          Drop="Page_Drop"
           PreviewMouseWheel="Panel_PreviewMouseWheel">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -174,7 +171,7 @@
                             VerticalAlignment="Center"
                             Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
                     <ui:SymbolIcon Symbol="Box24" FontSize="38" HorizontalAlignment="Center" />
-                    <TextBlock Text="暂无插件，可将 .dll 文件拖入此页面安装。"
+                    <TextBlock Text="暂无插件，可将 .dll 或 BepInEx 插件包拖入启动器任意页面安装。"
                                Margin="0,12,0,0"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                 </StackPanel>

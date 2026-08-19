@@ -48,7 +48,7 @@
                         Margin="0,16,0,20"
                         HorizontalAlignment="Stretch"
                         Background="{DynamicResource AccentFillColorDefaultBrush}">
-                    <TextBlock Text="v2.1.6 · Stable · 2026-08-19"
+                    <TextBlock Text="v2.1.7 · Stable · 2026-08-19"
                                FontSize="12"
                                FontWeight="SemiBold"
                                FontFamily="Cascadia Mono, Consolas, monospace"
