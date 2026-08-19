@@ -32,6 +32,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     private GpuInfo? _gpu;
     private DiagnosticAnalysis _diagnosticAnalysis = DiagnosticAnalysis.Empty;
     private LauncherUpdateInfo? _availableLauncherUpdate;
+    private LauncherReleaseNotesInfo? _latestReleaseNotes;
     private bool _updateCheckRequested;
     private bool _isDownloadingLauncherUpdate;
     private int _launcherUpdatePercentage;
@@ -101,26 +102,21 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
             StringComparison.Ordinal);
     public bool HasAvailableLauncherUpdate => _availableLauncherUpdate is not null;
     public bool HasHomeAnnouncement => IsHomeWelcomeEnabled && (HasNewReleaseAnnouncement || HasAvailableLauncherUpdate);
-    public string HomeAnnouncementVersion => HasAvailableLauncherUpdate
-        ? _availableLauncherUpdate!.DisplayVersion
-        : $"v{AppSettings.CurrentHomeAnnouncementVersion}";
+    public string HomeAnnouncementVersion => _latestReleaseNotes?.DisplayVersion
+        ?? $"v{AppSettings.CurrentHomeAnnouncementVersion}";
     public string HomeAnnouncementTitle => HasAvailableLauncherUpdate
         ? $"发现 {HomeAnnouncementVersion} 新版本"
-        : $"{HomeAnnouncementVersion} 已准备就绪";
-    public IReadOnlyList<string> HomeAnnouncementHighlights => HasAvailableLauncherUpdate
-        ?
-        [
-            "新版本已由 UMM 官方 GitHub Release 发布，可由你确认后下载。",
-            "下载完成后会校验 GitHub 提供的 SHA-256；校验失败不会安装。",
-            "确认安装时，UMM 才会退出并替换 EXE，同时保留旧版本 .bak 备份。"
-        ]
-        :
-        [
-            "首页新增可开关的 Q 版吉祥物欢迎区与版本公告，不会后台下载或静默更新。",
-            "详情页支持封面与正文图片预览，可缩放查看插件内容。",
-            "任务中心会显示安装、更新、卸载的实时进度、失败原因和重试入口。",
-            "本地插件方案、安全回滚与真实游戏目录管理保持可见、可恢复。"
-        ];
+        : $"{HomeAnnouncementVersion} 更新要点";
+    public IReadOnlyList<string> HomeAnnouncementHighlights
+    {
+        get
+        {
+            if (_latestReleaseNotes is { } latest)
+                return ExtractAnnouncementHighlights(latest.ReleaseNotes, CurrentVersionFallbackHighlights);
+
+            return CurrentVersionFallbackHighlights;
+        }
+    }
     public bool IsDownloadingLauncherUpdate
     {
         get => _isDownloadingLauncherUpdate;
@@ -440,10 +436,9 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            var url = HasAvailableLauncherUpdate
-                ? _availableLauncherUpdate!.DownloadUrl.AbsoluteUri.Replace("/download/", "/tag/", StringComparison.Ordinal)
-                    .Replace($"/{_availableLauncherUpdate.AssetName}", "", StringComparison.Ordinal)
-                : $"https://github.com/YU80Rice/UnturnedModManager/releases/tag/v{AppSettings.CurrentHomeAnnouncementVersion}";
+            var version = _latestReleaseNotes?.DisplayVersion
+                ?? $"v{AppSettings.CurrentHomeAnnouncementVersion}";
+            var url = $"https://github.com/YU80Rice/UnturnedModManager/releases/tag/{version}";
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
         catch (Exception exception)
@@ -457,7 +452,9 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         try
         {
             var current = typeof(HomeViewModel).Assembly.GetName().Version ?? new Version(0, 0, 0);
-            _availableLauncherUpdate = await _launcherUpdates.CheckForUpdateAsync(current);
+            var result = await _launcherUpdates.CheckLatestReleaseAsync(current);
+            _latestReleaseNotes = result.LatestRelease;
+            _availableLauncherUpdate = result.AvailableUpdate;
             OnPropertyChanged(nameof(HasAvailableLauncherUpdate));
             OnPropertyChanged(nameof(HasHomeAnnouncement));
             OnPropertyChanged(nameof(HomeAnnouncementVersion));
@@ -529,6 +526,36 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     }
 
     private void OnAccountSessionChanged() => OnPropertyChanged(nameof(WelcomeGreeting));
+
+    public static IReadOnlyList<string> ExtractAnnouncementHighlights(
+        string releaseNotes,
+        IReadOnlyList<string> fallback)
+    {
+        if (string.IsNullOrWhiteSpace(releaseNotes)) return fallback;
+
+        var highlights = releaseNotes.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .Where(line => line.StartsWith("- ", StringComparison.Ordinal) || line.StartsWith("* ", StringComparison.Ordinal))
+            .Select(line => line[2..].Replace("**", "", StringComparison.Ordinal).Replace("`", "", StringComparison.Ordinal).Trim())
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .Take(4)
+            .ToArray();
+        return highlights.Length == 0 ? fallback : highlights;
+    }
+
+    private static readonly IReadOnlyList<string> UpdateFallbackHighlights =
+    [
+        "新版本已由 UMM 官方 GitHub Release 发布，可由你确认后下载。",
+        "下载完成后会校验 GitHub 提供的 SHA-256；校验失败不会安装。",
+        "确认安装时，UMM 才会退出并替换 EXE，同时保留旧版本 .bak 备份。"
+    ];
+
+    private static readonly IReadOnlyList<string> CurrentVersionFallbackHighlights =
+    [
+        "社区插件可从作者声明的 GitHub latest Release 自动获取唯一的 ZIP 更新包。",
+        "GitHub 下载会校验资产归属、文件大小与 SHA-256；临时故障时才回退已登录社区包。",
+        "详情页、本地插件列表与安装清单会区分远端最新版本和实际安装版本，更新状态保持一致。"
+    ];
 
     private void BeginOperation(string text)
     {

@@ -118,6 +118,35 @@ public sealed class ModelBehaviorTests
     }
 
     [Fact]
+    public async Task LauncherUpdateService_ReturnsLatestReleaseNotesWhenLocalBuildIsNewer()
+    {
+        const string releaseJson = """
+        {"tag_name":"v2.1.5","name":"UMM v2.1.5","body":"## 更新\n\n- 第一项\n- 第二项","assets":[]}
+        """;
+
+        using var client = new HttpClient(new ReleaseHandler(releaseJson, "", []));
+        using var updates = new LauncherUpdateService(client, null);
+
+        var result = await updates.CheckLatestReleaseAsync(new Version(2, 1, 6, 0));
+
+        Assert.Null(result.AvailableUpdate);
+        Assert.NotNull(result.LatestRelease);
+        Assert.Equal("v2.1.5", result.LatestRelease!.DisplayVersion);
+        Assert.Contains("第一项", result.LatestRelease.ReleaseNotes);
+    }
+
+    [Fact]
+    public void HomeAnnouncement_ExtractsReleaseBulletHighlights()
+    {
+        var fallback = new[] { "兜底摘要" };
+        var highlights = HomeViewModel.ExtractAnnouncementHighlights(
+            "## 标题\n\n- **第一项**\n* `第二项`\n\n普通段落",
+            fallback);
+
+        Assert.Equal(["第一项", "第二项"], highlights);
+    }
+
+    [Fact]
     public void SingleInstanceService_RejectsSecondOwner()
     {
         var mutexName = $"Local\\UnturnedModManager.Tests.{Guid.NewGuid():N}";

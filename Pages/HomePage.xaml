@@ -91,7 +91,7 @@
                                    FontSize="24"
                                    FontWeight="SemiBold"
                                    Margin="0,12,0,0" />
-                        <TextBlock Text="这里会在 UMM 升级后自动展示当前版本的更新摘要。你可以在设置中随时重新开启或关闭这个欢迎区。"
+                        <TextBlock Text="这里会在 UMM 升级后自动展示当前版本的更新摘要；联网时会同步官方 GitHub Release 的要点。你可以在设置中随时重新开启或关闭这个欢迎区。"
                                    Margin="0,5,0,0"
                                    TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />

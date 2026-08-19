@@ -34,21 +34,36 @@ public sealed class LauncherUpdateService : IDisposable
 
     public async Task<LauncherUpdateInfo?> CheckForUpdateAsync(Version currentVersion, CancellationToken token = default)
     {
-        using var request = CreateRequest(HttpMethod.Get, RepositoryApiUrl);
-        using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
-        response.EnsureSuccessStatusCode();
-        var release = await response.Content.ReadFromJsonAsync<GitHubRelease>(cancellationToken: token)
-            ?? throw new InvalidDataException("GitHub Release 返回为空。");
+        var result = await CheckLatestReleaseAsync(currentVersion, token);
+        return result.AvailableUpdate;
+    }
 
-        if (!TryParseReleaseVersion(release.TagName, out var latestVersion)
-            || latestVersion <= NormalizeVersion(currentVersion))
-            return null;
+    /// <summary>
+    /// 一次读取最新 Release 的版本、说明和可选更新包。即使当前程序已是最新版本，
+    /// 首页也可据此展示与 GitHub Release 一致的更新摘要；不会下载任何资产。
+    /// </summary>
+    public async Task<LauncherReleaseCheckResult> CheckLatestReleaseAsync(
+        Version currentVersion,
+        CancellationToken token = default)
+    {
+        var release = await GetLatestReleaseAsync(token);
+        if (!TryParseReleaseVersion(release.TagName, out var latestVersion))
+            return new LauncherReleaseCheckResult(null, null);
+
+        var notes = new LauncherReleaseNotesInfo(
+            latestVersion,
+            release.Name?.Trim() ?? $"UMM v{latestVersion.ToString(3)}",
+            release.Body?.Trim() ?? "",
+            release.PublishedAt);
+
+        if (latestVersion <= NormalizeVersion(currentVersion))
+            return new LauncherReleaseCheckResult(notes, null);
 
         var assetName = $"UnturnedModManager-v{latestVersion.ToString(3)}-win-x64.exe";
         var asset = release.Assets.FirstOrDefault(item =>
             string.Equals(item.Name, assetName, StringComparison.OrdinalIgnoreCase));
         if (asset is null)
-            return null;
+            return new LauncherReleaseCheckResult(notes, null);
 
         if (!Uri.TryCreate(asset.BrowserDownloadUrl, UriKind.Absolute, out var assetUri)
             || !assetUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
@@ -62,15 +77,16 @@ public sealed class LauncherUpdateService : IDisposable
         if (asset.Size <= 0)
             throw new InvalidDataException("Release 资产大小无效。");
 
-        return new LauncherUpdateInfo(
+        var update = new LauncherUpdateInfo(
             latestVersion,
-            release.Name?.Trim() ?? $"UMM v{latestVersion.ToString(3)}",
-            release.Body?.Trim() ?? "",
+            notes.ReleaseName,
+            notes.ReleaseNotes,
             asset.Name,
             assetUri,
             asset.Size,
             expectedSha256,
             release.PublishedAt);
+        return new LauncherReleaseCheckResult(notes, update);
     }
 
     public async Task<string> DownloadAsync(
@@ -225,6 +241,15 @@ del "%~f0"
             _http.Dispose();
     }
 
+    private async Task<GitHubRelease> GetLatestReleaseAsync(CancellationToken token)
+    {
+        using var request = CreateRequest(HttpMethod.Get, RepositoryApiUrl);
+        using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<GitHubRelease>(cancellationToken: token)
+            ?? throw new InvalidDataException("GitHub Release 返回为空。");
+    }
+
     private static HttpRequestMessage CreateRequest(HttpMethod method, string url)
     {
         var request = new HttpRequestMessage(method, url);
@@ -283,3 +308,16 @@ public sealed record LauncherUpdateInfo(
 {
     public string DisplayVersion => "v" + Version.ToString(3);
 }
+
+public sealed record LauncherReleaseNotesInfo(
+    Version Version,
+    string ReleaseName,
+    string ReleaseNotes,
+    DateTimeOffset? PublishedAt)
+{
+    public string DisplayVersion => "v" + Version.ToString(3);
+}
+
+public sealed record LauncherReleaseCheckResult(
+    LauncherReleaseNotesInfo? LatestRelease,
+    LauncherUpdateInfo? AvailableUpdate);

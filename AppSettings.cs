@@ -175,8 +175,8 @@ public static class AppSettings
     }
 
     /// <summary>
-    /// 最近已确认过的首页公告版本。程序版本变更时，欢迎区会再次展示对应版本的更新摘要；
-    /// 这是本地版本提示，不会在后台联网读取或执行自更新。
+    /// 最近已确认过的首页公告版本。首页会联网同步 GitHub Latest Release 的更新摘要，
+    /// 但不会后台下载或执行自更新。
     /// </summary>
     public static string? LastAcknowledgedHomeAnnouncementVersion
     {
@@ -185,7 +185,7 @@ public static class AppSettings
     }
 
     public static string CurrentHomeAnnouncementVersion =>
-        typeof(AppSettings).Assembly.GetName().Version?.ToString(3) ?? "2.1.5";
+        typeof(AppSettings).Assembly.GetName().Version?.ToString(3) ?? "2.1.6";
     public static double WindowWidth { get => _data.WindowWidth; set { _data.WindowWidth = value; Save(); } }
     public static double WindowHeight { get => _data.WindowHeight; set { _data.WindowHeight = value; Save(); } }
     // WPF 用 NaN 表示“没有保存的位置”。JSON 不支持 NaN，因此持久化层使用 null，
