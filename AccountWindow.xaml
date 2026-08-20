@@ -60,6 +60,7 @@
                     <ui:Button Content="在浏览器中登录"
                                Icon="{ui:SymbolIcon Open24}"
                                Appearance="Primary"
+                               Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                                HorizontalAlignment="Stretch"
                                Padding="12"
                                Command="{Binding LoginCommand}"

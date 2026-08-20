@@ -185,7 +185,7 @@ public static class AppSettings
     }
 
     public static string CurrentHomeAnnouncementVersion =>
-        typeof(AppSettings).Assembly.GetName().Version?.ToString(3) ?? "2.1.7";
+        typeof(AppSettings).Assembly.GetName().Version?.ToString(3) ?? "2.1.8";
     public static double WindowWidth { get => _data.WindowWidth; set { _data.WindowWidth = value; Save(); } }
     public static double WindowHeight { get => _data.WindowHeight; set { _data.WindowHeight = value; Save(); } }
     // WPF 用 NaN 表示“没有保存的位置”。JSON 不支持 NaN，因此持久化层使用 null，

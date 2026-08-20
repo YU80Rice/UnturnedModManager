@@ -15,7 +15,7 @@
                 <ui:TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Grid.Column="0" PlaceholderText="搜索插件名称、作者或简介…" Margin="0,0,10,0"/>
                 <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="DisplayName" Grid.Column="1" Margin="0,0,10,0"/>
                 <ComboBox SelectedValue="{Binding Sort}" SelectedValuePath="Tag" Grid.Column="2" Margin="0,0,10,0"><ComboBoxItem Content="最新发布" Tag="newest"/><ComboBoxItem Content="下载最多" Tag="downloads"/><ComboBoxItem Content="点赞最多" Tag="likes"/></ComboBox>
-                <ui:Button Grid.Column="3" Appearance="Primary" Content="刷新" Icon="{ui:SymbolIcon ArrowSync24}" Command="{Binding RefreshCommand}"/>
+                <ui:Button Grid.Column="3" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Content="刷新" Icon="{ui:SymbolIcon ArrowSync24}" Command="{Binding RefreshCommand}"/>
             </Grid>
         </Border>
         <Border Grid.Row="2" CornerRadius="10" Background="{DynamicResource ControlFillColorDefaultBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
@@ -34,7 +34,7 @@
                 <Border Grid.RowSpan="2" Background="{DynamicResource ControlFillColorDefaultBrush}" Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                         <controls:StatePresenter Message="{Binding ErrorMessage}" Width="420" MinHeight="100"/>
-                        <ui:Button Content="重新连接" Icon="{ui:SymbolIcon ArrowSync24}" Appearance="Primary" Command="{Binding RefreshCommand}" HorizontalAlignment="Center" Margin="0,14,0,0"/>
+                        <ui:Button Content="重新连接" Icon="{ui:SymbolIcon ArrowSync24}" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Command="{Binding RefreshCommand}" HorizontalAlignment="Center" Margin="0,14,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>

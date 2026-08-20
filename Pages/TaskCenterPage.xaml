@@ -56,22 +56,22 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <Border Padding="7,2" CornerRadius="7" Background="{DynamicResource ControlFillColorSecondaryBrush}">
-                                                <TextBlock Text="{Binding KindText}" FontSize="11" />
+                                                <TextBlock Text="{Binding KindText}" FontSize="11" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
                                             </Border>
-                                            <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" Margin="10,0,0,0" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" Margin="10,0,0,0" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
                                         </StackPanel>
                                         <TextBlock Text="{Binding Stage}" Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                         <ProgressBar Value="{Binding Progress}" Maximum="100" Height="5" Margin="0,10,0,0" Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
-                                        <Border Background="#22D13438" Padding="10,7" CornerRadius="6" Margin="0,10,0,0" Visibility="{Binding HasFailureReason, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Text="{Binding FailureReason}" Foreground="#D13438" TextWrapping="Wrap" />
+                                        <Border Background="{DynamicResource DangerSurfaceBrush}" Padding="10,7" CornerRadius="6" Margin="0,10,0,0" Visibility="{Binding HasFailureReason, Converter={StaticResource BoolToVisibility}}">
+                                            <TextBlock Text="{Binding FailureReason}" Foreground="{DynamicResource DangerTextBrush}" TextWrapping="Wrap" />
                                         </Border>
                                         <TextBlock Text="{Binding AttemptText}" Margin="0,8,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Right">
-                                        <TextBlock Text="{Binding StatusText}" HorizontalAlignment="Right" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding StatusText}" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
                                         <TextBlock Text="{Binding ProgressText}" HorizontalAlignment="Right" Margin="0,3,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                         <TextBlock Text="{Binding TimeText}" HorizontalAlignment="Right" Margin="0,3,0,8" FontSize="11" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                                        <ui:Button Content="重试" Icon="{ui:SymbolIcon ArrowSync24}" Appearance="Primary" Command="{Binding DataContext.RetryCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}" CommandParameter="{Binding}" Visibility="{Binding IsRetryAvailable, Converter={StaticResource BoolToVisibility}}" />
+                                        <ui:Button Content="重试" Icon="{ui:SymbolIcon ArrowSync24}" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Command="{Binding DataContext.RetryCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}" CommandParameter="{Binding}" Visibility="{Binding IsRetryAvailable, Converter={StaticResource BoolToVisibility}}" />
                                         <ui:Button Content="查看插件" Margin="0,8,0,0" Command="{Binding DataContext.OpenPluginCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}" CommandParameter="{Binding}" Visibility="{Binding HasCommunityPlugin, Converter={StaticResource BoolToVisibility}}" />
                                     </StackPanel>
                                 </Grid>

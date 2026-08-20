@@ -23,7 +23,7 @@
                     </StackPanel>
                     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
                         <ui:Button Content="导出诊断日志" Icon="{ui:SymbolIcon FolderArrowRight24}"
-                                   Appearance="Primary" Command="{Binding ExportLogsCommand}" />
+                                   Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Command="{Binding ExportLogsCommand}" />
                         <ui:Button Content="忽略" Margin="8,0,0,0" Command="{Binding IgnoreCrashCommand}" />
                     </StackPanel>
                 </Grid>
@@ -50,7 +50,7 @@
                                 </Style>
                             </Ellipse.Style>
                         </Ellipse>
-                        <TextBlock Text="{Binding LaunchButtonText}" FontSize="12" />
+                        <TextBlock Text="{Binding LaunchButtonText}" FontSize="12" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -130,6 +130,7 @@
                                 <StackPanel Orientation="Horizontal" Margin="0,11,0,0">
                                     <ui:Button Content="{Binding UpdateDownloadButtonText}"
                                                Appearance="Primary"
+                                               Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                                                Visibility="{Binding HasAvailableLauncherUpdate, Converter={StaticResource BoolToVisibility}}"
                                                Command="{Binding DownloadLauncherUpdateCommand}" />
                                     <ui:Button Content="查看完整更新日志"
@@ -200,7 +201,7 @@
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                        <ui:Button Content="一键安装" Icon="{ui:SymbolIcon ArrowDownload24}" Appearance="Primary"
+                                    <ui:Button Content="一键安装" Icon="{ui:SymbolIcon ArrowDownload24}" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                                    Command="{Binding InstallCommand}"
                                    Visibility="{Binding CanInstallBepInEx, Converter={StaticResource BoolToVisibility}}" />
                         <ui:Button Content="{Binding BepInExRepairButtonText}" Icon="{ui:SymbolIcon Wrench24}"
@@ -301,12 +302,12 @@
             <Border CornerRadius="12" Padding="22" Background="{DynamicResource ControlFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                 <StackPanel HorizontalAlignment="Center">
-                    <ui:Button Appearance="Primary" Height="56" MinWidth="300"
+                    <ui:Button Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Height="56" MinWidth="300"
                                FontSize="18" FontWeight="SemiBold"
                                Command="{Binding LaunchCommand}" IsEnabled="{Binding CanLaunch}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Play24" FontSize="20" Margin="0,0,10,0" />
-                            <TextBlock Text="{Binding LaunchButtonText}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding LaunchButtonText}" VerticalAlignment="Center" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
                         </StackPanel>
                     </ui:Button>
                     <StackPanel Width="420" Margin="0,18,0,0"

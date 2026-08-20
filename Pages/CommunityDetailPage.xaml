@@ -26,9 +26,9 @@
                     <TextBlock Text="正在加载插件详情…" Margin="0,8,0,0" />
                 </StackPanel>
                 <StackPanel Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" Margin="0,22,0,0">
-                    <TextBlock Text="{Binding ErrorMessage}" Foreground="#E74C3C" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerTextBrush}" TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                        <ui:Button Content="重新加载" Appearance="Primary" Icon="{ui:SymbolIcon ArrowSync24}" Command="{Binding RetryCommand}" />
+                        <ui:Button Content="重新加载" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Icon="{ui:SymbolIcon ArrowSync24}" Command="{Binding RetryCommand}" />
                         <ui:Button x:Name="ErrorBackButton" Content="返回上一级" Click="BackButton_Click" Margin="10,0,0,0" />
                     </StackPanel>
                 </StackPanel>
@@ -76,9 +76,9 @@
                         </DockPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,22,0,0">
-                            <ui:Button Content="登录社区账户后安装" Icon="{ui:SymbolIcon Person24}" Appearance="Primary" Command="{Binding SignInCommand}" Visibility="{Binding RequiresLogin, Converter={StaticResource BoolToVisibility}}" />
-                            <ui:Button Content="安装到当前游戏" Icon="{ui:SymbolIcon ArrowDownload24}" Appearance="Primary" Command="{Binding InstallCommand}" IsEnabled="{Binding CanInstall}" Margin="10,0,0,0" />
-                            <ui:Button Content="更新到社区版本" Icon="{ui:SymbolIcon ArrowSync24}" Appearance="Primary" Margin="10,0,0,0" Command="{Binding UpdateCommand}" Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}" />
+                            <ui:Button Content="登录社区账户后安装" Icon="{ui:SymbolIcon Person24}" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Command="{Binding SignInCommand}" Visibility="{Binding RequiresLogin, Converter={StaticResource BoolToVisibility}}" />
+                            <ui:Button Content="安装到当前游戏" Icon="{ui:SymbolIcon ArrowDownload24}" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Command="{Binding InstallCommand}" IsEnabled="{Binding CanInstall}" Margin="10,0,0,0" />
+                            <ui:Button Content="更新到社区版本" Icon="{ui:SymbolIcon ArrowSync24}" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Margin="10,0,0,0" Command="{Binding UpdateCommand}" Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}" />
                             <ui:Button Content="卸载插件" Icon="{ui:SymbolIcon Delete24}" Appearance="Secondary" Margin="10,0,0,0" Command="{Binding UninstallCommand}" Visibility="{Binding IsInstalled, Converter={StaticResource BoolToVisibility}}" />
                         </StackPanel>
                         <TextBlock Text="操作会写入“任务中心”：可查看实时进度、安装阶段和失败原因；覆盖旧文件前会备份，卸载前会校验文件是否被修改。"

@@ -63,7 +63,7 @@
                         <TextBlock Text="{Binding AccountStatus}" Margin="0,3,0,0"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
-                    <ui:Button Grid.Column="1" Content="{Binding AccountActionText}" Appearance="Primary"
+                    <ui:Button Grid.Column="1" Content="{Binding AccountActionText}" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                                VerticalAlignment="Center" Command="{Binding ManageAccountCommand}" />
                 </Grid>
             </Border>
@@ -108,7 +108,7 @@
             </Border>
 
             <ui:Button Content="保存设置" Icon="{ui:SymbolIcon Save24}"
-                       Appearance="Primary" HorizontalAlignment="Left"
+                       Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" HorizontalAlignment="Left"
                        Command="{Binding SaveCommand}" />
         </StackPanel>
         </Grid>

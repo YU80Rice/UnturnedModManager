@@ -22,7 +22,7 @@
             <StackPanel Orientation="Horizontal">
                 <ui:Button Content="刷新并同步"
                            Icon="{ui:SymbolIcon ArrowSync24}"
-                           Appearance="Primary"
+                           Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                            Command="{Binding RefreshCommand}" />
                 <ui:Button Content="打开插件文件夹"
                            Icon="{ui:SymbolIcon FolderOpen24}"
@@ -58,7 +58,7 @@
                               ToolTip="选择要应用或保存的插件方案" />
                     <ui:Button Content="应用方案"
                                Icon="{ui:SymbolIcon CheckmarkCircle24}"
-                               Appearance="Primary"
+                               Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                                Margin="0,0,8,8"
                                Command="{Binding ApplyProfileCommand}" />
                     <ui:Button Content="保存当前状态"
@@ -141,7 +141,7 @@
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                         <ui:Button Content="更新"
                                                    Icon="{ui:SymbolIcon ArrowSync24}"
-                                                   Appearance="Primary"
+                                                   Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                                                    Margin="0,0,8,0"
                                                    Command="{Binding DataContext.UpdateCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}"
                                                    CommandParameter="{Binding}"

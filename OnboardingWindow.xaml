@@ -129,10 +129,12 @@
                            Command="{Binding BackCommand}" />
                 <ui:Button Content="下一步"
                            Appearance="Primary"
+                           Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                            Command="{Binding NextCommand}"
                            Visibility="{Binding IsFinishStep, Converter={StaticResource InverseBoolToVisibility}}" />
                 <ui:Button Content="开始使用"
                            Appearance="Primary"
+                           Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                            Command="{Binding FinishCommand}"
                            Visibility="{Binding IsFinishStep, Converter={StaticResource BoolToVisibility}}" />
             </StackPanel>

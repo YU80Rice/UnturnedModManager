@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
+using System.Windows.Media;
 using UnturnedModManager.Helpers;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
@@ -236,10 +237,57 @@ public sealed class ModelBehaviorTests
     [InlineData("warmPaper", ThemePalette.WarmPaper)]
     [InlineData("MistyForest", ThemePalette.MistyForest)]
     [InlineData("OceanDusk", ThemePalette.OceanDusk)]
-    [InlineData("Lavender", ThemePalette.Lavender)]
+    [InlineData("MascotOrange", ThemePalette.MascotOrange)]
     [InlineData("KleinBlue", ThemePalette.KleinBlue)]
+    [InlineData("Lavender", ThemePalette.Lavender)]
     public void ThemeService_ParsesEveryPublishedPalette(string value, ThemePalette expected) =>
         Assert.Equal(expected, ThemeService.ParsePalette(value));
+
+    [Theory]
+    [InlineData(ThemePreference.Light)]
+    [InlineData(ThemePreference.Dark)]
+    public void ThemeService_AllPublishedPalettesKeepTextReadableOnPageSurfaces(ThemePreference theme)
+    {
+        foreach (var palette in Enum.GetValues<ThemePalette>())
+        {
+            var colors = ThemeService.GetPaletteColors(palette, theme)
+                .ToDictionary(item => item.Key, item => item.Color, StringComparer.Ordinal);
+
+            Assert.True(ContrastRatio(colors["TextFillColorPrimaryBrush"], colors["ApplicationBackgroundBrush"]) >= 7,
+                $"{palette}/{theme} primary text lacks contrast on the page background.");
+            Assert.True(ContrastRatio(colors["TextFillColorPrimaryBrush"], colors["ControlFillColorDefaultBrush"]) >= 7,
+                $"{palette}/{theme} primary text lacks contrast on the control surface.");
+            Assert.True(ContrastRatio(colors["TextFillColorSecondaryBrush"], colors["ControlFillColorDefaultBrush"]) >= 4.5,
+                $"{palette}/{theme} secondary text lacks contrast on the control surface.");
+            Assert.True(ContrastRatio(colors["TextFillColorTertiaryBrush"], colors["ControlFillColorDefaultBrush"]) >= 3,
+                $"{palette}/{theme} tertiary text lacks contrast on the control surface.");
+            Assert.True(ContrastRatio(colors["AccentTextFillColorPrimaryBrush"], colors["ControlFillColorDefaultBrush"]) >= 4.5,
+                $"{palette}/{theme} accent text lacks contrast on the control surface.");
+
+            foreach (var accentKey in new[] { "AccentFillColorDefaultBrush", "AccentFillColorSecondaryBrush", "AccentFillColorTertiaryBrush" })
+            {
+                var accent = ParseColor(colors[accentKey]);
+                var foreground = ThemeService.GetContrastingForeground(accent);
+                Assert.True(ContrastRatio(foreground, accent) >= 4.5,
+                    $"{palette}/{theme} {accentKey} lacks a readable interactive foreground.");
+                if (theme == ThemePreference.Dark)
+                {
+                    Assert.True(foreground == Colors.White, $"{palette}/{accentKey} must use white text in dark mode.");
+                    var hover = Blend(accent, Colors.Black, 0.10);
+                    var pressed = Blend(accent, Colors.Black, 0.18);
+                    Assert.True(ContrastRatio(Colors.White, hover) >= 4.5, $"{palette}/{accentKey} hover state lacks white-text contrast.");
+                    Assert.True(ContrastRatio(Colors.White, pressed) >= 4.5, $"{palette}/{accentKey} pressed state lacks white-text contrast.");
+                }
+            }
+
+            var selectedBackground = Blend(
+                ParseColor(colors["ControlFillColorDefaultBrush"]),
+                ParseColor(colors["AccentFillColorDefaultBrush"]),
+                theme == ThemePreference.Dark ? 82d / 255d : 48d / 255d);
+            Assert.True(ContrastRatio(ParseColor(colors["TextFillColorPrimaryBrush"]), selectedBackground) >= 4.5,
+                $"{palette}/{theme} selected navigation text lacks contrast.");
+        }
+    }
 
     [Fact]
     public void PluginProfiles_SaveAndAtomicallyRestorePluginEnablement()
@@ -814,6 +862,40 @@ public sealed class ModelBehaviorTests
             if (Directory.Exists(cacheRoot)) Directory.Delete(cacheRoot, true);
         }
     }
+
+    private static double ContrastRatio(string first, string second) => ContrastRatio(ParseColor(first), ParseColor(second));
+
+    private static double ContrastRatio(Color first, Color second)
+    {
+        static double Channel(byte value)
+        {
+            var normalized = value / 255d;
+            return normalized <= 0.04045
+                ? normalized / 12.92
+                : Math.Pow((normalized + 0.055) / 1.055, 2.4);
+        }
+
+        static double Luminance(Color color) =>
+            0.2126 * Channel(color.R) + 0.7152 * Channel(color.G) + 0.0722 * Channel(color.B);
+
+        var firstLuminance = Luminance(first);
+        var secondLuminance = Luminance(second);
+        return (Math.Max(firstLuminance, secondLuminance) + 0.05) / (Math.Min(firstLuminance, secondLuminance) + 0.05);
+    }
+
+    private static Color ParseColor(string hex)
+    {
+        var value = hex.TrimStart('#');
+        return Color.FromRgb(
+            Convert.ToByte(value[..2], 16),
+            Convert.ToByte(value.Substring(2, 2), 16),
+            Convert.ToByte(value.Substring(4, 2), 16));
+    }
+
+    private static Color Blend(Color background, Color foreground, double opacity) => Color.FromRgb(
+        (byte)Math.Round(background.R + (foreground.R - background.R) * opacity),
+        (byte)Math.Round(background.G + (foreground.G - background.G) * opacity),
+        (byte)Math.Round(background.B + (foreground.B - background.B) * opacity));
 
     private static byte[] CreateZipPackage(string entryPath, string content)
         => CreateZipPackage((entryPath, content));

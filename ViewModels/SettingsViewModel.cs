@@ -41,10 +41,11 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         [
             new(ThemePalette.Fluent, "默认 Fluent"),
             new(ThemePalette.WarmPaper, "暖米白 · UMM 蓝"),
+            new(ThemePalette.MascotOrange, "吉祥物橙"),
             new(ThemePalette.MistyForest, "松林雾绿"),
             new(ThemePalette.OceanDusk, "深海雾蓝"),
-            new(ThemePalette.Lavender, "夜雾紫"),
-            new(ThemePalette.KleinBlue, "克莱因蓝")
+            new(ThemePalette.KleinBlue, "克莱因蓝"),
+            new(ThemePalette.Lavender, "夜雾紫")
         ];
         BrowseCommand = new RelayCommand(Browse);
         DetectCommand = new AsyncRelayCommand(DetectAsync, () => !IsBusy);
