@@ -1,6 +1,7 @@
 using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Media;
+using UnturnedModManager.Models;
 using Wpf.Ui.Appearance;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
@@ -17,6 +18,8 @@ public sealed class ThemeService
     public ThemePreference CurrentPreference { get; private set; } = ThemePreference.System;
     public ThemePreference AppliedTheme { get; private set; } = ThemePreference.Dark;
     public ThemePalette CurrentPalette { get; private set; } = ThemePalette.Fluent;
+    public CustomTheme? CurrentCustomTheme { get; private set; }
+    public string? CustomWallpaperPath { get; private set; }
     public event Action<ThemePreference>? ThemeChanged;
     public void Initialize(string preference) => Apply(Parse(preference), false);
     public void Apply(ThemePreference preference, bool persist = true)
@@ -57,6 +60,65 @@ public sealed class ThemeService
 
         if (persist) AppSettings.CommunityColorPalette = palette.ToString();
         if (raiseChanged) ThemeChanged?.Invoke(CurrentPreference);
+    }
+
+    public void ApplyCustomTheme(CustomTheme theme, string? wallpaperFilePath = null, bool raiseChanged = true)
+    {
+        var validation = theme.Validate();
+        if (!validation.IsValid) return;
+
+        CurrentCustomTheme = theme;
+        CustomWallpaperPath = wallpaperFilePath;
+        var actual = theme.BaseTheme == ThemePreference.System ? DetectSystemTheme() : theme.BaseTheme;
+        AppliedTheme = actual;
+        ApplicationThemeManager.Apply(actual == ThemePreference.Light ? ApplicationTheme.Light : ApplicationTheme.Dark, Wpf.Ui.Controls.WindowBackdropType.Mica);
+
+        var application = System.Windows.Application.Current;
+        if (application is not null)
+        {
+            var dictionary = EnsurePaletteDictionary(application);
+            dictionary.Clear();
+
+            var isDark = actual == ThemePreference.Dark;
+            var accent = (Color)ColorConverter.ConvertFromString(theme.AccentColor)!;
+            var bg = (Color)ColorConverter.ConvertFromString(theme.BackgroundColor)!;
+            var cardBg = (Color)ColorConverter.ConvertFromString(theme.CardBackgroundColor)!;
+            var cardAlpha = (byte)Math.Clamp((int)(theme.CardOpacity * 255), 25, 255);
+            var cardBrush = new SolidColorBrush(Color.FromArgb(cardAlpha, cardBg.R, cardBg.G, cardBg.B));
+
+            var colors = new List<(string Key, string Color)>
+            {
+                ("ApplicationBackgroundBrush", theme.BackgroundColor),
+                ("AccentFillColorDefaultBrush", theme.AccentColor),
+                ("TextFillColorPrimaryBrush", isDark ? "#FFFFFF" : "#1F1F1F"),
+                ("TextFillColorSecondaryBrush", isDark ? "#D0D0D0" : "#505050"),
+                ("TextFillColorTertiaryBrush", isDark ? "#909090" : "#808080"),
+                ("ControlStrokeColorDefaultBrush", isDark ? "#3A3A3A" : "#D0D0D0")
+            };
+
+            foreach (var (key, colorHex) in colors)
+            {
+                dictionary[key] = CreateBrush(colorHex);
+            }
+
+            dictionary["ControlFillColorDefaultBrush"] = cardBrush;
+            dictionary["ControlFillColorSecondaryBrush"] = new SolidColorBrush(Color.FromArgb((byte)Math.Max(20, cardAlpha - 25), cardBg.R, cardBg.G, cardBg.B));
+            dictionary["ControlCornerRadius"] = new CornerRadius(theme.CardBorderRadius);
+            dictionary["ToastNotificationBorderBrush"] = new SolidColorBrush(accent);
+
+            ApplyAccentControlResources(dictionary, colors, isDark);
+            ApplySemanticStatusResources(dictionary, isDark);
+        }
+
+        if (raiseChanged) ThemeChanged?.Invoke(CurrentPreference);
+    }
+
+    public void ResetToDefaultTheme()
+    {
+        CurrentCustomTheme = null;
+        CustomWallpaperPath = null;
+        Apply(ThemePreference.System);
+        ApplyPalette(ThemePalette.Fluent);
     }
 
     private static ResourceDictionary EnsurePaletteDictionary(System.Windows.Application application)
@@ -164,6 +226,20 @@ public sealed class ThemeService
         SetBrush(dictionary, "ComboBoxBorderBrushFocused", accent);
         SetBrush(dictionary, "FocusStrokeColorOuterBrush", pointerOver);
         SetBrush(dictionary, "FocusStrokeColorInnerBrush", onAccent);
+
+        var disabledForeground = isDark ? Color.FromRgb(165, 165, 165) : Color.FromRgb(115, 115, 115);
+        var disabledBackground = isDark ? Color.FromRgb(48, 48, 48) : Color.FromRgb(240, 240, 240);
+        var disabledBorder = isDark ? Color.FromRgb(68, 68, 68) : Color.FromRgb(218, 218, 218);
+
+        SetBrush(dictionary, "AccentButtonBackgroundDisabled", disabledBackground);
+        SetBrush(dictionary, "AccentButtonBorderBrushDisabled", disabledBorder);
+        SetBrush(dictionary, "AccentButtonForegroundDisabled", disabledForeground);
+
+        SetBrush(dictionary, "ButtonBackgroundDisabled", disabledBackground);
+        SetBrush(dictionary, "ButtonBorderBrushDisabled", disabledBorder);
+        SetBrush(dictionary, "ButtonForegroundDisabled", disabledForeground);
+        SetBrush(dictionary, "TextFillColorDisabledBrush", disabledForeground);
+        SetBrush(dictionary, "ControlFillColorDisabledBrush", disabledBackground);
     }
 
     private static void ApplySemanticStatusResources(ResourceDictionary dictionary, bool isDark)

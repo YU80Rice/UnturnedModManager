@@ -337,6 +337,520 @@ public sealed class ModelBehaviorTests
     }
 
     [Fact]
+    public void PluginProfile_ExportsValidUmmpkPackageWithManifestAndFiles()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-ummpk-export-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "Unturned");
+        var plugins = Path.Combine(gameRoot, "BepInEx", "plugins");
+        var config = Path.Combine(gameRoot, "BepInEx", "config");
+        var packagePath = Path.Combine(root, "ExportedModpack.ummpk");
+
+        try
+        {
+            Directory.CreateDirectory(plugins);
+            Directory.CreateDirectory(config);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            File.WriteAllText(Path.Combine(plugins, "Alpha.dll"), "alpha-dll-content");
+            File.WriteAllText(Path.Combine(config, "Alpha.cfg"), "alpha-cfg-content");
+
+            var installer = new CommunityModInstaller(Path.Combine(root, "community-state"));
+            var localMods = new LocalModService(installer, () => gameRoot);
+            var profiles = new PluginProfileService(localMods, () => gameRoot, Path.Combine(root, "profile-state"));
+
+            var created = profiles.CreateFromCurrent("联机专用包", localMods.Scan());
+            Assert.True(created.Success);
+            Assert.NotNull(created.Profile);
+
+            var exportResult = profiles.ExportPackage(created.Profile!.Id, packagePath);
+            Assert.True(exportResult.Success);
+            Assert.True(File.Exists(packagePath));
+
+            using var zip = ZipFile.OpenRead(packagePath);
+            var manifestEntry = zip.GetEntry("manifest.json");
+            Assert.NotNull(manifestEntry);
+
+            using var reader = new StreamReader(manifestEntry!.Open(), Encoding.UTF8);
+            var manifestJson = reader.ReadToEnd();
+            var manifest = JsonSerializer.Deserialize<UmmpkManifest>(manifestJson);
+            Assert.NotNull(manifest);
+            Assert.Equal("联机专用包", manifest!.Name);
+            Assert.Single(manifest.Plugins);
+            Assert.Equal("Alpha.dll", manifest.Plugins[0].RelativePath);
+            Assert.True(manifest.Plugins[0].Enabled);
+
+            Assert.NotNull(zip.GetEntry("BepInEx/plugins/Alpha.dll"));
+            Assert.NotNull(zip.GetEntry("BepInEx/config/Alpha.cfg"));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void PluginProfile_ImportsUmmpkPackageAndInstallsFilesSafely()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-ummpk-import-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "Unturned");
+        var packagePath = Path.Combine(root, "TestModpack.ummpk");
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+
+            var manifest = new UmmpkManifest
+            {
+                Name = "导入测试包",
+                Description = "一键开黑模组包",
+                Author = "Tester",
+                Version = "1.0.0",
+                Plugins =
+                [
+                    new UmmpkPluginEntry { RelativePath = "PackPlugin.dll", Enabled = true },
+                    new UmmpkPluginEntry { RelativePath = "DisabledPlugin.dll", Enabled = false }
+                ]
+            };
+
+            File.WriteAllBytes(packagePath, CreateZipPackage(
+                ("manifest.json", JsonSerializer.Serialize(manifest, new JsonSerializerOptions { WriteIndented = true })),
+                ("BepInEx/plugins/PackPlugin.dll", "pack-plugin-dll"),
+                ("BepInEx/plugins/DisabledPlugin.dll", "disabled-plugin-dll"),
+                ("BepInEx/config/PackPlugin.cfg", "pack-plugin-cfg")));
+
+            var installer = new CommunityModInstaller(Path.Combine(root, "community-state"));
+            var localMods = new LocalModService(installer, () => gameRoot);
+            var profiles = new PluginProfileService(localMods, () => gameRoot, Path.Combine(root, "profile-state"));
+
+            var importResult = profiles.ImportPackage(packagePath);
+            Assert.True(importResult.Success);
+            Assert.NotNull(importResult.Profile);
+            Assert.Equal("导入测试包", importResult.Profile!.Name);
+
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "plugins", "PackPlugin.dll")));
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "plugins", "DisabledPlugin.dll.disabled")));
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "config", "PackPlugin.cfg")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Theory]
+    [InlineData("manifest.json", "BepInEx/plugins/malicious.exe", "bad")]
+    [InlineData("manifest.json", "BepInEx/plugins/malicious.bat", "bad")]
+    [InlineData("manifest.json", "BepInEx/core/tamper.dll", "bad")]
+    [InlineData("manifest.json", "Unturned.exe", "bad")]
+    public void PluginProfile_RejectsMaliciousUmmpkPackageWithDangerousPayloads(string manifestName, string badEntry, string badContent)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-ummpk-reject-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "Unturned");
+        var packagePath = Path.Combine(root, "Malicious.ummpk");
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+
+            var manifest = new UmmpkManifest
+            {
+                Name = "恶意测试包",
+                Plugins = [new UmmpkPluginEntry { RelativePath = "malicious.exe", Enabled = true }]
+            };
+
+            File.WriteAllBytes(packagePath, CreateZipPackage(
+                (manifestName, JsonSerializer.Serialize(manifest)),
+                (badEntry, badContent)));
+
+            var installer = new CommunityModInstaller(Path.Combine(root, "community-state"));
+            var localMods = new LocalModService(installer, () => gameRoot);
+            var profiles = new PluginProfileService(localMods, () => gameRoot, Path.Combine(root, "profile-state"));
+
+            var importResult = profiles.ImportPackage(packagePath);
+            Assert.False(importResult.Success);
+            Assert.Empty(profiles.GetProfiles());
+            if (badEntry != "Unturned.exe")
+                Assert.False(File.Exists(Path.Combine(gameRoot, badEntry)));
+            else
+                Assert.NotEqual("bad", File.ReadAllText(Path.Combine(gameRoot, "Unturned.exe")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void LocalMods_ImportRecognizesAndAppliesUmmpk()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-local-ummpk-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "Unturned");
+        var packagePath = Path.Combine(root, "DropTest.ummpk");
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+
+            var manifest = new UmmpkManifest
+            {
+                Name = "拖拽方案包",
+                Plugins = [new UmmpkPluginEntry { RelativePath = "DropPlugin.dll", Enabled = true }]
+            };
+
+            File.WriteAllBytes(packagePath, CreateZipPackage(
+                ("manifest.json", JsonSerializer.Serialize(manifest)),
+                ("BepInEx/plugins/DropPlugin.dll", "drop-plugin-content")));
+
+            var installer = new CommunityModInstaller(Path.Combine(root, "community-state"));
+            var localMods = new LocalModService(installer, () => gameRoot);
+            var profiles = new PluginProfileService(localMods, () => gameRoot, Path.Combine(root, "profile-state"));
+            localMods.SetProfileService(profiles);
+
+            var result = localMods.Import([packagePath]);
+            Assert.Equal(1, result.Imported);
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "plugins", "DropPlugin.dll")));
+            Assert.Single(profiles.GetProfiles());
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void CustomTheme_ValidatesAndCalculatesContrastAndOpacity()
+    {
+        var theme = new CustomTheme
+        {
+            Name = "Cyberpunk Blue",
+            Author = "Tester",
+            Version = "1.0.0",
+            BaseTheme = ThemePreference.Dark,
+            AccentColor = "#00D2FF",
+            BackgroundColor = "#0F111A",
+            CardBackgroundColor = "#1A1D2C",
+            CardOpacity = 0.85,
+            CardBorderRadius = 12.0
+        };
+
+        var validation = theme.Validate();
+        Assert.True(validation.IsValid);
+        Assert.InRange(theme.CardOpacity, 0.1, 1.0);
+        Assert.InRange(theme.CardBorderRadius, 0.0, 32.0);
+
+        var badTheme = new CustomTheme
+        {
+            Name = "",
+            AccentColor = "invalid-color",
+            CardOpacity = 2.5
+        };
+        var badValidation = badTheme.Validate();
+        Assert.False(badValidation.IsValid);
+    }
+
+    [Fact]
+    public void ThemePackageService_ExportsAndImportsValidUmmthemePackage()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-theme-test-" + Guid.NewGuid().ToString("N"));
+        var themeStorage = Path.Combine(root, "themes");
+        var packagePath = Path.Combine(root, "Cyberpunk.ummtheme");
+        var wallpaperPath = Path.Combine(root, "wallpaper.png");
+
+        try
+        {
+            Directory.CreateDirectory(root);
+            Directory.CreateDirectory(themeStorage);
+            File.WriteAllBytes(wallpaperPath, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]); // PNG header
+
+            var theme = new CustomTheme
+            {
+                Name = "赛博霓虹",
+                Author = "Designer",
+                Version = "1.0.0",
+                Description = "绚丽的赛博朋克深蓝配色",
+                BaseTheme = ThemePreference.Dark,
+                AccentColor = "#00D2FF",
+                BackgroundColor = "#0B0E14",
+                CardBackgroundColor = "#151922",
+                CardOpacity = 0.88,
+                CardBorderRadius = 14.0,
+                BackgroundAsset = "wallpaper.png"
+            };
+
+            var service = new ThemePackageService(themeStorage);
+            var exportResult = service.ExportPackage(theme, wallpaperPath, packagePath);
+            Assert.True(exportResult.Success);
+            Assert.True(File.Exists(packagePath));
+
+            using var zip = ZipFile.OpenRead(packagePath);
+            Assert.NotNull(zip.GetEntry("theme.json"));
+            Assert.NotNull(zip.GetEntry("wallpaper.png"));
+
+            var importResult = service.ImportPackage(packagePath);
+            Assert.True(importResult.Success);
+            Assert.NotNull(importResult.Theme);
+            Assert.Equal("赛博霓虹", importResult.Theme!.Name);
+            Assert.True(File.Exists(importResult.WallpaperDestinationPath));
+
+            var installed = service.GetInstalledThemes();
+            Assert.Single(installed);
+            Assert.Equal("赛博霓虹", installed[0].Name);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Theory]
+    [InlineData("theme.json", "payload.exe", "bad")]
+    [InlineData("theme.json", "payload.dll", "bad")]
+    [InlineData("theme.json", "payload.bat", "bad")]
+    [InlineData("theme.json", "nested/deep/exploit.png", "bad")]
+    public void ThemePackageService_RejectsMaliciousUmmthemePackageWithDangerousFiles(string manifestName, string badEntry, string badContent)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-theme-reject-" + Guid.NewGuid().ToString("N"));
+        var themeStorage = Path.Combine(root, "themes");
+        var packagePath = Path.Combine(root, "Malicious.ummtheme");
+
+        try
+        {
+            Directory.CreateDirectory(root);
+            Directory.CreateDirectory(themeStorage);
+
+            var theme = new CustomTheme
+            {
+                Name = "恶意主题",
+                AccentColor = "#FF0000"
+            };
+
+            File.WriteAllBytes(packagePath, CreateZipPackage(
+                (manifestName, JsonSerializer.Serialize(theme)),
+                (badEntry, badContent)));
+
+            var service = new ThemePackageService(themeStorage);
+            var importResult = service.ImportPackage(packagePath);
+            Assert.False(importResult.Success);
+            Assert.Empty(service.GetInstalledThemes());
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void LocalMods_ImportRecognizesAndInstallsUmmtheme()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-local-theme-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "Unturned");
+        var themeStorage = Path.Combine(root, "themes");
+        var packagePath = Path.Combine(root, "DropTheme.ummtheme");
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            Directory.CreateDirectory(themeStorage);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+
+            var theme = new CustomTheme
+            {
+                Name = "拖拽主题",
+                AccentColor = "#22C55E"
+            };
+
+            File.WriteAllBytes(packagePath, CreateZipPackage(
+                ("theme.json", JsonSerializer.Serialize(theme))));
+
+            var installer = new CommunityModInstaller(Path.Combine(root, "community-state"));
+            var themeService = new ThemePackageService(themeStorage);
+            var localMods = new LocalModService(installer, () => gameRoot);
+            localMods.SetThemePackageService(themeService);
+
+            var result = localMods.Import([packagePath]);
+            Assert.Equal(1, result.Imported);
+            Assert.Single(themeService.GetInstalledThemes());
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void VisualAcceptance_VerifiesWcagContrastOnCustomThemes()
+    {
+        var customThemes = new[]
+        {
+            new CustomTheme { Name = "Cyberpunk", AccentColor = "#00D2FF", BackgroundColor = "#0F111A", CardBackgroundColor = "#1A1D2C" },
+            new CustomTheme { Name = "Emerald", AccentColor = "#10B981", BackgroundColor = "#064E3B", CardBackgroundColor = "#047857" },
+            new CustomTheme { Name = "Sunset", AccentColor = "#F97316", BackgroundColor = "#1C1917", CardBackgroundColor = "#292524" },
+            new CustomTheme { Name = "PaperWhite", AccentColor = "#0284C7", BackgroundColor = "#F8FAFC", CardBackgroundColor = "#FFFFFF" }
+        };
+
+        foreach (var theme in customThemes)
+        {
+            var accent = ParseColor(theme.AccentColor);
+            var foreground = ThemeService.GetContrastingForeground(accent);
+            var contrast = ContrastRatio(foreground, accent);
+            Assert.True(contrast >= 4.5,
+                $"Theme '{theme.Name}' accent color {theme.AccentColor} has insufficient WCAG contrast ({contrast:F2}:1) against {foreground}.");
+        }
+    }
+
+    [Fact]
+    public void VisualAcceptance_AllCorePagesUseUnifiedDynamicBrushesAndAccessibleButtons()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        string? pagesDir = null;
+        string? appXamlPath = null;
+        while (current is not null)
+        {
+            var direct = Path.Combine(current.FullName, "Pages");
+            if (Directory.Exists(direct))
+            {
+                pagesDir = direct;
+                appXamlPath = Path.Combine(current.FullName, "App.xaml");
+                break;
+            }
+            var sub = Path.Combine(current.FullName, "UnturnedModManager", "Pages");
+            if (Directory.Exists(sub))
+            {
+                pagesDir = sub;
+                appXamlPath = Path.Combine(current.FullName, "UnturnedModManager", "App.xaml");
+                break;
+            }
+            current = current.Parent;
+        }
+
+        Assert.NotNull(pagesDir);
+        Assert.True(Directory.Exists(pagesDir), "Pages directory should exist.");
+
+        // Verify App.xaml does not have global TextBlock style overriding button text
+        if (appXamlPath is not null && File.Exists(appXamlPath))
+        {
+            var appContent = File.ReadAllText(appXamlPath);
+            Assert.DoesNotContain("<Style TargetType=\"{x:Type TextBlock}\">", appContent);
+        }
+
+        var xamlFiles = Directory.EnumerateFiles(pagesDir!, "*.xaml").ToList();
+        Assert.NotEmpty(xamlFiles);
+
+        foreach (var xamlFile in xamlFiles)
+        {
+            var content = File.ReadAllText(xamlFile);
+            // All pages should use DynamicResource for Background
+            Assert.Contains("Background=\"{DynamicResource ApplicationBackgroundBrush}\"", content);
+        }
+    }
+
+    [Fact]
+    public void VisualAcceptance_DisabledStatesAndSecondaryTextMaintainAccessibleContrast()
+    {
+        var isDarkValues = new[] { false, true };
+        foreach (var isDark in isDarkValues)
+        {
+            var disabledForeground = isDark ? Color.FromRgb(165, 165, 165) : Color.FromRgb(115, 115, 115);
+            var disabledBackground = isDark ? Color.FromRgb(48, 48, 48) : Color.FromRgb(240, 240, 240);
+            var contrast = ContrastRatio(disabledForeground, disabledBackground);
+            Assert.True(contrast >= 3.0, $"Disabled contrast in {(isDark ? "Dark" : "Light")} mode should be >= 3.0:1, got {contrast:F2}:1");
+        }
+    }
+
+    [Fact]
+    public async Task RegressionTest_FullFourPhaseEndToEndPipeline()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-full-e2e-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "Unturned");
+        var stateRoot = Path.Combine(root, "state");
+        var cacheRoot = Path.Combine(root, "cache");
+        var themeRoot = Path.Combine(root, "themes");
+        var profileRoot = Path.Combine(root, "profiles");
+
+        try
+        {
+            // === PHASE 1: Community Mod Installer with Whitelist ===
+            Directory.CreateDirectory(gameRoot);
+            Directory.CreateDirectory(Path.Combine(gameRoot, "BepInEx", "plugins"));
+            Directory.CreateDirectory(Path.Combine(gameRoot, "BepInEx", "config"));
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+
+            var dllBytes = Encoding.UTF8.GetBytes("e2e-plugin-dll");
+            const string detailJson = """{"mod":{"id":200,"title":{"zh":"全链路测试插件"},"version":"1.0.0","has_file":true}}""";
+            using var http = new HttpClient(new SingleFileCommunityHandler(detailJson, dllBytes, "E2EPlugin.dll"))
+            {
+                BaseAddress = new Uri("https://unmod.online/")
+            };
+            using var api = new CommunityApiClient(new CommunityCacheService(cacheRoot), http);
+            var detail = await api.GetModAsync(200);
+            var installer = new CommunityModInstaller(stateRoot);
+            await installer.InstallWithDependenciesDetailedAsync(api, detail, gameRoot);
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "plugins", "E2EPlugin.dll")));
+
+            // === PHASE 2: Diagnostic Engine & Sanitization ===
+            var logs = Path.Combine(gameRoot, "Logs");
+            Directory.CreateDirectory(logs);
+            File.WriteAllText(Path.Combine(logs, "Client.log"), "Could not load type 'Example' TypeLoadException token=secret_token_123");
+            var diagnosticService = new DiagnosticService(gameRoot);
+            var analysis = diagnosticService.Analyze(gameRoot);
+            Assert.Equal(DiagnosticCategory.MissingDependency, analysis.Category);
+            Assert.Contains("前置", analysis.Recommendation);
+
+            var reportFolder = diagnosticService.ExportLogs(gameRoot);
+            var reportContent = File.ReadAllText(Path.Combine(reportFolder, "UMM-诊断摘要.txt"));
+            Assert.DoesNotContain("secret_token_123", reportContent);
+            Assert.Contains("token=<REDACTED>", reportContent);
+
+            // === PHASE 3: Physical Profiles & .ummpk Modpack ===
+            var localMods = new LocalModService(installer, () => gameRoot);
+            var profileService = new PluginProfileService(localMods, () => gameRoot, profileRoot);
+            localMods.SetProfileService(profileService);
+
+            var createProfile = profileService.CreateFromCurrent("全流程方案", localMods.Scan());
+            Assert.True(createProfile.Success);
+            Assert.NotNull(createProfile.Profile);
+
+            var ummpkPath = Path.Combine(root, "E2EPipeline.ummpk");
+            var exportUmmpk = profileService.ExportPackage(createProfile.Profile!.Id, ummpkPath);
+            Assert.True(exportUmmpk.Success);
+            Assert.True(File.Exists(ummpkPath));
+
+            var importUmmpk = profileService.ImportPackage(ummpkPath);
+            Assert.True(importUmmpk.Success);
+
+            // === PHASE 4: Open Themes & .ummtheme ===
+            var themeService = new ThemePackageService(themeRoot);
+            localMods.SetThemePackageService(themeService);
+
+            var customTheme = new CustomTheme
+            {
+                Name = "全流程主题",
+                Author = "E2ETester",
+                AccentColor = "#00D2FF",
+                BackgroundColor = "#0F111A",
+                CardBackgroundColor = "#1A1D2C",
+                CardOpacity = 0.90,
+                CardBorderRadius = 12.0
+            };
+
+            var ummthemePath = Path.Combine(root, "E2EPipeline.ummtheme");
+            var exportTheme = themeService.ExportPackage(customTheme, null, ummthemePath);
+            Assert.True(exportTheme.Success);
+            Assert.True(File.Exists(ummthemePath));
+
+            var dropThemeResult = localMods.Import([ummthemePath]);
+            Assert.Equal(1, dropThemeResult.Imported);
+            Assert.Single(themeService.GetInstalledThemes());
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
     public void DiagnosticService_ReportsFatalLogEvidence()
     {
         var gameRoot = Path.Combine(Path.GetTempPath(), "umm-diagnostic-" + Guid.NewGuid().ToString("N"));
@@ -863,6 +1377,295 @@ public sealed class ModelBehaviorTests
         }
     }
 
+    [Fact]
+    public async Task CommunityInstaller_InstallsSingleDllIntoBepInExPlugins()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-comm-dll-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "game");
+        var stateRoot = Path.Combine(root, "state");
+        var cacheRoot = Path.Combine(root, "cache");
+        var dllBytes = Encoding.UTF8.GetBytes("raw-plugin-dll");
+        const string detailJson = """
+        {"mod":{"id":101,"title":{"zh":"单文件插件"},"version":"1.0.0","has_file":true}}
+        """;
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            using var http = new HttpClient(new SingleFileCommunityHandler(detailJson, dllBytes, "SinglePlugin.dll"))
+            {
+                BaseAddress = new Uri("https://unmod.online/")
+            };
+            using var api = new CommunityApiClient(new CommunityCacheService(cacheRoot), http);
+            var detail = await api.GetModAsync(101);
+            var installer = new CommunityModInstaller(stateRoot);
+
+            await installer.InstallWithDependenciesDetailedAsync(api, detail, gameRoot);
+
+            var installed = Assert.Single(installer.GetInstalledMods());
+            Assert.Equal(101, installed.RemoteId);
+            var installedFile = Assert.Single(installed.Files);
+            Assert.Equal("BepInEx/plugins/SinglePlugin.dll", installedFile.RelativePath);
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "plugins", "SinglePlugin.dll")));
+            Assert.Equal("raw-plugin-dll", await File.ReadAllTextAsync(Path.Combine(gameRoot, "BepInEx", "plugins", "SinglePlugin.dll")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public async Task CommunityInstaller_InstallsZipWithSingleWrapper()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-comm-zip-wrap-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "game");
+        var stateRoot = Path.Combine(root, "state");
+        var cacheRoot = Path.Combine(root, "cache");
+        var package = CreateZipPackage(
+            ("WrapperFolder/BepInEx/plugins/Wrapped.dll", "wrapped-plugin"),
+            ("WrapperFolder/BepInEx/config/Wrapped.cfg", "wrapped-config"));
+        const string detailJson = """
+        {"mod":{"id":102,"title":{"zh":"嵌套包装插件"},"version":"1.0.0","has_file":true}}
+        """;
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            using var http = new HttpClient(new SingleFileCommunityHandler(detailJson, package, "WrappedMod.zip"))
+            {
+                BaseAddress = new Uri("https://unmod.online/")
+            };
+            using var api = new CommunityApiClient(new CommunityCacheService(cacheRoot), http);
+            var detail = await api.GetModAsync(102);
+            var installer = new CommunityModInstaller(stateRoot);
+
+            await installer.InstallWithDependenciesDetailedAsync(api, detail, gameRoot);
+
+            var installed = Assert.Single(installer.GetInstalledMods());
+            Assert.Equal(102, installed.RemoteId);
+            Assert.Equal(2, installed.Files.Count);
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "plugins", "Wrapped.dll")));
+            Assert.True(File.Exists(Path.Combine(gameRoot, "BepInEx", "config", "Wrapped.cfg")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Theory]
+    [InlineData("BepInEx/core/Unsafe.dll", "unsafe")]
+    [InlineData("Unturned.exe", "tamper")]
+    [InlineData("Other/payload.dll", "other")]
+    [InlineData("BepInEx/mono/managed.dll", "mono")]
+    public async Task CommunityInstaller_RejectsPackageWritingOutsidePluginsOrConfig(string entryPath, string content)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-comm-reject-out-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "game");
+        var stateRoot = Path.Combine(root, "state");
+        var cacheRoot = Path.Combine(root, "cache");
+        var package = CreateZipPackage(
+            ("BepInEx/plugins/Valid.dll", "valid"),
+            (entryPath, content));
+        const string detailJson = """
+        {"mod":{"id":103,"title":{"zh":"越界插件测试"},"version":"1.0.0","has_file":true}}
+        """;
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            using var http = new HttpClient(new SingleFileCommunityHandler(detailJson, package, "IllegalMod.zip"))
+            {
+                BaseAddress = new Uri("https://unmod.online/")
+            };
+            using var api = new CommunityApiClient(new CommunityCacheService(cacheRoot), http);
+            var detail = await api.GetModAsync(103);
+            var installer = new CommunityModInstaller(stateRoot);
+
+            await Assert.ThrowsAnyAsync<Exception>(() => installer.InstallWithDependenciesDetailedAsync(api, detail, gameRoot));
+            Assert.Empty(installer.GetInstalledMods());
+            Assert.False(File.Exists(Path.Combine(gameRoot, "BepInEx", "plugins", "Valid.dll")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Theory]
+    [InlineData("BepInEx/plugins/danger.exe")]
+    [InlineData("BepInEx/plugins/danger.bat")]
+    [InlineData("BepInEx/plugins/danger.ps1")]
+    [InlineData("BepInEx/config/danger.cmd")]
+    [InlineData("BepInEx/plugins/danger.vbs")]
+    public async Task CommunityInstaller_RejectsPackageWithDangerousPayloads(string dangerousEntry)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-comm-danger-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "game");
+        var stateRoot = Path.Combine(root, "state");
+        var cacheRoot = Path.Combine(root, "cache");
+        var package = CreateZipPackage(
+            ("BepInEx/plugins/Valid.dll", "valid"),
+            (dangerousEntry, "echo bad"));
+        const string detailJson = """
+        {"mod":{"id":104,"title":{"zh":"危险脚本插件"},"version":"1.0.0","has_file":true}}
+        """;
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            using var http = new HttpClient(new SingleFileCommunityHandler(detailJson, package, "DangerMod.zip"))
+            {
+                BaseAddress = new Uri("https://unmod.online/")
+            };
+            using var api = new CommunityApiClient(new CommunityCacheService(cacheRoot), http);
+            var detail = await api.GetModAsync(104);
+            var installer = new CommunityModInstaller(stateRoot);
+
+            await Assert.ThrowsAnyAsync<Exception>(() => installer.InstallWithDependenciesDetailedAsync(api, detail, gameRoot));
+            Assert.Empty(installer.GetInstalledMods());
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public async Task CommunityInstaller_RejectsPackageWithoutPluginDll()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "umm-comm-nodll-" + Guid.NewGuid().ToString("N"));
+        var gameRoot = Path.Combine(root, "game");
+        var stateRoot = Path.Combine(root, "state");
+        var cacheRoot = Path.Combine(root, "cache");
+        var package = CreateZipPackage(("BepInEx/config/OnlyConfig.cfg", "key=val"));
+        const string detailJson = """
+        {"mod":{"id":105,"title":{"zh":"纯配置无DLL插件"},"version":"1.0.0","has_file":true}}
+        """;
+
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "Unturned.exe"), "test");
+            using var http = new HttpClient(new SingleFileCommunityHandler(detailJson, package, "NoDllMod.zip"))
+            {
+                BaseAddress = new Uri("https://unmod.online/")
+            };
+            using var api = new CommunityApiClient(new CommunityCacheService(cacheRoot), http);
+            var detail = await api.GetModAsync(105);
+            var installer = new CommunityModInstaller(stateRoot);
+
+            await Assert.ThrowsAnyAsync<Exception>(() => installer.InstallWithDependenciesDetailedAsync(api, detail, gameRoot));
+            Assert.Empty(installer.GetInstalledMods());
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void DiagnosticService_IdentifiesMissingDependencyWithActionableRecommendation()
+    {
+        var gameRoot = Path.Combine(Path.GetTempPath(), "umm-dep-diagnostic-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var bepInEx = Path.Combine(gameRoot, "BepInEx");
+            Directory.CreateDirectory(bepInEx);
+            File.WriteAllText(Path.Combine(bepInEx, "LogOutput.log"), "Could not load type 'Rocket.Core.R' from assembly 'Rocket.Core', TypeLoadException\n");
+
+            var analysis = new DiagnosticService(gameRoot).Analyze(gameRoot);
+
+            Assert.Equal(DiagnosticSeverity.Warning, analysis.Severity);
+            Assert.Equal(DiagnosticCategory.MissingDependency, analysis.Category);
+            Assert.Contains("前置依赖", analysis.Title);
+            Assert.Contains("前置", analysis.Recommendation);
+            Assert.Contains(analysis.Evidence, item => item.Contains("TypeLoadException"));
+        }
+        finally
+        {
+            if (Directory.Exists(gameRoot)) Directory.Delete(gameRoot, true);
+        }
+    }
+
+    [Fact]
+    public void DiagnosticService_IdentifiesBattlEyeConflictWithActionableRecommendation()
+    {
+        var gameRoot = Path.Combine(Path.GetTempPath(), "umm-be-diagnostic-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var logs = Path.Combine(gameRoot, "Logs");
+            Directory.CreateDirectory(logs);
+            File.WriteAllText(Path.Combine(logs, "Client_Prev.log"), "BattlEye Client: Blocked loading of winhttp.dll, BEService integrity violation\n");
+
+            var analysis = new DiagnosticService(gameRoot).Analyze(gameRoot);
+
+            Assert.Equal(DiagnosticSeverity.Error, analysis.Severity);
+            Assert.Equal(DiagnosticCategory.BattlEyeConflict, analysis.Category);
+            Assert.Contains("BattlEye", analysis.Title);
+            Assert.Contains("BattlEye", analysis.Recommendation);
+            Assert.Contains(analysis.Evidence, item => item.Contains("Blocked loading"));
+        }
+        finally
+        {
+            if (Directory.Exists(gameRoot)) Directory.Delete(gameRoot, true);
+        }
+    }
+
+    [Fact]
+    public void DiagnosticService_IdentifiesDoorstopFailureWithActionableRecommendation()
+    {
+        var gameRoot = Path.Combine(Path.GetTempPath(), "umm-doorstop-diagnostic-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            Directory.CreateDirectory(gameRoot);
+            File.WriteAllText(Path.Combine(gameRoot, "doorstop_prev.log"), "[Doorstop:ERROR] Failed to load Mono library (mono-2.0-bdwgc.dll), error 126\n");
+
+            var analysis = new DiagnosticService(gameRoot).Analyze(gameRoot);
+
+            Assert.Equal(DiagnosticSeverity.Error, analysis.Severity);
+            Assert.Equal(DiagnosticCategory.DoorstopFailure, analysis.Category);
+            Assert.Contains("Doorstop", analysis.Title);
+            Assert.Contains("修复", analysis.Recommendation);
+        }
+        finally
+        {
+            if (Directory.Exists(gameRoot)) Directory.Delete(gameRoot, true);
+        }
+    }
+
+    [Fact]
+    public void DiagnosticService_SanitizesSensitiveDataInReport()
+    {
+        var gameRoot = Path.Combine(Path.GetTempPath(), "umm-sanitize-" + Guid.NewGuid().ToString("N"));
+        var launcherDirectory = Path.Combine(gameRoot, "launcher");
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(gameRoot, "Logs"));
+            Directory.CreateDirectory(launcherDirectory);
+            var rawText = @"Fatal error at C:\Users\MySecretUsername\AppData\Roaming\UnturnedModManager\config.json and token=eyJhbGciOiJIUzI1NiJ9.secret";
+            File.WriteAllText(Path.Combine(gameRoot, "Logs", "Client.log"), rawText);
+
+            var service = new DiagnosticService(@"C:\Users\MySecretUsername", launcherDirectory);
+            var folder = service.ExportLogs(gameRoot);
+            var report = File.ReadAllText(Path.Combine(folder, "UMM-诊断摘要.txt"));
+
+            Assert.DoesNotContain("MySecretUsername", report);
+            Assert.DoesNotContain("eyJhbGciOiJIUzI1NiJ9.secret", report);
+            Assert.Contains("<USER>", report);
+            Assert.Contains("token=<REDACTED>", report);
+        }
+        finally
+        {
+            if (Directory.Exists(gameRoot)) Directory.Delete(gameRoot, true);
+        }
+    }
+
     private static double ContrastRatio(string first, string second) => ContrastRatio(ParseColor(first), ParseColor(second));
 
     private static double ContrastRatio(Color first, Color second)
@@ -999,6 +1802,39 @@ public sealed class ModelBehaviorTests
                 {
                     Content = new ByteArrayContent(package)
                 });
+            }
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
+        }
+    }
+
+    private sealed class SingleFileCommunityHandler(
+        string detailJson,
+        byte[] package,
+        string fileName) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var uri = request.RequestUri ?? throw new InvalidOperationException("请求 URL 缺失。");
+            if (uri.AbsoluteUri.Contains("/api/mods/") && !uri.AbsoluteUri.EndsWith("/file", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(detailJson, Encoding.UTF8, "application/json")
+                });
+            }
+
+            if (uri.AbsoluteUri.EndsWith("/file", StringComparison.OrdinalIgnoreCase))
+            {
+                var response = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new ByteArrayContent(package)
+                };
+                response.Content.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
+                {
+                    FileName = fileName
+                };
+                return Task.FromResult(response);
             }
 
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));

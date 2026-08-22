@@ -285,6 +285,17 @@
                         <TextBlock Text="{Binding DiagnosticTitle}" FontSize="15" FontWeight="SemiBold" />
                         <TextBlock Text="{Binding DiagnosticSummary}" Margin="0,4,0,0" TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <Border Margin="0,8,0,0" Padding="12,8" CornerRadius="8"
+                                Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
+                                Visibility="{Binding HasDiagnosticRecommendation, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Lightbulb24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+                                <TextBlock Text="{Binding DiagnosticRecommendation}" TextWrapping="Wrap" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                            </StackPanel>
+                        </Border>
                         <TextBlock Text="{Binding DiagnosticDetail}" Margin="0,10,0,0" TextWrapping="Wrap"
                                    FontFamily="Cascadia Mono, Consolas, monospace" FontSize="11"
                                    Visibility="{Binding HasDiagnosticDetail, Converter={StaticResource BoolToVisibility}}"
@@ -292,8 +303,10 @@
                     </StackPanel>
                     <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
                         <ui:Button Content="分析最近日志" Icon="{ui:SymbolIcon Search24}"
+                                   Appearance="Secondary"
                                    Command="{Binding AnalyzeLogsCommand}" />
                         <ui:Button Content="导出诊断包" Icon="{ui:SymbolIcon FolderArrowRight24}"
+                                   Appearance="Secondary"
                                    Margin="8,0,0,0" Command="{Binding ExportLogsCommand}" />
                     </StackPanel>
                 </Grid>
@@ -302,12 +315,12 @@
             <Border CornerRadius="12" Padding="22" Background="{DynamicResource ControlFillColorDefaultBrush}"
                     BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                 <StackPanel HorizontalAlignment="Center">
-                    <ui:Button Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Height="56" MinWidth="300"
+                    <ui:Button Appearance="Primary" Height="56" MinWidth="300"
                                FontSize="18" FontWeight="SemiBold"
                                Command="{Binding LaunchCommand}" IsEnabled="{Binding CanLaunch}">
                         <StackPanel Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Play24" FontSize="20" Margin="0,0,10,0" />
-                            <TextBlock Text="{Binding LaunchButtonText}" VerticalAlignment="Center" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
+                            <TextBlock Text="{Binding LaunchButtonText}" VerticalAlignment="Center" />
                         </StackPanel>
                     </ui:Button>
                     <StackPanel Width="420" Margin="0,18,0,0"

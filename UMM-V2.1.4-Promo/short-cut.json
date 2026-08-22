@@ -1,0 +1,33 @@
+{
+  "title": "UMM v2.1.4 纯宣传短版",
+  "description": "无旁白宣传剪辑：保留核心卖点，压缩重复说明性镜头。",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "transitionMs": 350,
+  "frames": [
+    { "frame": 1, "durationMs": 4500 },
+    { "frame": 3, "durationMs": 3800 },
+    { "frame": 5, "durationMs": 3800 },
+    { "frame": 6, "durationMs": 4200 },
+    { "frame": 7, "durationMs": 4200 },
+    { "frame": 8, "durationMs": 4200 },
+    { "frame": 9, "durationMs": 3800 },
+    { "frame": 10, "durationMs": 3800 },
+    { "frame": 14, "durationMs": 3800 },
+    { "frame": 15, "durationMs": 4200 },
+    { "frame": 17, "durationMs": 4000 },
+    { "frame": 18, "durationMs": 4000 },
+    { "frame": 19, "durationMs": 4200 },
+    { "frame": 20, "durationMs": 3800 },
+    { "frame": 21, "durationMs": 4200 },
+    { "frame": 23, "durationMs": 4000 },
+    { "frame": 25, "durationMs": 3800 },
+    { "frame": 26, "durationMs": 4000 },
+    { "frame": 27, "durationMs": 4500 },
+    { "frame": 28, "durationMs": 4000 },
+    { "frame": 29, "durationMs": 4000 },
+    { "frame": 30, "durationMs": 4300 },
+    { "frame": 32, "durationMs": 5500 }
+  ]
+}

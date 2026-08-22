@@ -27,6 +27,19 @@ public sealed class LocalModService
         _gamePathProvider = gamePathProvider;
     }
 
+    private PluginProfileService? _profileService;
+    private ThemePackageService? _themePackageService;
+
+    public void SetProfileService(PluginProfileService profileService)
+    {
+        _profileService = profileService;
+    }
+
+    public void SetThemePackageService(ThemePackageService themePackageService)
+    {
+        _themePackageService = themePackageService;
+    }
+
     public string? GetPluginsPath()
     {
         var gamePath = _gamePathProvider();
@@ -37,7 +50,9 @@ public sealed class LocalModService
     public static bool IsSupportedImportFile(string path) =>
         path.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
         || path.EndsWith(".dll.disabled", StringComparison.OrdinalIgnoreCase)
-        || path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase);
+        || path.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".ummpk", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".ummtheme", StringComparison.OrdinalIgnoreCase);
 
     public IReadOnlyList<ModItem> Scan()
     {
@@ -200,9 +215,38 @@ public sealed class LocalModService
 
             try
             {
-                if (source.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                if (source.EndsWith(".ummtheme", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (_themePackageService is not null)
+                    {
+                        var themeResult = _themePackageService.ImportPackage(source);
+                        if (themeResult.Success)
+                        {
+                            return new LocalModImportResult(1, skipped, themeResult.Message);
+                        }
+                        throw new InvalidDataException(themeResult.Message);
+                    }
+                    skipped++;
+                }
+                else if (source.EndsWith(".ummpk", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (_profileService is not null)
+                    {
+                        var profileResult = _profileService.ImportPackage(source);
+                        if (profileResult.Success)
+                        {
+                            return new LocalModImportResult(profileResult.Profile?.Plugins.Count ?? 1, skipped, profileResult.Message);
+                        }
+                        throw new InvalidDataException(profileResult.Message);
+                    }
                     prepared.AddRange(ReadBepInExPackage(source));
+                }
+                else if (source.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+                {
+                    prepared.AddRange(ReadBepInExPackage(source));
+                }
                 else
+                {
                     prepared.Add(new ImportEntry(
                         $"BepInEx/plugins/{Path.GetFileName(source)}",
                         source,
@@ -210,6 +254,7 @@ public sealed class LocalModService
                         null,
                         new FileInfo(source).Length,
                         true));
+                }
             }
             catch (Exception ex)
             {

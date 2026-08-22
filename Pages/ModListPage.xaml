@@ -63,10 +63,22 @@
                                Command="{Binding ApplyProfileCommand}" />
                     <ui:Button Content="保存当前状态"
                                Icon="{ui:SymbolIcon Save24}"
+                               Appearance="Secondary"
                                Margin="0,0,8,8"
                                Command="{Binding SaveProfileCommand}" />
+                    <ui:Button Content="导出模组包"
+                               Icon="{ui:SymbolIcon Share24}"
+                               Appearance="Secondary"
+                               Margin="0,0,8,8"
+                               Command="{Binding ExportPackageCommand}" />
+                    <ui:Button Content="导入模组包"
+                               Icon="{ui:SymbolIcon ArrowDownload24}"
+                               Appearance="Secondary"
+                               Margin="0,0,8,8"
+                               Command="{Binding ImportPackageCommand}" />
                     <ui:Button Content="删除方案"
                                Icon="{ui:SymbolIcon Delete24}"
+                               Appearance="Secondary"
                                Margin="0,0,8,8"
                                Command="{Binding DeleteProfileCommand}" />
                 </WrapPanel>
@@ -78,6 +90,7 @@
                                 Text="{Binding NewProfileName, UpdateSourceTrigger=PropertyChanged}" />
                     <ui:Button Content="从当前状态创建"
                                Icon="{ui:SymbolIcon Add24}"
+                               Appearance="Secondary"
                                Margin="0,0,8,8"
                                Command="{Binding CreateProfileCommand}" />
                 </WrapPanel>
@@ -85,7 +98,7 @@
                            Margin="0,2,0,0"
                            FontSize="12"
                            TextWrapping="Wrap"
-                           Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
             </StackPanel>
         </Border>
 
@@ -120,12 +133,15 @@
                                                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                                        TextTrimming="CharacterEllipsis" />
                                             <Border Margin="10,0,0,0"
-                                                    Padding="7,2"
-                                                    CornerRadius="7"
-                                                    Background="{DynamicResource ControlFillColorSecondaryBrush}">
+                                                    Padding="8,3"
+                                                    CornerRadius="6"
+                                                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                                                    BorderThickness="1">
                                                 <TextBlock Text="{Binding SourceText}"
                                                            FontSize="11"
-                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                                           FontWeight="Medium"
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Text="{Binding FileName}"
@@ -136,7 +152,7 @@
                                         <TextBlock Text="{Binding VersionText}"
                                                    Margin="0,2,0,0"
                                                    FontSize="11"
-                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                         <ui:Button Content="更新"
@@ -147,6 +163,7 @@
                                                    CommandParameter="{Binding}"
                                                    Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}" />
                                         <ui:Button Content="社区详情"
+                                                   Appearance="Secondary"
                                                    Margin="0,0,8,0"
                                                    Command="{Binding DataContext.OpenCommunityCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}"
                                                    CommandParameter="{Binding}"

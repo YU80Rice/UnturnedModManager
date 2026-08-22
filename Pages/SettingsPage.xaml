@@ -71,7 +71,7 @@
             <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
                     Background="{DynamicResource ControlFillColorDefaultBrush}">
                 <StackPanel>
-                    <TextBlock Text="主题模式" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="主题模式与外观" FontSize="16" FontWeight="SemiBold" />
                     <TextBlock Text="选择浅色、深色，或跟随 Windows 系统设置。"
                                Margin="0,3,0,12"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
@@ -89,6 +89,30 @@
                               DisplayMemberPath="Label"
                               Width="220"
                               HorizontalAlignment="Left" />
+                    <TextBlock Text="自定义主题包 (.ummtheme)" FontSize="14" FontWeight="SemiBold" Margin="0,20,0,0" />
+                    <TextBlock Text="导入创作者分享的 .ummtheme 主题包，或将当前外观配置一键打包分享。"
+                               Margin="0,3,0,10"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <WrapPanel>
+                        <ComboBox ItemsSource="{Binding CustomThemes}"
+                                  SelectedItem="{Binding SelectedCustomTheme}"
+                                  DisplayMemberPath="Name"
+                                  Width="220"
+                                  Margin="0,0,8,8"
+                                  ToolTip="选择已安装的自定义主题" />
+                        <ui:Button Content="导入主题包"
+                                   Icon="{ui:SymbolIcon ArrowDownload24}"
+                                   Margin="0,0,8,8"
+                                   Command="{Binding ImportThemeCommand}" />
+                        <ui:Button Content="导出当前主题"
+                                   Icon="{ui:SymbolIcon Share24}"
+                                   Margin="0,0,8,8"
+                                   Command="{Binding ExportThemeCommand}" />
+                        <ui:Button Content="恢复默认外观"
+                                   Icon="{ui:SymbolIcon ArrowReset24}"
+                                   Margin="0,0,8,8"
+                                   Command="{Binding ResetThemeCommand}" />
+                    </WrapPanel>
                 </StackPanel>
             </Border>
 

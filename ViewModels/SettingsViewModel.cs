@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Input;
+using UnturnedModManager.Models;
 using UnturnedModManager.Services;
 
 namespace UnturnedModManager.ViewModels;
@@ -13,9 +15,11 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     private readonly ThemeService _themes;
     private readonly CommunityAuthService _authentication;
     private readonly IUserDialogService _dialogs;
+    private readonly ThemePackageService _themePackages;
     private string _gamePath = "";
     private ThemeChoice? _selectedTheme;
     private ThemePaletteChoice? _selectedPalette;
+    private CustomTheme? _selectedCustomTheme;
     private bool _isHomeWelcomeEnabled;
     private bool _isBusy;
 
@@ -24,13 +28,15 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         IFolderPickerService folderPicker,
         ThemeService themes,
         CommunityAuthService authentication,
-        IUserDialogService dialogs)
+        IUserDialogService dialogs,
+        ThemePackageService? themePackages = null)
     {
         _gamePaths = gamePaths;
         _folderPicker = folderPicker;
         _themes = themes;
         _authentication = authentication;
         _dialogs = dialogs;
+        _themePackages = themePackages ?? new ThemePackageService();
         ThemeChoices =
         [
             new(ThemePreference.Light, "浅色"),
@@ -52,12 +58,28 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         SaveCommand = new RelayCommand(Save, () => !IsBusy);
         ManageAccountCommand = new RelayCommand(() => AccountManagementRequested?.Invoke());
         RestartOnboardingCommand = new AsyncRelayCommand(RestartOnboardingAsync, () => !IsBusy);
+        ExportThemeCommand = new AsyncRelayCommand(ExportThemeAsync);
+        ImportThemeCommand = new AsyncRelayCommand(ImportThemeAsync);
+        ResetThemeCommand = new RelayCommand(ResetTheme);
         _authentication.SessionChanged += OnSessionChanged;
         Load();
     }
 
     public ObservableCollection<ThemeChoice> ThemeChoices { get; }
     public ObservableCollection<ThemePaletteChoice> PaletteChoices { get; }
+    public ObservableCollection<CustomTheme> CustomThemes { get; } = [];
+    public CustomTheme? SelectedCustomTheme
+    {
+        get => _selectedCustomTheme;
+        set
+        {
+            if (!SetProperty(ref _selectedCustomTheme, value) || value is null) return;
+            var wallpaper = string.IsNullOrWhiteSpace(value.BackgroundAsset)
+                ? null
+                : Path.Combine(AppDataPaths.RootDirectory, "themes", value.Id, value.BackgroundAsset);
+            _themes.ApplyCustomTheme(value, wallpaper);
+        }
+    }
     public string GamePath { get => _gamePath; set => SetProperty(ref _gamePath, value); }
     public bool IsHomeWelcomeEnabled
     {
@@ -111,6 +133,9 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     public ICommand SaveCommand { get; }
     public ICommand ManageAccountCommand { get; }
     public ICommand RestartOnboardingCommand { get; }
+    public ICommand ExportThemeCommand { get; }
+    public ICommand ImportThemeCommand { get; }
+    public ICommand ResetThemeCommand { get; }
     public event Action<UserNotice>? NoticeRaised;
     public event Action? AccountManagementRequested;
     public event Action? OnboardingRequested;
@@ -126,6 +151,14 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         _isHomeWelcomeEnabled = AppSettings.IsHomeWelcomeEnabled;
         OnPropertyChanged(nameof(IsHomeWelcomeEnabled));
         RefreshAccount();
+        RefreshCustomThemes();
+    }
+
+    public void RefreshCustomThemes()
+    {
+        CustomThemes.Clear();
+        foreach (var theme in _themePackages.GetInstalledThemes())
+            CustomThemes.Add(theme);
     }
 
     private void Browse()
@@ -179,6 +212,56 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
             RaiseNotice("首次设置向导已关闭，当前设置已保留。", UserNoticeSeverity.Success);
         }
         finally { IsBusy = false; }
+    }
+
+    private async Task ImportThemeAsync()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "导入 .ummtheme 自定义主题包",
+            Filter = "UMM 主题包 (*.ummtheme)|*.ummtheme|所有文件 (*.*)|*.*"
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        var result = await Task.Run(() => _themePackages.ImportPackage(dialog.FileName));
+        RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
+        if (result.Success && result.Theme is not null)
+        {
+            RefreshCustomThemes();
+            SelectedCustomTheme = CustomThemes.FirstOrDefault(t => t.Id == result.Theme.Id);
+        }
+    }
+
+    private async Task ExportThemeAsync()
+    {
+        var theme = _themes.CurrentCustomTheme ?? new CustomTheme
+        {
+            Name = "当前配色方案",
+            BaseTheme = _themes.AppliedTheme,
+            AccentColor = "#0078D4",
+            BackgroundColor = _themes.AppliedTheme == ThemePreference.Dark ? "#1E1E1E" : "#F3F3F3",
+            CardBackgroundColor = _themes.AppliedTheme == ThemePreference.Dark ? "#2D2D2D" : "#FFFFFF"
+        };
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "导出 .ummtheme 主题包",
+            Filter = "UMM 主题包 (*.ummtheme)|*.ummtheme",
+            FileName = $"{theme.Name}.ummtheme"
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        var result = await Task.Run(() => _themePackages.ExportPackage(theme, _themes.CustomWallpaperPath, dialog.FileName));
+        RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
+    }
+
+    private void ResetTheme()
+    {
+        _themes.ResetToDefaultTheme();
+        _selectedCustomTheme = null;
+        OnPropertyChanged(nameof(SelectedCustomTheme));
+        Load();
+        RaiseNotice("已恢复默认主题设置。", UserNoticeSeverity.Success);
     }
 
     private void OnSessionChanged() => RefreshAccount();

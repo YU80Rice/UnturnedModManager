@@ -65,6 +65,8 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
         CreateProfileCommand = new AsyncRelayCommand(CreateProfileAsync, () => !string.IsNullOrWhiteSpace(NewProfileName));
         ApplyProfileCommand = new AsyncRelayCommand(ApplyProfileAsync, () => SelectedProfile is not null);
         SaveProfileCommand = new AsyncRelayCommand(SaveProfileAsync, () => SelectedProfile is not null);
+        ExportPackageCommand = new AsyncRelayCommand(ExportPackageAsync, () => SelectedProfile is not null);
+        ImportPackageCommand = new AsyncRelayCommand(ImportPackageAsync);
         DeleteProfileCommand = new AsyncRelayCommand(DeleteProfileAsync, () => SelectedProfile is not null);
     }
 
@@ -112,6 +114,8 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
     public ICommand CreateProfileCommand { get; }
     public ICommand ApplyProfileCommand { get; }
     public ICommand SaveProfileCommand { get; }
+    public ICommand ExportPackageCommand { get; }
+    public ICommand ImportPackageCommand { get; }
     public ICommand DeleteProfileCommand { get; }
 
     public event Action<int>? OpenCommunityRequested;
@@ -325,6 +329,44 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
         return Task.CompletedTask;
     }
 
+    private async Task ExportPackageAsync()
+    {
+        var profile = SelectedProfile;
+        if (profile is null) return;
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "导出 .ummpk 模组方案包",
+            Filter = "UMM 模组方案包 (*.ummpk)|*.ummpk|ZIP 压缩包 (*.zip)|*.zip",
+            FileName = $"{profile.Name}.ummpk"
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        var result = await Task.Run(() => _profiles.ExportPackage(profile.Id, dialog.FileName));
+        RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
+    }
+
+    private async Task ImportPackageAsync()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "导入 .ummpk 模组方案包",
+            Filter = "UMM 模组方案包 (*.ummpk;*.zip)|*.ummpk;*.zip|所有文件 (*.*)|*.*",
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog() != true) return;
+
+        var result = await Task.Run(() => _profiles.ImportPackage(dialog.FileName));
+        RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
+        if (result.Success && result.Profile is not null)
+        {
+            RefreshProfiles(result.Profile.Id);
+            await RefreshAsync(force: true);
+        }
+    }
+
     private async Task DeleteProfileAsync()
     {
         var profile = SelectedProfile;
@@ -360,6 +402,7 @@ public sealed class LocalModsViewModel : ViewModelBase, IDisposable
         ((AsyncRelayCommand)CreateProfileCommand).RaiseCanExecuteChanged();
         ((AsyncRelayCommand)ApplyProfileCommand).RaiseCanExecuteChanged();
         ((AsyncRelayCommand)SaveProfileCommand).RaiseCanExecuteChanged();
+        ((AsyncRelayCommand)ExportPackageCommand).RaiseCanExecuteChanged();
         ((AsyncRelayCommand)DeleteProfileCommand).RaiseCanExecuteChanged();
     }
 

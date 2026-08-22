@@ -1,0 +1,135 @@
+{
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "frames": [
+    {
+      "src": "/recording-frames/frame-001.png",
+      "durationMs": 8000
+    },
+    {
+      "src": "/recording-frames/frame-002.png",
+      "durationMs": 7000
+    },
+    {
+      "src": "/recording-frames/frame-003.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-004.png",
+      "durationMs": 8000
+    },
+    {
+      "src": "/recording-frames/frame-005.png",
+      "durationMs": 7000
+    },
+    {
+      "src": "/recording-frames/frame-006.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-007.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-008.png",
+      "durationMs": 10000
+    },
+    {
+      "src": "/recording-frames/frame-009.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-010.png",
+      "durationMs": 8000
+    },
+    {
+      "src": "/recording-frames/frame-011.png",
+      "durationMs": 7000
+    },
+    {
+      "src": "/recording-frames/frame-012.png",
+      "durationMs": 7000
+    },
+    {
+      "src": "/recording-frames/frame-013.png",
+      "durationMs": 8000
+    },
+    {
+      "src": "/recording-frames/frame-014.png",
+      "durationMs": 8000
+    },
+    {
+      "src": "/recording-frames/frame-015.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-016.png",
+      "durationMs": 8000
+    },
+    {
+      "src": "/recording-frames/frame-017.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-018.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-019.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-020.png",
+      "durationMs": 8000
+    },
+    {
+      "src": "/recording-frames/frame-021.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-022.png",
+      "durationMs": 8000
+    },
+    {
+      "src": "/recording-frames/frame-023.png",
+      "durationMs": 8000
+    },
+    {
+      "src": "/recording-frames/frame-024.png",
+      "durationMs": 8000
+    },
+    {
+      "src": "/recording-frames/frame-025.png",
+      "durationMs": 8000
+    },
+    {
+      "src": "/recording-frames/frame-026.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-027.png",
+      "durationMs": 10000
+    },
+    {
+      "src": "/recording-frames/frame-028.png",
+      "durationMs": 10000
+    },
+    {
+      "src": "/recording-frames/frame-029.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-030.png",
+      "durationMs": 10000
+    },
+    {
+      "src": "/recording-frames/frame-031.png",
+      "durationMs": 9000
+    },
+    {
+      "src": "/recording-frames/frame-032.png",
+      "durationMs": 10000
+    }
+  ]
+}

@@ -7,12 +7,14 @@
         <ResourceDictionary>
             <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
             <helpers:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
+            <Style TargetType="{x:Type Window}">
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            </Style>
             <Style TargetType="{x:Type Page}">
                 <Setter Property="TextElement.Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
             </Style>
-            <!-- WPF-UI 的部分模板不会继承 Page 前景；为普通文本提供统一的动态主题默认值。 -->
-            <Style TargetType="{x:Type TextBlock}">
-                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            <Style TargetType="{x:Type UserControl}">
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
             </Style>
             <Style x:Key="PageTitleTextStyle" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="28" />

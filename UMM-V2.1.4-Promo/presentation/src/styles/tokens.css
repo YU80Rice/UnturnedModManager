@@ -1,0 +1,50 @@
+/* Theme: blueprint-spark — a brighter, friendlier blueprint palette. */
+:root {
+  --shell:        #071827;
+  --surface:      #0b2438;
+  --surface-2:    #103a55;
+  --surface-3:    #175676;
+  --text:         #effaff;
+  --text-2:       #bfe8f0;
+  --text-mute:    #78a8b9;
+  --text-faint:   #4c7183;
+  --rule:         rgba(74, 223, 255, 0.34);
+  --accent:       #4adfff;
+  --accent-soft:  rgba(74, 223, 255, 0.12);
+  --accent-glow:  rgba(74, 223, 255, 0.58);
+  --accent-2:     #c8f45a;
+  --accent-warm:  #ffbf69;
+
+  --font-display-cn: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+  --font-display-en: "IBM Plex Mono", "JetBrains Mono", monospace;
+  --font-body:       "IBM Plex Sans", "Noto Sans SC", sans-serif;
+  --font-mono:       "IBM Plex Mono", "JetBrains Mono", monospace;
+  --font-features:   "tnum", "zero", "ss01";
+
+  --dur-quick:       220ms;
+  --dur-base:       500ms;
+  --dur-slow:       800ms;
+  --dur-cinematic:  1200ms;
+
+  --r-card:        var(--r-flat);    /* SIGNATURE — engineering, not branding */
+  --r-stage:       0;
+  --rule-w:        2px;
+  --rule-style:    dashed;
+  --hero-num-font:    var(--font-mono);
+  --hero-num-style:   normal;
+  --hero-num-weight:  500;
+  --hero-num-track:   -0.02em;
+  --stage-pad-x:   96px;
+  --stage-pad-y:   72px;
+  --card-shadow:   inset 0 0 0 2px var(--rule);
+  --shadow-stage:
+    0 60px 160px rgba(0, 20, 60, 0.55),
+    0 0 0 1px rgba(120, 200, 255, 0.10);
+
+  --surface-pattern:
+    linear-gradient(rgba(74, 223, 255, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74, 223, 255, 0.09) 1px, transparent 1px),
+    radial-gradient(circle, rgba(200, 244, 90, 0.12) 1px, transparent 1.5px);
+  --surface-pattern-size: 120px 120px, 120px 120px, 24px 24px;
+  --surface-pattern-opacity: 0.62;
+}

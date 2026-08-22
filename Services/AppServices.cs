@@ -25,12 +25,15 @@ public sealed class AppServices : IDisposable
     public DiagnosticService Diagnostics { get; } = new();
     public LocalModService LocalMods { get; }
     public PluginProfileService PluginProfiles { get; }
+    public ThemePackageService ThemePackages { get; } = new();
     public AppNavigationService Navigation => AppNavigationService.Current;
 
     public AppServices()
     {
         LocalMods = new LocalModService(CommunityInstaller);
         PluginProfiles = new PluginProfileService(LocalMods);
+        LocalMods.SetProfileService(PluginProfiles);
+        LocalMods.SetThemePackageService(ThemePackages);
         BepInEx = new BepInExService(Downloads);
         Dxvk = new DxvkService(Downloads);
         GameLauncher = new GameLaunchService(BepInEx, Dxvk);
@@ -60,7 +63,8 @@ public sealed class AppServices : IDisposable
         FolderPicker,
         Theme,
         Authentication,
-        Dialogs);
+        Dialogs,
+        ThemePackages);
 
     public AccountViewModel CreateAccountViewModel() => new(Authentication, Dialogs);
 

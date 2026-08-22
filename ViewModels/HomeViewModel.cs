@@ -139,6 +139,9 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public string DiagnosticSummary => _diagnosticAnalysis.Summary;
     public string DiagnosticDetail => _diagnosticAnalysis.Detail;
     public bool HasDiagnosticDetail => _diagnosticAnalysis.Evidence.Count > 0;
+    public string DiagnosticRecommendation => _diagnosticAnalysis.Recommendation;
+    public bool HasDiagnosticRecommendation => !string.IsNullOrWhiteSpace(_diagnosticAnalysis.Recommendation);
+    public DiagnosticCategory DiagnosticCategory => _diagnosticAnalysis.Category;
     public bool IsBusy
     {
         get => _isBusy;
@@ -600,6 +603,9 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(DiagnosticSummary));
         OnPropertyChanged(nameof(DiagnosticDetail));
         OnPropertyChanged(nameof(HasDiagnosticDetail));
+        OnPropertyChanged(nameof(DiagnosticRecommendation));
+        OnPropertyChanged(nameof(HasDiagnosticRecommendation));
+        OnPropertyChanged(nameof(DiagnosticCategory));
     }
     private void RaiseNotice(string message, UserNoticeSeverity severity) =>
         NoticeRaised?.Invoke(new UserNotice(message, severity));

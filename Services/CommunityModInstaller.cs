@@ -15,6 +15,10 @@ public sealed class CommunityModInstaller
     {
         "Unturned.exe", "Unturned_BE.exe", "UnityPlayer.dll"
     };
+    private static readonly HashSet<string> BlockedExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".exe", ".bat", ".cmd", ".ps1", ".vbs", ".reg", ".com", ".scr", ".msi", ".jar", ".sh", ".pif"
+    };
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     private readonly string _stateRoot;
 
@@ -270,37 +274,90 @@ public sealed class CommunityModInstaller
 
     private List<PackageEntry> ReadEntries(DownloadedMod package)
     {
-        if (!Path.GetExtension(package.FileName).Equals(".zip", StringComparison.OrdinalIgnoreCase))
-            return [new PackageEntry(Path.GetFileName(package.FileName), package.Content)];
+        var ext = Path.GetExtension(package.FileName);
+        if (!ext.Equals(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            if (ext.Equals(".dll", StringComparison.OrdinalIgnoreCase))
+            {
+                var fileName = Path.GetFileName(package.FileName);
+                if (string.IsNullOrWhiteSpace(fileName) || fileName.Any(c => Path.GetInvalidFileNameChars().Contains(c)))
+                    throw new InvalidDataException($"插件文件名无效：{package.FileName}");
+                return [new PackageEntry($"BepInEx/plugins/{fileName}", package.Content)];
+            }
+            throw new InvalidDataException("社区 Mod 仅支持 .zip 压缩包或单个 .dll 插件文件。");
+        }
+
         using var stream = new MemoryStream(package.Content);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
         if (archive.Entries.Count > MaxArchiveEntries)
             throw new InvalidDataException($"Mod 包文件数量超过安全限制（{MaxArchiveEntries}）。");
+
         var result = new List<PackageEntry>();
+        string? wrapper = null;
         long expandedBytes = 0;
+        var hasPluginDll = false;
+
         foreach (var entry in archive.Entries)
         {
             if (string.IsNullOrEmpty(entry.Name)) continue;
-            var relative = NormalizeRelativePath(entry.FullName);
-            expandedBytes += entry.Length;
-            if (expandedBytes > MaxExpandedBytes)
+
+            var segments = SplitArchivePath(entry.FullName);
+            var bepinIndex = Array.FindIndex(segments, segment =>
+                segment.Equals("BepInEx", StringComparison.OrdinalIgnoreCase));
+            if (bepinIndex < 0)
+                throw new InvalidDataException("社区 Mod 压缩包必须包含 BepInEx/plugins 目录结构。");
+
+            var currentWrapper = string.Join('/', segments.Take(bepinIndex));
+            if (wrapper is null) wrapper = currentWrapper;
+            else if (!wrapper.Equals(currentWrapper, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("社区 Mod 压缩包包含多个不一致的 BepInEx 根目录。");
+
+            var relativeSegments = segments[bepinIndex..];
+            if (relativeSegments.Length < 3)
+                throw new InvalidDataException("BepInEx 包内文件必须位于 plugins 或 config 子目录。");
+
+            var area = relativeSegments[1];
+            if (!area.Equals("plugins", StringComparison.OrdinalIgnoreCase)
+                && !area.Equals("config", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException($"社区 Mod 压缩包不允许写入 BepInEx/{area}。仅允许 plugins 与 config。");
+
+            var fileExt = Path.GetExtension(entry.Name);
+            if (BlockedExtensions.Contains(fileExt))
+                throw new InvalidDataException($"社区 Mod 包含危险的可执行或脚本文件（{entry.Name}），安装已阻止。");
+
+            if (entry.Length < 0 || entry.Length > MaxExpandedBytes - expandedBytes)
                 throw new InvalidDataException("Mod 包解压后体积超过 1 GB 安全限制。");
+            expandedBytes += entry.Length;
+
+            var relativePath = string.Join('/', relativeSegments);
+            var isPluginDll = area.Equals("plugins", StringComparison.OrdinalIgnoreCase)
+                && relativePath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
+            hasPluginDll |= isPluginDll;
+
             using var content = entry.Open();
             using var buffer = new MemoryStream();
             content.CopyTo(buffer);
-            result.Add(new PackageEntry(relative, buffer.ToArray()));
+            result.Add(new PackageEntry(relativePath, buffer.ToArray()));
         }
+
+        if (!hasPluginDll)
+            throw new InvalidDataException("社区 Mod 压缩包未包含 BepInEx/plugins 下的 .dll 插件文件。");
+
         return result;
     }
 
-    private static string NormalizeRelativePath(string path)
+    private static string[] SplitArchivePath(string fullName)
     {
-        var normalized = path.Replace('\\', '/').TrimStart('/');
-        if (string.IsNullOrWhiteSpace(normalized) || normalized.Split('/').Any(p => p is ".." or "." || p.Contains(':')))
-            throw new InvalidDataException($"Mod 包含不安全路径：{path}");
-        if (!normalized.Contains('/') && ProtectedRootFiles.Contains(normalized))
-            throw new InvalidDataException($"社区包不允许覆盖游戏核心文件：{normalized}");
-        return normalized;
+        var normalized = fullName.Replace('\\', '/').Trim('/');
+        if (string.IsNullOrWhiteSpace(normalized))
+            throw new InvalidDataException("压缩包包含空路径。");
+
+        var segments = normalized.Split('/', StringSplitOptions.None);
+        if (segments.Any(segment => string.IsNullOrWhiteSpace(segment)
+            || segment is "." or ".."
+            || segment.Contains(':')))
+            throw new InvalidDataException($"压缩包包含不安全路径：{fullName}");
+        return segments;
     }
 
     private static string SafeDestination(string root, string relative)

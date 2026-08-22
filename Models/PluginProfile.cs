@@ -8,6 +8,9 @@ public sealed class PluginProfile
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Author { get; set; } = "";
+    public string Version { get; set; } = "1.0.0";
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.Now;
     public List<PluginProfileEntry> Plugins { get; set; } = [];
@@ -24,3 +27,24 @@ public sealed class PluginProfileEntry
 }
 
 public sealed record PluginProfileOperationResult(bool Success, string Message, PluginProfile? Profile = null);
+
+/// <summary>
+/// .ummpk 模组包清单规范。
+/// </summary>
+public sealed class UmmpkManifest
+{
+    public string FormatVersion { get; set; } = "1.0.0";
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Author { get; set; } = "";
+    public string Version { get; set; } = "1.0.0";
+    public DateTimeOffset ExportedAt { get; set; } = DateTimeOffset.Now;
+    public List<UmmpkPluginEntry> Plugins { get; set; } = [];
+}
+
+public sealed class UmmpkPluginEntry
+{
+    public string RelativePath { get; set; } = "";
+    public bool Enabled { get; set; } = true;
+    public string Sha256 { get; set; } = "";
+}

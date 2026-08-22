@@ -1,7 +1,8 @@
+using System.IO;
+using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.IO;
 using UnturnedModManager.Models;
 
 namespace UnturnedModManager.Services;
@@ -137,6 +138,232 @@ public sealed class PluginProfileService
             if (document.ActiveProfileId == profile.Id) document.ActiveProfileId = null;
             Save(storagePath, document);
             return new(true, $"已删除方案“{profile.Name}”。插件文件和当前启停状态未被修改。");
+        }
+    }
+
+    private static readonly HashSet<string> BlockedPackageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".exe", ".bat", ".cmd", ".ps1", ".vbs", ".reg", ".com", ".scr", ".msi", ".jar", ".sh", ".pif"
+    };
+
+    public PluginProfileOperationResult ExportPackage(string profileId, string outputFilePath)
+    {
+        lock (_sync)
+        {
+            var gamePath = _gamePathProvider();
+            if (string.IsNullOrWhiteSpace(gamePath) || !Directory.Exists(gamePath))
+                return new(false, "Unturned 游戏目录无效，无法导出方案包。");
+
+            if (!TryGetStoragePath(out var storagePath, out var error)) return new(false, error);
+            if (!TryLoad(storagePath, out var document, out error)) return new(false, error);
+            var profile = document.Profiles.FirstOrDefault(item => item.Id == profileId);
+            if (profile is null) return new(false, "指定的插件方案不存在。");
+
+            var pluginsRoot = Path.Combine(gamePath, "BepInEx", "plugins");
+            var configRoot = Path.Combine(gamePath, "BepInEx", "config");
+
+            var manifest = new UmmpkManifest
+            {
+                Name = profile.Name,
+                Description = profile.Description,
+                Author = profile.Author,
+                Version = profile.Version,
+                ExportedAt = DateTimeOffset.Now
+            };
+
+            var destinationDir = Path.GetDirectoryName(outputFilePath);
+            if (!string.IsNullOrWhiteSpace(destinationDir)) Directory.CreateDirectory(destinationDir);
+
+            var tempPackage = outputFilePath + ".tmp." + Guid.NewGuid().ToString("N");
+            try
+            {
+                using (var zip = ZipFile.Open(tempPackage, ZipArchiveMode.Create))
+                {
+                    foreach (var plugin in profile.Plugins)
+                    {
+                        if (!IsSafeRelativePath(plugin.RelativePath)) continue;
+
+                        var enabledFile = Path.Combine(pluginsRoot, plugin.RelativePath);
+                        var disabledFile = enabledFile + ".disabled";
+                        var actualFile = File.Exists(enabledFile) ? enabledFile : (File.Exists(disabledFile) ? disabledFile : null);
+
+                        string sha256 = "";
+                        if (actualFile is not null)
+                        {
+                            var entry = zip.CreateEntry($"BepInEx/plugins/{plugin.RelativePath.Replace('\\', '/')}", CompressionLevel.Optimal);
+                            using (var sourceStream = File.OpenRead(actualFile))
+                            using (var entryStream = entry.Open())
+                            {
+                                sourceStream.CopyTo(entryStream);
+                            }
+                            sha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(actualFile))).ToLowerInvariant();
+                        }
+
+                        manifest.Plugins.Add(new UmmpkPluginEntry
+                        {
+                            RelativePath = plugin.RelativePath,
+                            Enabled = plugin.Enabled,
+                            Sha256 = sha256
+                        });
+
+                        // 导出对应的前缀/同名配置文件（若存在）
+                        if (Directory.Exists(configRoot))
+                        {
+                            var baseName = Path.GetFileNameWithoutExtension(plugin.RelativePath);
+                            foreach (var cfgFile in Directory.EnumerateFiles(configRoot, $"{baseName}.*", SearchOption.AllDirectories))
+                            {
+                                var relCfg = Path.GetRelativePath(configRoot, cfgFile).Replace('\\', '/');
+                                if (!BlockedPackageExtensions.Contains(Path.GetExtension(relCfg)))
+                                {
+                                    var cfgEntry = zip.CreateEntry($"BepInEx/config/{relCfg}", CompressionLevel.Optimal);
+                                    using var cfgSource = File.OpenRead(cfgFile);
+                                    using var cfgDest = cfgEntry.Open();
+                                    cfgSource.CopyTo(cfgDest);
+                                }
+                            }
+                        }
+                    }
+
+                    var manifestEntry = zip.CreateEntry("manifest.json", CompressionLevel.Optimal);
+                    using var manifestStream = new StreamWriter(manifestEntry.Open(), Encoding.UTF8);
+                    manifestStream.Write(JsonSerializer.Serialize(manifest, JsonOptions));
+                }
+
+                File.Move(tempPackage, outputFilePath, overwrite: true);
+                return new(true, $"已导出方案包“{profile.Name}”至：{outputFilePath}", profile);
+            }
+            catch (Exception ex)
+            {
+                if (File.Exists(tempPackage)) File.Delete(tempPackage);
+                return new(false, $"导出方案包失败：{ex.Message}");
+            }
+        }
+    }
+
+    public PluginProfileOperationResult ImportPackage(string packagePath)
+    {
+        lock (_sync)
+        {
+            if (string.IsNullOrWhiteSpace(packagePath) || !File.Exists(packagePath))
+                return new(false, "方案包文件不存在。");
+
+            var gamePath = _gamePathProvider();
+            if (string.IsNullOrWhiteSpace(gamePath) || !Directory.Exists(gamePath))
+                return new(false, "Unturned 游戏目录无效，无法导入方案包。");
+
+            try
+            {
+                using var zip = ZipFile.OpenRead(packagePath);
+                var manifestEntry = zip.GetEntry("manifest.json");
+                if (manifestEntry is null)
+                    return new(false, "无效的模组包：未找到 manifest.json 清单。");
+
+                UmmpkManifest manifest;
+                using (var reader = new StreamReader(manifestEntry.Open(), Encoding.UTF8))
+                {
+                    manifest = JsonSerializer.Deserialize<UmmpkManifest>(reader.ReadToEnd())
+                        ?? throw new InvalidDataException("无法解析 manifest.json。");
+                }
+
+                var validation = ValidateName(manifest.Name);
+                if (validation is not null) return new(false, validation);
+
+                if (zip.Entries.Count > 4096)
+                    return new(false, "模组包条目过多，已中止导入。");
+
+                long totalBytes = 0;
+                foreach (var entry in zip.Entries)
+                {
+                    if (string.IsNullOrEmpty(entry.Name)) continue;
+                    var normalized = entry.FullName.Replace('\\', '/').TrimStart('/');
+                    if (normalized.Equals("manifest.json", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    var ext = Path.GetExtension(normalized);
+                    if (BlockedPackageExtensions.Contains(ext))
+                        return new(false, $"模组包包含危险的可执行文件或脚本载荷（{ext}），已阻止导入。");
+
+                    if (!normalized.StartsWith("BepInEx/plugins/", StringComparison.OrdinalIgnoreCase)
+                        && !normalized.StartsWith("BepInEx/config/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return new(false, $"模组包包含白名单目录以外的文件（{normalized}），已阻止导入。");
+                    }
+
+                    if (normalized.Contains(".."))
+                        return new(false, "模组包包含非法相对路径跳跃。");
+
+                    totalBytes += entry.Length;
+                    if (totalBytes > 2L * 1024 * 1024 * 1024)
+                        return new(false, "模组包解压后体积超出安全上限（2GB）。");
+                }
+
+                var pluginsRoot = Path.Combine(gamePath, "BepInEx", "plugins");
+                var configRoot = Path.Combine(gamePath, "BepInEx", "config");
+                Directory.CreateDirectory(pluginsRoot);
+                Directory.CreateDirectory(configRoot);
+
+                var pluginStates = manifest.Plugins.ToDictionary(
+                    p => p.RelativePath.Replace('\\', '/'),
+                    p => p.Enabled,
+                    StringComparer.OrdinalIgnoreCase);
+
+                foreach (var entry in zip.Entries)
+                {
+                    if (string.IsNullOrEmpty(entry.Name)) continue;
+                    var normalized = entry.FullName.Replace('\\', '/').TrimStart('/');
+                    if (normalized.Equals("manifest.json", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    if (normalized.StartsWith("BepInEx/plugins/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var relPath = normalized["BepInEx/plugins/".Length..];
+                        var enabled = !pluginStates.TryGetValue(relPath, out var state) || state;
+                        var targetFileName = enabled ? relPath : (relPath.EndsWith(".disabled", StringComparison.OrdinalIgnoreCase) ? relPath : relPath + ".disabled");
+                        var destination = Path.Combine(pluginsRoot, targetFileName);
+                        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+
+                        using var entryStream = entry.Open();
+                        using var fileStream = File.Create(destination);
+                        entryStream.CopyTo(fileStream);
+                    }
+                    else if (normalized.StartsWith("BepInEx/config/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var relPath = normalized["BepInEx/config/".Length..];
+                        var destination = Path.Combine(configRoot, relPath);
+                        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+
+                        using var entryStream = entry.Open();
+                        using var fileStream = File.Create(destination);
+                        entryStream.CopyTo(fileStream);
+                    }
+                }
+
+                if (!TryGetStoragePath(out var storagePath, out var error)) return new(false, error);
+                if (!TryLoad(storagePath, out var document, out error)) return new(false, error);
+
+                var existing = document.Profiles.FirstOrDefault(p => p.Name.Equals(manifest.Name, StringComparison.OrdinalIgnoreCase));
+                var profile = existing ?? new PluginProfile();
+                profile.Name = manifest.Name;
+                profile.Description = manifest.Description;
+                profile.Author = manifest.Author;
+                profile.Version = manifest.Version;
+                profile.UpdatedAt = DateTimeOffset.Now;
+                profile.Plugins = manifest.Plugins.Select(p => new PluginProfileEntry
+                {
+                    RelativePath = p.RelativePath,
+                    Enabled = p.Enabled
+                }).ToList();
+
+                if (existing is null) document.Profiles.Add(profile);
+                document.ActiveProfileId = profile.Id;
+                Save(storagePath, document);
+
+                return new(true, $"已成功导入并应用模组方案“{profile.Name}”。", profile);
+            }
+            catch (Exception ex)
+            {
+                return new(false, $"导入模组包失败：{ex.Message}");
+            }
         }
     }
 
