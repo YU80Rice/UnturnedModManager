@@ -1,5 +1,12 @@
 # Unturned Mod Manager (UMM) - Agent Guidelines
 
+## 发布规范 (Publish Conventions)
+- **发布目录命名**：`publish/UMM-v{Version}-win-x64/`（例如 `publish/UMM-v2.2.0-win-x64/`）
+- **发布压缩包命名**：`publish/UMM-v{Version}-win-x64.zip`
+- **执行程序命名**：主文件始终保持原名 `UnturnedModManager.exe`
+
+---
+
 ## Agent skills
 
 ### Issue tracker
