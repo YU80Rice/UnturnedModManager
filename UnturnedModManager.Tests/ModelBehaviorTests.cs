@@ -760,6 +760,29 @@ public sealed class ModelBehaviorTests
     }
 
     [Fact]
+    public void SingleFilePublish_CsprojAndPublishStructureEnforceStandaloneSingleExecutable()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        string? csprojPath = null;
+        while (current is not null)
+        {
+            var direct = Path.Combine(current.FullName, "UnturnedModManager.csproj");
+            if (File.Exists(direct)) { csprojPath = direct; break; }
+            var sub = Path.Combine(current.FullName, "UnturnedModManager", "UnturnedModManager.csproj");
+            if (File.Exists(sub)) { csprojPath = sub; break; }
+            current = current.Parent;
+        }
+
+        Assert.NotNull(csprojPath);
+        Assert.True(File.Exists(csprojPath), "UnturnedModManager.csproj should exist.");
+
+        var csprojContent = File.ReadAllText(csprojPath);
+        Assert.Contains("<PublishSingleFile>true</PublishSingleFile>", csprojContent);
+        Assert.Contains("<SelfContained>true</SelfContained>", csprojContent);
+        Assert.Contains("<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>", csprojContent);
+    }
+
+    [Fact]
     public async Task RegressionTest_FullFourPhaseEndToEndPipeline()
     {
         var root = Path.Combine(Path.GetTempPath(), "umm-full-e2e-" + Guid.NewGuid().ToString("N"));

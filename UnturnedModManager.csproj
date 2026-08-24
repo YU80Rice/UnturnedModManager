@@ -10,6 +10,11 @@
     <Version>2.2.0</Version>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
     <FileVersion>2.2.0.0</FileVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <Authors>YU80Rice and contributors</Authors>
     <Description>Unturned 启动、BepInEx 插件管理与 unmod.online 社区客户端。</Description>
     <Copyright>Copyright (C) 2026 YU80Rice</Copyright>
