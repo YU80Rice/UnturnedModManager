@@ -27,7 +27,7 @@ public partial class App : System.Windows.Application
 
             Services.SingleInstance.Activated += OnSecondaryActivation;
             Services.SingleInstance.StartListening();
-            ProtocolRegistrar.EnsureRegistered();
+            ShellAssociationService.EnsureRegistered();
             _pendingInstallModId = ProtocolRegistrar.FindInstallIntent(e.Args);
 
             if (!AppSettings.IsOnboardingCompleted)

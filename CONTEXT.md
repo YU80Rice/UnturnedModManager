@@ -45,13 +45,3 @@ _Avoid_: Skin, style pack, UI template
 **ThemePalette**:
 A predefined, WCAG AA compliant color harmony (such as Fluent, WarmPaper, MascotOrange, MistyForest, OceanDusk, KleinBlue, Lavender) that dynamically injects accent and surface brush resources across all WPF views.
 _Avoid_: Color scheme, preset colors
-
-### Multiplayer & Ecosystem
-
-**NetworkBridge (`LaunchMultiplayerNet`)**:
-The fundamental Unturned multiplayer transport library facilitating bidirectional client-server communication channels across mods.
-_Avoid_: Socket lib, net helper
-
-**MultiplayerSync**:
-The integrity validation and alignment of required network bridge libraries and mod versions between hosts and clients before joining a session.
-_Avoid_: P2P connector, server joiner

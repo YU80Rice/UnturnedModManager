@@ -119,6 +119,30 @@
             <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
                     Background="{DynamicResource ControlFillColorDefaultBrush}">
                 <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="Windows 文件关联 (.ummpk / .ummtheme)" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding ShellAssociationStatusText}"
+                                   Margin="0,3,0,0"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <ui:Button Content="修复/关联" Icon="{ui:SymbolIcon Checkmark24}"
+                                   Margin="0,0,8,0"
+                                   Command="{Binding RepairShellAssociationCommand}" />
+                        <ui:Button Content="解除关联" Icon="{ui:SymbolIcon Dismiss24}"
+                                   Command="{Binding UnregisterShellAssociationCommand}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                     <StackPanel>
                         <TextBlock Text="首次设置" FontSize="16" FontWeight="SemiBold" />

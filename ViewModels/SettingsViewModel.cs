@@ -22,6 +22,8 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     private CustomTheme? _selectedCustomTheme;
     private bool _isHomeWelcomeEnabled;
     private bool _isBusy;
+    private bool _isShellAssociationRegistered;
+    private string _shellAssociationStatusText = "";
 
     public SettingsViewModel(
         GamePathService gamePaths,
@@ -61,6 +63,8 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         ExportThemeCommand = new AsyncRelayCommand(ExportThemeAsync);
         ImportThemeCommand = new AsyncRelayCommand(ImportThemeAsync);
         ResetThemeCommand = new RelayCommand(ResetTheme);
+        RepairShellAssociationCommand = new RelayCommand(RepairShellAssociation);
+        UnregisterShellAssociationCommand = new RelayCommand(UnregisterShellAssociation);
         _authentication.SessionChanged += OnSessionChanged;
         Load();
     }
@@ -127,6 +131,17 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
             ? "未登录。登录后可下载插件并同步个人数据。"
             : $"已保存账户：{AppSettings.CommunityUsername}（等待联网验证）";
     public string AccountActionText => _authentication.IsSignedIn ? "管理账户" : "登录社区账户";
+    public bool IsShellAssociationRegistered
+    {
+        get => _isShellAssociationRegistered;
+        private set => SetProperty(ref _isShellAssociationRegistered, value);
+    }
+
+    public string ShellAssociationStatusText
+    {
+        get => _shellAssociationStatusText;
+        private set => SetProperty(ref _shellAssociationStatusText, value);
+    }
 
     public ICommand BrowseCommand { get; }
     public ICommand DetectCommand { get; }
@@ -136,6 +151,8 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     public ICommand ExportThemeCommand { get; }
     public ICommand ImportThemeCommand { get; }
     public ICommand ResetThemeCommand { get; }
+    public ICommand RepairShellAssociationCommand { get; }
+    public ICommand UnregisterShellAssociationCommand { get; }
     public event Action<UserNotice>? NoticeRaised;
     public event Action? AccountManagementRequested;
     public event Action? OnboardingRequested;
@@ -152,6 +169,7 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(IsHomeWelcomeEnabled));
         RefreshAccount();
         RefreshCustomThemes();
+        RefreshShellAssociationStatus();
     }
 
     public void RefreshCustomThemes()
@@ -270,6 +288,70 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(AccountStatus));
         OnPropertyChanged(nameof(AccountActionText));
     }
+
+    public void RefreshShellAssociationStatus()
+    {
+        if (AppDataPaths.IsIsolatedProfile)
+        {
+            IsShellAssociationRegistered = false;
+            ShellAssociationStatusText = "当前处于便携隔离模式（UMM_DATA_DIRECTORY），已禁用系统注册表关联。";
+            return;
+        }
+
+        if (!OperatingSystem.IsWindows())
+        {
+            IsShellAssociationRegistered = false;
+            ShellAssociationStatusText = "当前非 Windows 操作系统，不支持系统文件关联。";
+            return;
+        }
+
+        var registered = ShellAssociationService.IsRegistered();
+        IsShellAssociationRegistered = registered;
+        ShellAssociationStatusText = registered
+            ? "已就绪：.ummpk（模组包）与 .ummtheme（主题包）已成功关联到当前启动器。"
+            : "未完全关联：系统尚未将 .ummpk 与 .ummtheme 关联到当前启动器。";
+    }
+
+    private void RepairShellAssociation()
+    {
+        if (AppDataPaths.IsIsolatedProfile)
+        {
+            RaiseNotice("当前处于便携隔离模式，无法修改系统文件关联。", UserNoticeSeverity.Warning);
+            return;
+        }
+
+        var ok = ShellAssociationService.RegisterAssociations();
+        RefreshShellAssociationStatus();
+        if (ok)
+        {
+            RaiseNotice("已成功注册并修复 .ummpk 与 .ummtheme 打开方式。", UserNoticeSeverity.Success);
+        }
+        else
+        {
+            RaiseNotice("注册文件关联失败，请检查杀毒软件或系统权限。", UserNoticeSeverity.Error);
+        }
+    }
+
+    private void UnregisterShellAssociation()
+    {
+        if (AppDataPaths.IsIsolatedProfile)
+        {
+            RaiseNotice("当前处于便携隔离模式，未修改系统文件关联。", UserNoticeSeverity.Warning);
+            return;
+        }
+
+        var ok = ShellAssociationService.UnregisterAssociations();
+        RefreshShellAssociationStatus();
+        if (ok)
+        {
+            RaiseNotice("已成功解除 .ummpk 与 .ummtheme 的系统文件关联。", UserNoticeSeverity.Success);
+        }
+        else
+        {
+            RaiseNotice("解除文件关联失败。", UserNoticeSeverity.Error);
+        }
+    }
+
     private void RaiseNotice(string message, UserNoticeSeverity severity) =>
         NoticeRaised?.Invoke(new UserNotice(message, severity));
 
