@@ -93,6 +93,24 @@ public static class AppSettings
         set { _data.CommunityColorPalette = value; Save(); }
     }
 
+    public static string? ActiveCustomThemeId
+    {
+        get => _data.ActiveCustomThemeId;
+        set { _data.ActiveCustomThemeId = value; Save(); }
+    }
+
+    public static string? ActiveCustomThemeDarkWallpaper
+    {
+        get => _data.ActiveCustomThemeDarkWallpaper;
+        set { _data.ActiveCustomThemeDarkWallpaper = value; Save(); }
+    }
+
+    public static string? ActiveCustomThemeLightWallpaper
+    {
+        get => _data.ActiveCustomThemeLightWallpaper;
+        set { _data.ActiveCustomThemeLightWallpaper = value; Save(); }
+    }
+
     public static int? LastSessionExitCode
     {
         get => _data.LastSessionExitCode;
@@ -410,6 +428,9 @@ public static class AppSettings
         public string ThemeMode { get; set; } = "Dark";
         public string CommunityThemeMode { get; set; } = "System";
         public string CommunityColorPalette { get; set; } = "Fluent";
+        public string? ActiveCustomThemeId { get; set; }
+        public string? ActiveCustomThemeDarkWallpaper { get; set; }
+        public string? ActiveCustomThemeLightWallpaper { get; set; }
         public int? LastSessionExitCode { get; set; }
         public bool LastSessionUsedMods { get; set; }
         public bool LastSessionUsedDxvk { get; set; }

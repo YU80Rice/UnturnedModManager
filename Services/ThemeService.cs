@@ -19,9 +19,42 @@ public sealed class ThemeService
     public ThemePreference AppliedTheme { get; private set; } = ThemePreference.Dark;
     public ThemePalette CurrentPalette { get; private set; } = ThemePalette.Fluent;
     public CustomTheme? CurrentCustomTheme { get; private set; }
-    public string? CustomWallpaperPath { get; private set; }
+    public string? CustomWallpaperDarkPath { get; private set; }
+    public string? CustomWallpaperLightPath { get; private set; }
+    public string? CustomWallpaperPath =>
+        AppliedTheme == ThemePreference.Light
+            ? (CustomWallpaperLightPath ?? CustomWallpaperDarkPath)
+            : (CustomWallpaperDarkPath ?? CustomWallpaperLightPath);
+
     public event Action<ThemePreference>? ThemeChanged;
-    public void Initialize(string preference) => Apply(Parse(preference), false);
+
+    public void Initialize(string preference)
+    {
+        var pref = Parse(preference);
+        CurrentPreference = pref;
+
+        var activeThemeId = AppSettings.ActiveCustomThemeId;
+        if (!string.IsNullOrWhiteSpace(activeThemeId))
+        {
+            var packageService = new ThemePackageService();
+            var installed = packageService.GetInstalledThemes();
+            var savedTheme = installed.FirstOrDefault(t => t.Id.Equals(activeThemeId, StringComparison.OrdinalIgnoreCase));
+            if (savedTheme is not null)
+            {
+                ApplyCustomTheme(
+                    savedTheme,
+                    AppSettings.ActiveCustomThemeDarkWallpaper,
+                    AppSettings.ActiveCustomThemeLightWallpaper,
+                    targetMode: pref,
+                    persist: false,
+                    raiseChanged: false);
+                return;
+            }
+        }
+
+        Apply(pref, persist: false);
+    }
+
     public void Apply(ThemePreference preference, bool persist = true)
     {
         CurrentPreference = preference;
@@ -29,9 +62,19 @@ public sealed class ThemeService
         AppliedTheme = actual;
         ApplicationThemeManager.Apply(actual == ThemePreference.Light ? ApplicationTheme.Light : ApplicationTheme.Dark, Wpf.Ui.Controls.WindowBackdropType.Mica);
         if (persist) AppSettings.CommunityThemeMode = preference.ToString();
-        ApplyPalette(ParsePalette(AppSettings.CommunityColorPalette), persist: false, raiseChanged: false);
+
+        if (CurrentCustomTheme is not null)
+        {
+            ApplyCustomThemeInternal(CurrentCustomTheme, CustomWallpaperDarkPath, CustomWallpaperLightPath, actual, persist, raiseChanged: false);
+        }
+        else
+        {
+            ApplyPalette(ParsePalette(AppSettings.CommunityColorPalette), persist: false, raiseChanged: false);
+        }
+
         ThemeChanged?.Invoke(preference);
     }
+
     public static ThemePreference Parse(string? value) => Enum.TryParse<ThemePreference>(value, true, out var result) ? result : ThemePreference.System;
 
     public static ThemePalette ParsePalette(string? value) =>
@@ -43,6 +86,16 @@ public sealed class ThemeService
     private void ApplyPalette(ThemePalette palette, bool persist, bool raiseChanged)
     {
         CurrentPalette = palette;
+        CurrentCustomTheme = null;
+        CustomWallpaperDarkPath = null;
+        CustomWallpaperLightPath = null;
+        if (persist)
+        {
+            AppSettings.ActiveCustomThemeId = null;
+            AppSettings.ActiveCustomThemeDarkWallpaper = null;
+            AppSettings.ActiveCustomThemeLightWallpaper = null;
+        }
+
         var application = System.Windows.Application.Current;
         if (application is not null)
         {
@@ -82,14 +135,54 @@ public sealed class ThemeService
         if (raiseChanged) ThemeChanged?.Invoke(CurrentPreference);
     }
 
-    public void ApplyCustomTheme(CustomTheme theme, string? wallpaperFilePath = null, bool raiseChanged = true)
+    public void ApplyCustomTheme(CustomTheme theme, string? wallpaperFilePath = null, bool raiseChanged = true) =>
+        ApplyCustomTheme(theme, wallpaperFilePath, null, targetMode: null, persist: true, raiseChanged: raiseChanged);
+
+    public void ApplyCustomTheme(CustomTheme theme, string? wallpaperDarkPath, string? wallpaperLightPath, bool raiseChanged = true) =>
+        ApplyCustomTheme(theme, wallpaperDarkPath, wallpaperLightPath, targetMode: null, persist: true, raiseChanged: raiseChanged);
+
+    public void ApplyCustomTheme(
+        CustomTheme theme,
+        string? wallpaperDarkPath,
+        string? wallpaperLightPath,
+        ThemePreference? targetMode,
+        bool persist = true,
+        bool raiseChanged = true)
     {
+        theme.EnsureDualMode();
         var validation = theme.Validate();
         if (!validation.IsValid) return;
 
         CurrentCustomTheme = theme;
-        CustomWallpaperPath = wallpaperFilePath;
-        var actual = theme.BaseTheme == ThemePreference.System ? DetectSystemTheme() : theme.BaseTheme;
+        CustomWallpaperDarkPath = wallpaperDarkPath;
+        CustomWallpaperLightPath = wallpaperLightPath;
+
+        ThemePreference actual;
+        if (targetMode is not null)
+        {
+            CurrentPreference = targetMode.Value;
+            actual = targetMode.Value == ThemePreference.System ? DetectSystemTheme() : targetMode.Value;
+        }
+        else
+        {
+            actual = CurrentPreference == ThemePreference.System ? DetectSystemTheme() : CurrentPreference;
+            if (CurrentPreference == ThemePreference.System && theme.BaseTheme != ThemePreference.System)
+            {
+                actual = theme.BaseTheme;
+            }
+        }
+
+        ApplyCustomThemeInternal(theme, wallpaperDarkPath, wallpaperLightPath, actual, persist, raiseChanged);
+    }
+
+    private void ApplyCustomThemeInternal(
+        CustomTheme theme,
+        string? wallpaperDarkPath,
+        string? wallpaperLightPath,
+        ThemePreference actual,
+        bool persist,
+        bool raiseChanged)
+    {
         AppliedTheme = actual;
         var appTheme = actual == ThemePreference.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
         ApplicationThemeManager.Apply(appTheme, Wpf.Ui.Controls.WindowBackdropType.Mica);
@@ -118,20 +211,23 @@ public sealed class ThemeService
             var dictionary = EnsurePaletteDictionary(application);
             dictionary.Clear();
 
-            var isDark = actual == ThemePreference.Dark;
-            var bg = (Color)ColorConverter.ConvertFromString(theme.BackgroundColor)!;
-            var cardBg = (Color)ColorConverter.ConvertFromString(theme.CardBackgroundColor)!;
-            var cardAlpha = (byte)Math.Clamp((int)(theme.CardOpacity * 255), 25, 255);
+            var bgHex = isDarkTheme ? theme.BackgroundColor : (theme.LightBackgroundColor ?? "#F8F8F8");
+            var cardBgHex = isDarkTheme ? theme.CardBackgroundColor : (theme.LightCardBackgroundColor ?? "#FFFFFF");
+            var cardOpacity = isDarkTheme ? theme.CardOpacity : (theme.LightCardOpacity ?? theme.CardOpacity);
+            var cardRadius = isDarkTheme ? theme.CardBorderRadius : (theme.LightCardBorderRadius ?? theme.CardBorderRadius);
+
+            var bg = (Color)ColorConverter.ConvertFromString(bgHex)!;
+            var cardBg = (Color)ColorConverter.ConvertFromString(cardBgHex)!;
+            var cardAlpha = (byte)Math.Clamp((int)(cardOpacity * 255), 25, 255);
             var cardBrush = new SolidColorBrush(Color.FromArgb(cardAlpha, cardBg.R, cardBg.G, cardBg.B));
 
             var colors = new List<(string Key, string Color)>
             {
-                ("ApplicationBackgroundBrush", theme.BackgroundColor),
                 ("AccentFillColorDefaultBrush", theme.AccentColor),
-                ("TextFillColorPrimaryBrush", isDark ? "#FFFFFF" : "#1F1F1F"),
-                ("TextFillColorSecondaryBrush", isDark ? "#D0D0D0" : "#505050"),
-                ("TextFillColorTertiaryBrush", isDark ? "#909090" : "#808080"),
-                ("ControlStrokeColorDefaultBrush", isDark ? "#3A3A3A" : "#D0D0D0")
+                ("TextFillColorPrimaryBrush", isDarkTheme ? "#FFFFFF" : "#1F1F1F"),
+                ("TextFillColorSecondaryBrush", isDarkTheme ? "#D0D0D0" : "#505050"),
+                ("TextFillColorTertiaryBrush", isDarkTheme ? "#909090" : "#808080"),
+                ("ControlStrokeColorDefaultBrush", isDarkTheme ? "#3A3A3A" : "#D0D0D0")
             };
 
             foreach (var (key, colorHex) in colors)
@@ -139,13 +235,58 @@ public sealed class ThemeService
                 dictionary[key] = CreateBrush(colorHex);
             }
 
+            var activeWallpaper = isDarkTheme
+                ? (wallpaperDarkPath ?? wallpaperLightPath)
+                : (wallpaperLightPath ?? wallpaperDarkPath);
+
+            if (!string.IsNullOrWhiteSpace(activeWallpaper) && System.IO.File.Exists(activeWallpaper))
+            {
+                try
+                {
+                    var bytes = System.IO.File.ReadAllBytes(activeWallpaper);
+                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.StreamSource = new System.IO.MemoryStream(bytes);
+                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+
+                    var imageBrush = new ImageBrush(bitmap)
+                    {
+                        Stretch = Stretch.UniformToFill
+                    };
+                    dictionary["ApplicationBackgroundBrush"] = imageBrush;
+                    application.Resources["ApplicationBackgroundBrush"] = imageBrush;
+                }
+                catch
+                {
+                    var bgBrush = CreateBrush(bg);
+                    dictionary["ApplicationBackgroundBrush"] = bgBrush;
+                    application.Resources["ApplicationBackgroundBrush"] = bgBrush;
+                }
+            }
+            else
+            {
+                var bgBrush = CreateBrush(bg);
+                dictionary["ApplicationBackgroundBrush"] = bgBrush;
+                application.Resources["ApplicationBackgroundBrush"] = bgBrush;
+            }
+
             dictionary["ControlFillColorDefaultBrush"] = cardBrush;
             dictionary["ControlFillColorSecondaryBrush"] = new SolidColorBrush(Color.FromArgb((byte)Math.Max(20, cardAlpha - 25), cardBg.R, cardBg.G, cardBg.B));
-            dictionary["ControlCornerRadius"] = new CornerRadius(theme.CardBorderRadius);
+            dictionary["ControlCornerRadius"] = new CornerRadius(cardRadius);
             dictionary["ToastNotificationBorderBrush"] = new SolidColorBrush(accent);
 
-            ApplyAccentControlResources(dictionary, colors, isDark);
-            ApplySemanticStatusResources(dictionary, isDark);
+            ApplyAccentControlResources(dictionary, colors, isDarkTheme);
+            ApplySemanticStatusResources(dictionary, isDarkTheme);
+        }
+
+        if (persist)
+        {
+            AppSettings.ActiveCustomThemeId = theme.Id;
+            AppSettings.ActiveCustomThemeDarkWallpaper = wallpaperDarkPath;
+            AppSettings.ActiveCustomThemeLightWallpaper = wallpaperLightPath;
+            AppSettings.CommunityThemeMode = CurrentPreference.ToString();
         }
 
         if (raiseChanged) ThemeChanged?.Invoke(CurrentPreference);
@@ -154,7 +295,11 @@ public sealed class ThemeService
     public void ResetToDefaultTheme()
     {
         CurrentCustomTheme = null;
-        CustomWallpaperPath = null;
+        CustomWallpaperDarkPath = null;
+        CustomWallpaperLightPath = null;
+        AppSettings.ActiveCustomThemeId = null;
+        AppSettings.ActiveCustomThemeDarkWallpaper = null;
+        AppSettings.ActiveCustomThemeLightWallpaper = null;
         Apply(ThemePreference.System);
         ApplyPalette(ThemePalette.Fluent);
     }
