@@ -239,38 +239,10 @@ public sealed class ThemeService
                 ? (wallpaperDarkPath ?? wallpaperLightPath)
                 : (wallpaperLightPath ?? wallpaperDarkPath);
 
-            if (!string.IsNullOrWhiteSpace(activeWallpaper) && System.IO.File.Exists(activeWallpaper))
-            {
-                try
-                {
-                    var bytes = System.IO.File.ReadAllBytes(activeWallpaper);
-                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.StreamSource = new System.IO.MemoryStream(bytes);
-                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
-                    bitmap.Freeze();
-
-                    var imageBrush = new ImageBrush(bitmap)
-                    {
-                        Stretch = Stretch.UniformToFill
-                    };
-                    dictionary["ApplicationBackgroundBrush"] = imageBrush;
-                    application.Resources["ApplicationBackgroundBrush"] = imageBrush;
-                }
-                catch
-                {
-                    var bgBrush = CreateBrush(bg);
-                    dictionary["ApplicationBackgroundBrush"] = bgBrush;
-                    application.Resources["ApplicationBackgroundBrush"] = bgBrush;
-                }
-            }
-            else
-            {
-                var bgBrush = CreateBrush(bg);
-                dictionary["ApplicationBackgroundBrush"] = bgBrush;
-                application.Resources["ApplicationBackgroundBrush"] = bgBrush;
-            }
+            // 启动器页面与视窗背景永久保持高质感纯色，杜绝全屏壁纸侵占全局背景
+            var bgBrush = CreateBrush(bg);
+            dictionary["ApplicationBackgroundBrush"] = bgBrush;
+            application.Resources["ApplicationBackgroundBrush"] = bgBrush;
 
             dictionary["ControlFillColorDefaultBrush"] = cardBrush;
             dictionary["ControlFillColorSecondaryBrush"] = new SolidColorBrush(Color.FromArgb((byte)Math.Max(20, cardAlpha - 25), cardBg.R, cardBg.G, cardBg.B));
