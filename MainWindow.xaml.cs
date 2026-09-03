@@ -311,7 +311,29 @@ public partial class MainWindow : FluentWindow
             return;
         }
 
-        // 2. 沙箱通过后，流转到各向导或后续处理（Ticket 04/05 接管）
+        // 2. 沙箱通过后，流转到各向导或后续处理
+        if (intent.Type == ShellFileIntentType.ModPackage)
+        {
+            var plan = App.Services.PluginProfiles.InspectPackagePlan(intent.FilePath);
+            var wizard = new Windows.ModPackageImportWindow(plan, App.Services.PluginProfiles)
+            {
+                Owner = this
+            };
+
+            var confirmed = wizard.ShowDialog() == true;
+            if (confirmed && wizard.Result?.Success == true)
+            {
+                _notifications.Publish(new UserNotice(wizard.Result.Message, UserNoticeSeverity.Success));
+                if (_currentPage is Pages.ModListPage localModsPage)
+                {
+                    _ = localModsPage.RefreshAfterExternalImportAsync();
+                }
+            }
+
+            onCompleted();
+            return;
+        }
+
         if (ShellFileIntentReceived is not null)
         {
             ShellFileIntentReceived.Invoke(intent, onCompleted);

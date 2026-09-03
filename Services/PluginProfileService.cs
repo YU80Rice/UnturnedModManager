@@ -240,7 +240,72 @@ public sealed class PluginProfileService
         }
     }
 
-    public PluginProfileOperationResult ImportPackage(string packagePath)
+    public ModPackageImportPlan InspectPackagePlan(string packagePath)
+    {
+        var plan = new ModPackageImportPlan { PackagePath = packagePath };
+        if (string.IsNullOrWhiteSpace(packagePath) || !File.Exists(packagePath))
+            return plan;
+
+        var gamePath = _gamePathProvider();
+        if (string.IsNullOrWhiteSpace(gamePath) || !Directory.Exists(gamePath))
+            return plan;
+
+        var pluginsRoot = Path.Combine(gamePath, "BepInEx", "plugins");
+        var configRoot = Path.Combine(gamePath, "BepInEx", "config");
+
+        try
+        {
+            using var zip = ZipFile.OpenRead(packagePath);
+            var manifestEntry = zip.GetEntry("manifest.json");
+            if (manifestEntry is not null)
+            {
+                using var reader = new StreamReader(manifestEntry.Open(), Encoding.UTF8);
+                plan.Manifest = JsonSerializer.Deserialize<UmmpkManifest>(reader.ReadToEnd()) ?? new();
+            }
+
+            foreach (var entry in zip.Entries)
+            {
+                if (string.IsNullOrEmpty(entry.Name)) continue;
+                var normalized = entry.FullName.Replace('\\', '/').TrimStart('/');
+                if (normalized.Equals("manifest.json", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (normalized.StartsWith("BepInEx/plugins/", StringComparison.OrdinalIgnoreCase))
+                {
+                    var relPath = normalized["BepInEx/plugins/".Length..];
+                    var destNormal = Path.Combine(pluginsRoot, relPath);
+                    var destDisabled = destNormal + ".disabled";
+                    var conflict = File.Exists(destNormal) || File.Exists(destDisabled);
+                    plan.Entries.Add(new ModPackagePlanEntry(
+                        normalized,
+                        "Plugin",
+                        entry.Length,
+                        conflict ? ModPackageEntryConflictType.ConflictDll : ModPackageEntryConflictType.New,
+                        conflict ? "本地已存在同名插件，导入时将自动备份现有版本为 .bak" : "全新插件，无版本冲突"));
+                }
+                else if (normalized.StartsWith("BepInEx/config/", StringComparison.OrdinalIgnoreCase))
+                {
+                    var relPath = normalized["BepInEx/config/".Length..];
+                    var destConfig = Path.Combine(configRoot, relPath);
+                    var conflict = File.Exists(destConfig);
+                    plan.Entries.Add(new ModPackagePlanEntry(
+                        normalized,
+                        "Config",
+                        entry.Length,
+                        conflict ? ModPackageEntryConflictType.ConflictConfig : ModPackageEntryConflictType.New,
+                        conflict ? "本地已存在同名配置文件，默认保留本地配置" : "全新配置文件"));
+                }
+            }
+        }
+        catch { }
+
+        return plan;
+    }
+
+    public PluginProfileOperationResult ImportPackage(string packagePath) =>
+        ImportPackageWithOptions(packagePath, new ModPackageImportOptions());
+
+    public PluginProfileOperationResult ImportPackageWithOptions(string packagePath, ModPackageImportOptions options)
     {
         lock (_sync)
         {
@@ -265,7 +330,11 @@ public sealed class PluginProfileService
                         ?? throw new InvalidDataException("无法解析 manifest.json。");
                 }
 
-                var validation = ValidateName(manifest.Name);
+                var targetProfileName = options.CreateNewProfile && !string.IsNullOrWhiteSpace(options.NewProfileName)
+                    ? options.NewProfileName
+                    : manifest.Name;
+
+                var validation = ValidateName(targetProfileName);
                 if (validation is not null) return new(false, validation);
 
                 if (zip.Entries.Count > 4096)
@@ -322,6 +391,12 @@ public sealed class PluginProfileService
                         var destination = Path.Combine(pluginsRoot, targetFileName);
                         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
 
+                        if (File.Exists(destination) && options.BackupConflictingDlls)
+                        {
+                            try { File.Copy(destination, destination + ".bak", overwrite: true); }
+                            catch { }
+                        }
+
                         using var entryStream = entry.Open();
                         using var fileStream = File.Create(destination);
                         entryStream.CopyTo(fileStream);
@@ -332,6 +407,17 @@ public sealed class PluginProfileService
                         var destination = Path.Combine(configRoot, relPath);
                         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
 
+                        if (File.Exists(destination))
+                        {
+                            if (options.PreserveLocalConfig)
+                            {
+                                continue;
+                            }
+
+                            try { File.Copy(destination, destination + ".bak", overwrite: true); }
+                            catch { }
+                        }
+
                         using var entryStream = entry.Open();
                         using var fileStream = File.Create(destination);
                         entryStream.CopyTo(fileStream);
@@ -341,9 +427,24 @@ public sealed class PluginProfileService
                 if (!TryGetStoragePath(out var storagePath, out var error)) return new(false, error);
                 if (!TryLoad(storagePath, out var document, out error)) return new(false, error);
 
-                var existing = document.Profiles.FirstOrDefault(p => p.Name.Equals(manifest.Name, StringComparison.OrdinalIgnoreCase));
-                var profile = existing ?? new PluginProfile();
-                profile.Name = manifest.Name;
+                PluginProfile? profile = null;
+                if (!options.CreateNewProfile && !string.IsNullOrWhiteSpace(options.TargetProfileId))
+                {
+                    profile = document.Profiles.FirstOrDefault(p => p.Id == options.TargetProfileId);
+                }
+
+                if (profile is null)
+                {
+                    profile = document.Profiles.FirstOrDefault(p => p.Name.Equals(targetProfileName, StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (profile is null)
+                {
+                    profile = new PluginProfile { Name = targetProfileName };
+                    document.Profiles.Add(profile);
+                }
+
+                profile.Name = targetProfileName;
                 profile.Description = manifest.Description;
                 profile.Author = manifest.Author;
                 profile.Version = manifest.Version;
@@ -354,7 +455,6 @@ public sealed class PluginProfileService
                     Enabled = p.Enabled
                 }).ToList();
 
-                if (existing is null) document.Profiles.Add(profile);
                 document.ActiveProfileId = profile.Id;
                 Save(storagePath, document);
 
