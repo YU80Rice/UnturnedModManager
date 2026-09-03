@@ -45,3 +45,11 @@ _Avoid_: Skin, style pack, UI template
 **ThemePalette**:
 A predefined, WCAG AA compliant color harmony (such as Fluent, WarmPaper, MascotOrange, MistyForest, OceanDusk, KleinBlue, Lavender) that dynamically injects accent and surface brush resources across all WPF views.
 _Avoid_: Color scheme, preset colors
+
+**WallpaperHost**:
+A decoupled, 3-layer visual background pipeline in MainWindow (Layer 0 Solid Base -> Layer 1 GPU BlurEffect Image Host -> Layer 2 Dynamic Contrast Dim Overlay -> Layer 3 Transparent UI Frame) that guarantees zero-overdraw, smooth page navigation, and WCAG AA legibility under any user wallpaper.
+_Avoid_: Background image setter, canvas wallpaper, window background brush
+
+**ScrollWheelRouter**:
+A tunneling-phase (`PreviewMouseWheel`) routing mechanism that intercepts mouse wheel interactions before child controls or hit-test surfaces swallow them, safely cascading the scroll delta up to the nearest scrollable viewport.
+_Avoid_: Wheel hook, scroll fix, mouse wheel handler

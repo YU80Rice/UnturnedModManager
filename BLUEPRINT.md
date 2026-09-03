@@ -142,21 +142,33 @@
 | **Phase 1: 基石与安全加固** | `BepInEx/plugins` & `config` 严格目录白名单、单 DLL 自动重定向、危险扩展名集合拦截、压缩包沙箱防护 | 51+ | ✅ **已验收** |
 | **Phase 2: 卡片体验与智能崩溃诊断** | 前置缺失/反作弊冲突/Doorstop/DXVK 智能特征分类、日志敏感信息脱敏导出、首页排查建议卡片 | 67+ | ✅ **已验收** |
 | **Phase 3: 物理多 Profile 与 .ummpk 模组包** | 物理级改名切换方案、`.ummpk` 标准 ZIP 模组包一键导出/安全导入/拖拽安装 | 74+ | ✅ **已验收** |
-| **Phase 4: 开放式主题框架与自定义 UI** | `.ummtheme` 主题包规范、卡片透明度/圆角调节、壁纸资产沙箱解压、主题实时热切换与 WCAG AA 对比度返修 | 85+ | ✅ **已验收** |
-| **Phase 5: Windows 原生关联与 Shell 扩展** | 注册 `.ummpk` 与 `.ummtheme` 专属文件类型与图标，双击直接激活单实例并弹出导入确认 | 待定 | 📋 **进行中 (v2.2.0 目标)** |
-| **Phase 6: 联机生态与外部网桥联动** | 剥离出 UMM（由独立联机项目承接，UMM 保持无捆绑独立纯净启动） | - | 🚫 **移出范围 (独立项目)** |
+| **Phase 4: 开放式主题框架与自定义 UI** | `.ummtheme` 主题包规范、卡片透明度/圆角调节、壁纸资产沙箱解压、主题实时热切换与 WCAG AA 对比度返修 | 85+ | ✅ **已验收 (v2.2.0)** |
+| **Phase 5: Windows 原生关联与 Shell 扩展** | 注册 `.ummpk` 与 `.ummtheme` 专属文件类型与图标，双击直接激活单实例并弹出导入确认与向导 | 131+ | ✅ **已验收 (v2.2.0)** |
+| **Phase 6: 玩家自定义壁纸与高斯模糊个性化** | 无锁内存流壁纸加载、0~40px 高斯模糊与 10%~80% 遮罩实时滑块、主视窗三层底座、页面透明化与滚轮隧道路由 | 155+ | ✅ **已验收 (v2.2.1)** |
+| **Phase 7: 联机生态与外部网桥联动** | 剥离出 UMM（由独立联机项目承接，UMM 保持无捆绑独立纯净启动） | - | 🚫 **移出范围 (独立项目)** |
 
 ---
 
-## 8. 版本交付计划 (v2.2.0 Milestone Release)
+## 8. 版本交付计划 (v2.2.0 & v2.2.1 Milestone Release)
 
-1. **版本跃迁**：基于 Phase 1~4 全新架构与生态格式，由 `v2.1.x` 跃迁为 **`v2.2.0` 正式里程碑版本**。
+1. **版本跃迁**：
+   - 基于 Phase 1~5 全新架构与生态格式，由 `v2.1.x` 跃迁为 **`v2.2.0` 正式里程碑版本**。
+   - 进一步引入玩家自主壁纸与高斯模糊毛玻璃渲染系统，并修复全页滚轮路由，发布 **`v2.2.1` 体验完善版**。
 2. **核心交付成果**：
    - 物理多方案切换与 `.ummpk` 模组包双向流通；
    - 崩溃特征分类与脱敏诊断包一键导出；
-   - 开放式 `.ummtheme` 主题包热切换与 WCAG AA 视觉优化；
+   - 开放式 `.ummtheme` 主题包热切换、13 套官方调色板矩阵与 WCAG AA 视觉优化；
+   - 玩家自定义全屏壁纸与 GPU 硬件加速双向实时调节滑块（0~40px 模糊度、10%~80% 遮罩浓度）；
+   - Windows 原生文件关联（`.ummpk` / `.ummtheme`）与交互式安全沙箱向导；
+   - 全页面背景透明穿透与 `ScrollWheelRouter` 滚轮隧道路由全覆盖；
    - 社区安装器严苛白名单与安全沙箱防护。
 3. **架构资产留档**：
    - 领域模型规约：[`CONTEXT.md`](file:///D:/Agent-工作目录/DevelopMyUNMultiplayerModAndModloader/启动器/CONTEXT.md)
-   - 架构决策记录：[`docs/adr/0001-physical-file-management.md`](file:///D:/Agent-工作目录/DevelopMyUNMultiplayerModAndModloader/启动器/docs/adr/0001-physical-file-management.md)、[`docs/adr/0002-safe-sandbox-whitelist.md`](file:///D:/Agent-工作目录/DevelopMyUNMultiplayerModAndModloader/启动器/docs/adr/0002-safe-sandbox-whitelist.md)、[`docs/adr/0003-open-theme-pipeline.md`](file:///D:/Agent-工作目录/DevelopMyUNMultiplayerModAndModloader/启动器/docs/adr/0003-open-theme-pipeline.md)
+   - 架构决策记录：
+     - [`docs/adr/0001-physical-file-management.md`](file:///D:/Agent-工作目录/DevelopMyUNMultiplayerModAndModloader/启动器/docs/adr/0001-physical-file-management.md)
+     - [`docs/adr/0002-safe-sandbox-whitelist.md`](file:///D:/Agent-工作目录/DevelopMyUNMultiplayerModAndModloader/启动器/docs/adr/0002-safe-sandbox-whitelist.md)
+     - [`docs/adr/0003-open-theme-pipeline.md`](file:///D:/Agent-工作目录/DevelopMyUNMultiplayerModAndModloader/启动器/docs/adr/0003-open-theme-pipeline.md)
+     - [`docs/adr/0004-shell-file-associations-and-safe-import-wizard.md`](file:///D:/Agent-工作目录/DevelopMyUNMultiplayerModAndModloader/启动器/docs/adr/0004-shell-file-associations-and-safe-import-wizard.md)
+     - [`docs/research/launcher-wallpaper-and-blur-architecture.md`](file:///D:/Agent-工作目录/DevelopMyUNMultiplayerModAndModloader/启动器/docs/research/launcher-wallpaper-and-blur-architecture.md)
+     - [`docs/specs/ummtheme-specification-v2.md`](file:///D:/Agent-工作目录/DevelopMyUNMultiplayerModAndModloader/启动器/docs/specs/ummtheme-specification-v2.md)
 

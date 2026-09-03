@@ -1,4 +1,4 @@
-# Unturned Mod Manager v2.1.8
+# Unturned Mod Manager v2.2.1
 
 > 面向 Windows 的 Unturned 启动、BepInEx 插件管理与 [unmod.online](https://unmod.online/) 社区客户端。
 
@@ -6,7 +6,7 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![WPF-UI](https://img.shields.io/badge/WPF--UI-3.0.5-CA1E1E)](https://github.com/lepoco/wpfui)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?logo=windows)](https://www.microsoft.com/windows)
-[![Release](https://img.shields.io/badge/Release-v2.1.8-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
+[![Release](https://img.shields.io/badge/Release-v2.2.1-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
 [![Build and test](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml/badge.svg)](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml)
 
 **仓库：** [github.com/YU80Rice/UnturnedModManager](https://github.com/YU80Rice/UnturnedModManager)
@@ -45,7 +45,7 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 
 ---
 
-## v2.1.8 能做什么
+## v2.2.1 能做什么
 
 ### 游戏与插件环境
 
@@ -53,34 +53,32 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 - 下载、安装、升级、修复或卸载社区统一基线 BepInEx 5.4.23.5（win_x64，Unity Mono / winhttp doorstop）；
 - 通过 `winhttp.dll` / `winhttp.dll.disabled` 切换 BepInEx 注入状态；
 - 模组模式使用 `Unturned.exe -NoBattlEye`，原版模式使用 `Unturned_BE.exe`；
-- 可选部署 DXVK 2.4，并根据检测到的 GPU 架构给出兼容性提示。
-- 可在首页分析本机 Unity、Unturned、BepInEx 与 DXVK 日志；诊断包保存在启动器同级目录，右下角通知会显示路径，点击即可打开。
+- 可选部署 DXVK 2.4，并根据检测到的 GPU 架构给出兼容性提示；
+- **智能崩溃特征库分析**：集成 MissingDependency（前置缺失）、BattlEyeConflict（反作弊冲突）、DoorstopFailure（Mono 加载失败）、DxvkFailure（显卡/Vulkan 异常）与 UnityCrash 特征分析，异常退出时主动在首页展示针对性排查建议；
+- **敏感信息脱敏导出**：一键导出 Unity 与 BepInEx 诊断日志包，自动过滤系统用户名绝对路径（`C:\Users\<USER>\...`）与 Token 凭据。
 
-配置默认保存于 `%AppData%\Roaming\UnturnedModManager\config.json`。发布包目录不保存用户配置；如需隔离验收或便携式调试，可在启动前设置 `UMM_DATA_DIRECTORY`，配置和社区缓存会一起写入该目录。
+### 物理插件方案与 .ummpk 模组包
 
-> DXVK 的效果取决于显卡、驱动和游戏环境。UMM 会跳过远程/投屏虚拟显示驱动，优先分析实际物理显卡；即使显卡具备 Vulkan 支持，Windows 原生 D3D11 也不一定更慢，因此应以相同场景的帧率和稳定性实测为准。
+- 彻底摒弃虚拟文件系统，通过物理目录与 `.dll` / `.dll.disabled` 改名实现 100% 离线物理隔离；
+- 支持为每个 Unturned 安装目录保存多个“插件方案”并在其间无缝秒级切换；
+- 推出标准 `.ummpk` 模组包规范（标准 ZIP 归档，包含 `manifest.json` 与 `BepInEx/plugins/**`、`BepInEx/config/**`）；
+- 支持一键将当前方案导出为 `.ummpk` 模组包分享给联机好友，支持拖拽或双击一键安全安装。
 
-BepInEx 安装包使用多源回退策略，并在解压前统一校验 SHA-256：
+### 开放式主题、自定义壁纸与高斯模糊
 
-1. 已登录时优先使用 unmod.online 社区包（社区条目 ID `4`，需要社区账户 Cookie）；
-2. 未登录时自动跳过社区源，然后尝试国内镜像 `gh-proxy.com` 与 `ghproxy.net`；
-3. 镜像不可用时回退到 GitHub 官方发布地址。
+- **开放式主题生态 (.ummtheme)**：支持导入、导出与热切换社区创作者分享的 `.ummtheme` 主题包；
+- **官方 13 套调色板矩阵**：内置默认 Fluent、暖米白、吉祥物橙、松林雾绿、深海雾蓝、克莱因蓝、夜雾紫等丰富色彩方案，全方位通过 WCAG 2.1 AA（4.5:1）无障碍对比度合规；
+- **玩家自定义背景壁纸**：支持玩家自主选择本地图片（PNG/JPG/WEBP/BMP）作为全屏壁纸，非阻塞无锁内存流加载，不占用系统文件句柄；
+- **硬件加速双实时滑块**：
+  - **背景高斯模糊程度**：`0 ~ 40 px` 动态无级调节（无模糊 / 柔和 / 毛玻璃 / 重度模糊），GPU 硬件加速渲染；
+  - **动态对比度遮罩浓度**：`10% ~ 80%` 实时可控，自动跟随主题日夜态自适应融合，确保文字与按钮永远清晰锐利；
+  - 支持一键清除壁纸，瞬时丝滑回退至纯净原生 Fluent 纯色底座。
 
-因此，国内镜像仍然保留，但镜像服务属于公共代理，可能因网络、限流或服务维护而暂时不可用。启动器会在状态提示中显示当前尝试的源，不会因为镜像失败而阻塞安装。无论下载自社区、镜像还是 GitHub，均必须通过同一份 BepInEx 5.4.23.5 包校验。
+### Windows 原生关联与安全向导
 
-UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerfOptimizer`。两个文件仅暂存为后续整合原材料，不进入发布产物。
-
-“关闭插件环境”只会停用 `winhttp.dll`，适合临时以原版模式运行；“卸载环境”会移除 BepInEx 核心和 Doorstop 启动文件，但保留 `plugins`、`config`、缓存、日志与社区安装记录，方便以后重新安装后继续使用。
-
-### 本地插件管理
-
-- 递归扫描 `BepInEx/plugins` 下的 `.dll` 与 `.dll.disabled`；
-- 启用、停用、导入和卸载本地插件；任意页面可拖入 `.dll` 或符合 `BepInEx/plugins` 结构的 ZIP 包自动安装；
-- 区分社区托管插件与玩家手动安装插件；
-- 将本地 DLL 名称、程序集信息与社区条目进行匹配；
-- 从本地插件跳转到对应社区详情，并支持社区版本更新；
-- 保留来源页导航上下文，详情页“返回”会回到真正的上一级页面。
-- 支持为每个 Unturned 安装目录保存多个“插件方案”：方案记录全部本地插件的启停状态，例如“联机优化（ABC）”或“开发调试（XYZ）”；应用方案时未包含的现有插件会被停用，但 DLL、社区安装记录与 BepInEx 配置都不会被删除或复制。
+- 自动注册 `.ummpk`（模组包）与 `.ummtheme`（主题包）专属 Windows 文件类型与图标关联；
+- 双击文件直接唤醒 UMM 独占单实例，弹出交互式导入安全向导，提供元数据预览与安全确认；
+- 设置页提供“文件关联一键检测、修复与解除”管理卡片。
 
 ### unmod.online 社区
 
@@ -88,43 +86,35 @@ UMM 不再内嵌、安装或启动时覆盖 `LaunchPerfOptimizer` 与 `WaterPerf
 - 社区列表、缩略图、分类、排序和防抖搜索；筛选条件变化后自动刷新；
 - 列表内查看摘要，进入独立详情页后查看完整信息和执行安装；详情支持基础 Markdown 排版、依赖条目跳转及来源上下文返回；
 - 插件封面可点击进入独立图片预览，支持滚动、缩放、Ctrl + 滚轮和 Esc 关闭；详情正文中的 HTTPS Markdown 图片也会以缩略图库形式提供同样的安全预览；
-- 详情页展示作者、版本、分类、文件大小、下载量、点赞量、依赖数量和当前安装状态，不以伪造数据补充社区未提供的图库；
-- 对标记 `github_repo` 的社区条目，直接读取对应 GitHub 仓库的 latest Release；UMM 只接受唯一的 ZIP 发布资产，并在 GitHub 提供 SHA-256 摘要时校验文件。GitHub API 或下载临时不可用时，会回退到已登录的社区包端点；
-- 安装依赖、更新、卸载及安装清单同步；
-- 新增任务中心：社区插件安装、更新与卸载均可显示流式下载百分比、已下载大小、当前阶段、失败原因、尝试次数及操作历史；失败任务可在同一次启动中重试；
+- 详情页展示作者、版本、分类、文件大小、下载量、点赞量、依赖数量和当前安装状态；
+- 对标记 `github_repo` 的社区条目，直接读取对应 GitHub 仓库的 latest Release；
+- 任务中心：社区插件安装、更新与卸载均可显示流式下载百分比、已下载大小、当前阶段、失败原因、尝试次数及操作历史；失败任务可在同一次启动中重试；
 - 分类、列表和详情元数据缓存；网络暂时不可用时可读取最近缓存；
 - 已验证会话与“仅有本地缓存账户”状态分离，避免离线时误启用受保护操作。
 
 ### 安装安全与可恢复性
 
 - 拒绝 ZIP 路径穿越、`BepInEx/core` 等加载器核心覆盖，以及对游戏核心文件的直接覆盖；
-- 仅允许 ZIP 写入 `BepInEx/plugins` 与 `BepInEx/config`，要求至少包含一个插件 DLL，并限制条目数量及实际解压总体积；
+- 严苛白名单沙箱：仅允许写入 `BepInEx/plugins/**` 与 `BepInEx/config/**`，严格拦截 `.exe`, `.bat`, `.cmd`, `.ps1`, `.vbs`, `.reg`, `.msi` 等危险载荷，防御 Zip 炸弹；
 - 记录社区插件文件所有权，阻止不同插件静默覆盖同一路径；
 - 更新失败时恢复旧文件；卸载前校验文件哈希，发现用户修改后停止删除；
 - 社区安装清单与备份位于 `%AppData%\UnturnedModManager\community-mods`。
-
-这些保护降低了误操作风险，但不等同于完整沙箱。安装第三方插件前仍应确认来源并备份重要数据。
 
 ---
 
 ## 界面与状态持久化
 
 - WPF-UI 3.0.5 Fluent 控件与深色、浅色、跟随系统三种主题；
-- 侧边栏展开状态、窗口尺寸和位置持久化；
-- 折叠侧栏显示账户头像和完整主题图标；
-- 社区账户昵称、头像与登录令牌在本地保存，以便下次启动恢复会话；
-- 社区账户会保存并展示 unmod.online 服务端返回的身份标识（例如社区管理员、创作者）；侧栏展开时显示“头像 + 身份 + 用户名”，超长文本自动省略并可悬停查看完整内容；本地不会根据昵称或已安装插件推断、伪造身份；
-- 页面加载、空状态、错误状态和缓存状态使用独立反馈。
-- 设置、列表和详情页会将滚轮交给鼠标下方最近的可滚动区域；本地插件条目可用 Enter 键进入其社区详情。
-- 首次启动提供三步引导：游戏目录、主题偏好和功能说明；已经配置过游戏目录的旧版本升级不会被重复打断。
-- 启动器启用单实例保护：第二次启动会唤醒已有窗口，并将安装意图安全转交给它，避免多个窗口同时修改同一套插件文件。
-- 注册独立的 `umm://install/{社区插件 ID}` 协议入口；它只打开对应插件详情供用户确认安装，不会抢占 UML 使用的 `unmod://` 协议。
-- 提供六套可持久化配色；非默认配色会同时更新按钮、开关、导航选中、进度条和焦点等交互状态，而不只是改变页面背景。
-- 首页提供可在设置中关闭的 Q 版吉祥物欢迎区与版本公告；每次升级后会重新展示对应摘要，只在本地识别程序版本，不会后台下载或静默安装更新。
-- 登录、插件环境切换、安装与诊断等操作结果会集中显示为主窗口右下角的短暂通知；同一时刻最多保留三条，避免遮挡主界面。
-- 欢迎区会查询 UMM 官方 GitHub Release 的最新稳定版；发现更高版本后提供“下载并安装”按钮。下载、SHA-256 校验、替换当前 EXE 均需要用户明确确认，替换前保留 `.bak`，无写入权限时只启动已校验的新 EXE。
-
-社区令牌当前保存在 `%AppData%\UnturnedModManager\config.json`；插件方案保存在同一数据根目录的 `plugin-profiles` 下，任务历史保存在 `task-history.json`，并按游戏安装目录隔离。请将该目录视为敏感数据，不要公开上传或附在 Issue 中。
+- 主视窗三层底座渲染架构（纯色底座 -> 单层 GPU BlurEffect 宿主 -> 动态主题遮罩层 -> 透明 UI 层），彻底消灭多层重叠渲染（Overdraw）与显存重绘开销；
+- 所有二级页面（主页、设置、插件列表、关于、社区等）背景统一透明化穿透，切页丝滑稳定不闪烁；
+- 全局接入 `ScrollWheelRouter` 滚轮隧道路由（`PreviewMouseWheel`），确保鼠标悬停在卡片、按钮、开关等任意子元素上方时，鼠标滚轮均能 100% 顺畅传递至外层滚动视图；
+- 侧边栏展开状态、窗口尺寸和位置持久化；折叠侧栏显示账户头像和完整主题图标；
+- 社区账户昵称、头像与登录令牌在本地保存，支持本地缓存离线查看；
+- 首次启动提供三步引导：游戏目录、主题偏好和功能说明；
+- 启动器启用单实例保护：第二次启动会唤醒已有窗口，并将安装意图安全转交给它；
+- 注册独立的 `umm://install/{社区插件 ID}` 协议入口；
+- 首页提供可在设置中关闭的 Q 版吉祥物欢迎区与版本公告；每次升级后会重新展示对应摘要；
+- 登录、插件环境切换、安装与诊断等操作结果集中显示为主窗口右下角轻量 Toast 通知。
 
 ---
 
