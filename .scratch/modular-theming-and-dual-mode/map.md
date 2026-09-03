@@ -19,6 +19,7 @@
 - [02: .ummtheme v2 日夜双态数据模型与 v1 智能升级派生](issues/02-dual-mode-theme-schema-and-backward-compatibility.md) — 确立 v2 双模规范与双壁纸支持，实现 EnsureDualMode 浅色自动派生算法
 - [03: 运行时日夜模式联动与全局主题自适应切换](issues/03-theme-service-day-night-runtime-switching.md) — 重构 ThemeService 支持自定义主题白天/夜间态热翻转、双壁纸调度与持久化恢复
 - [04: 导入审查向导 WCAG 对比度达标与日夜交互预览](issues/04-import-wizard-high-contrast-and-dual-preview.md) — 重构向导排版消灭黑字暗底，新增日间/夜间交互预览切换器
+- [05: 自动化对比度测试守卫与双态粉色主题包实装](issues/05-contrast-guard-and-dual-mode-e2e-verification.md) — 建立 WCAG 2.1 AA 守卫矩阵，实装 SakuraPink v2 双态高分辨率主题包
 
 ## 尚未明确
 
