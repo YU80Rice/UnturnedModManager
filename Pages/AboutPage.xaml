@@ -31,7 +31,7 @@
                         Margin="0,0,0,20"
                         HorizontalAlignment="Center">
                     <Viewbox Width="40" Height="40">
-                        <ui:SymbolIcon Symbol="Box24" Foreground="White" />
+                        <ui:SymbolIcon Symbol="Box24" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
                     </Viewbox>
                 </Border>
 
@@ -54,7 +54,7 @@
                                FontFamily="Cascadia Mono, Consolas, monospace"
                                TextAlignment="Center"
                                HorizontalAlignment="Stretch"
-                               Foreground="White" />
+                               Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
                 </Border>
 
                 <TextBlock Grid.Row="3"

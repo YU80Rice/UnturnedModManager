@@ -1,4 +1,4 @@
-﻿# Map: 深度模块化主题系统与日夜双态生态 (Wayfinder Map)
+# Map: 深度模块化主题系统与日夜双态生态 (Wayfinder Map)
 
 ## 目的地
 
@@ -15,7 +15,7 @@
 
 ## 已有决策
 
-<!-- 索引——每个已关闭 ticket 一行：足以判断相关性，然后点击链接获取 ticket 中的详细内容 -->
+- [01: WPF-UI 内部强调色总线打通与默认蓝底根治](issues/01-wpf-ui-accent-manager-integration.md) — 接入 ApplicationAccentColorManager 并统一语义代币，消灭主页与关于页残留默认蓝
 
 ## 尚未明确
 

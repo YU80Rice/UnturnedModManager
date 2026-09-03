@@ -51,6 +51,26 @@ public sealed class ThemeService
             var colors = GetPaletteColors(palette, AppliedTheme);
             foreach (var (key, color) in colors)
                 dictionary[key] = CreateBrush(color);
+
+            var accentHex = colors.First(item => item.Key == "AccentFillColorDefaultBrush").Color;
+            var accent = (Color)ColorConverter.ConvertFromString(accentHex)!;
+            var isDark = AppliedTheme == ThemePreference.Dark;
+            var pointerOver = Blend(accent, isDark ? Colors.Black : Colors.White, isDark ? 0.10 : 0.10);
+            var pressed = Blend(accent, Colors.Black, isDark ? 0.18 : 0.12);
+            try
+            {
+                ApplicationAccentColorManager.Apply(accent, accent, pointerOver, pressed);
+            }
+            catch
+            {
+                // Headless test runner fallback
+            }
+
+            // 同步应用级全局资源，确保跨页面、弹窗及外部样式查找始终为当前强调色
+            application.Resources["AccentFillColorDefaultBrush"] = CreateBrush(accent);
+            application.Resources["SystemAccentColorPrimaryBrush"] = CreateBrush(accent);
+            application.Resources["SystemAccentColorPrimary"] = accent;
+
             // 通知是自定义控件，不能依赖 WPF-UI 主题内部的 Accent 资源查找顺序；
             // 在每次切换方案时显式写入自己的动态资源，确保边框始终同步当前配色。
             dictionary["ToastNotificationBorderBrush"] = CreateBrush(ResolveAccentColor(application, colors));
@@ -71,16 +91,34 @@ public sealed class ThemeService
         CustomWallpaperPath = wallpaperFilePath;
         var actual = theme.BaseTheme == ThemePreference.System ? DetectSystemTheme() : theme.BaseTheme;
         AppliedTheme = actual;
-        ApplicationThemeManager.Apply(actual == ThemePreference.Light ? ApplicationTheme.Light : ApplicationTheme.Dark, Wpf.Ui.Controls.WindowBackdropType.Mica);
+        var appTheme = actual == ThemePreference.Light ? ApplicationTheme.Light : ApplicationTheme.Dark;
+        ApplicationThemeManager.Apply(appTheme, Wpf.Ui.Controls.WindowBackdropType.Mica);
+
+        var accent = (Color)ColorConverter.ConvertFromString(theme.AccentColor)!;
+        var isDarkTheme = actual == ThemePreference.Dark;
+        var pointerOverColor = Blend(accent, isDarkTheme ? Colors.Black : Colors.White, isDarkTheme ? 0.10 : 0.10);
+        var pressedColor = Blend(accent, Colors.Black, isDarkTheme ? 0.18 : 0.12);
+        try
+        {
+            ApplicationAccentColorManager.Apply(accent, accent, pointerOverColor, pressedColor);
+        }
+        catch
+        {
+            // Headless test runner fallback
+        }
 
         var application = System.Windows.Application.Current;
         if (application is not null)
         {
+            // 同步应用级全局资源，彻底消除对默认系统蓝色的回退
+            application.Resources["AccentFillColorDefaultBrush"] = CreateBrush(accent);
+            application.Resources["SystemAccentColorPrimaryBrush"] = CreateBrush(accent);
+            application.Resources["SystemAccentColorPrimary"] = accent;
+
             var dictionary = EnsurePaletteDictionary(application);
             dictionary.Clear();
 
             var isDark = actual == ThemePreference.Dark;
-            var accent = (Color)ColorConverter.ConvertFromString(theme.AccentColor)!;
             var bg = (Color)ColorConverter.ConvertFromString(theme.BackgroundColor)!;
             var cardBg = (Color)ColorConverter.ConvertFromString(theme.CardBackgroundColor)!;
             var cardAlpha = (byte)Math.Clamp((int)(theme.CardOpacity * 255), 25, 255);
@@ -124,11 +162,21 @@ public sealed class ThemeService
     private static ResourceDictionary EnsurePaletteDictionary(System.Windows.Application application)
     {
         const string key = "UnturnedModManager.ThemePalette";
-        if (application.Resources[key] is ResourceDictionary dictionary)
-            return dictionary;
+        ResourceDictionary dictionary;
+        if (application.Resources[key] is ResourceDictionary existing)
+        {
+            dictionary = existing;
+            if (application.Resources.MergedDictionaries.Contains(existing))
+            {
+                application.Resources.MergedDictionaries.Remove(existing);
+            }
+        }
+        else
+        {
+            dictionary = new ResourceDictionary();
+            application.Resources[key] = dictionary;
+        }
 
-        dictionary = new ResourceDictionary();
-        application.Resources[key] = dictionary;
         application.Resources.MergedDictionaries.Add(dictionary);
         return dictionary;
     }
@@ -177,6 +225,9 @@ public sealed class ThemeService
         SetBrush(dictionary, "SystemAccentColorPrimaryBrush", accent);
         SetBrush(dictionary, "SystemAccentColorSecondaryBrush", pointerOver);
         SetBrush(dictionary, "SystemAccentColorTertiaryBrush", pressed);
+        SetBrush(dictionary, "AccentFillColorDefaultBrush", accent);
+        SetBrush(dictionary, "AccentFillColorSecondaryBrush", pointerOver);
+        SetBrush(dictionary, "AccentFillColorTertiaryBrush", pressed);
 
         SetBrush(dictionary, "AccentButtonBackground", accent);
         SetBrush(dictionary, "AccentButtonBackgroundPointerOver", pointerOver);

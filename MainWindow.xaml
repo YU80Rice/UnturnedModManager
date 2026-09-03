@@ -15,7 +15,7 @@
      <ui:Button x:Name="AccountButton" Grid.Row="0" Margin="0,4" Padding="4" MinHeight="44" Appearance="Secondary" HorizontalContentAlignment="Stretch" Click="AccountButton_Click" ToolTip="社区账户">
       <Grid x:Name="AccountContentGrid" HorizontalAlignment="Stretch">
        <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-       <Border Grid.Column="0" Width="36" Height="36" MinWidth="36" MinHeight="36" CornerRadius="18" Background="{DynamicResource AccentFillColorDefaultBrush}" ClipToBounds="True" HorizontalAlignment="Center"><Grid><Image x:Name="AccountAvatarImage" Stretch="UniformToFill" Visibility="Collapsed"/><TextBlock x:Name="AccountAvatarText" Text="?" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/></Grid></Border>
+       <Border Grid.Column="0" Width="36" Height="36" MinWidth="36" MinHeight="36" CornerRadius="18" Background="{DynamicResource AccentFillColorDefaultBrush}" ClipToBounds="True" HorizontalAlignment="Center"><Grid><Image x:Name="AccountAvatarImage" Stretch="UniformToFill" Visibility="Collapsed"/><TextBlock x:Name="AccountAvatarText" Text="?" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/></Grid></Border>
        <TextBlock x:Name="AccountNameText" Grid.Column="1" Text="登录社区账户" VerticalAlignment="Center" Margin="8,0,0,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
       </Grid>
      </ui:Button>
