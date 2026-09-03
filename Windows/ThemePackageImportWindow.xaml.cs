@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -27,28 +27,65 @@ public partial class ThemePackageImportWindow : Window
         _themeService = themeService;
 
         var theme = preview.Theme;
+        theme.EnsureDualMode();
         ThemeNameText.Text = string.IsNullOrWhiteSpace(theme.Name) ? "未命名主题" : theme.Name;
         ThemeAuthorText.Text = $"作者: {(string.IsNullOrWhiteSpace(theme.Author) ? "未知" : theme.Author)}";
         ThemeVersionText.Text = $"版本: {(string.IsNullOrWhiteSpace(theme.Version) ? "1.0.0" : theme.Version)}";
         ThemeBaseText.Text = $"基底: {(theme.BaseTheme == ThemePreference.Light ? "浅色模式" : "深色模式")}";
         ThemeDescriptionText.Text = string.IsNullOrWhiteSpace(theme.Description) ? "暂无说明信息。" : theme.Description;
 
-        // Color Swatches
+        SetPreviewMode(_themeService.AppliedTheme);
+    }
+
+    public ThemePreference CurrentPreviewMode { get; private set; } = ThemePreference.Dark;
+
+    public void SetPreviewMode(ThemePreference mode)
+    {
+        CurrentPreviewMode = mode;
+        var isLight = mode == ThemePreference.Light;
+        PreviewDayButton.Appearance = isLight ? Wpf.Ui.Controls.ControlAppearance.Primary : Wpf.Ui.Controls.ControlAppearance.Secondary;
+        PreviewNightButton.Appearance = isLight ? Wpf.Ui.Controls.ControlAppearance.Secondary : Wpf.Ui.Controls.ControlAppearance.Primary;
+
+        var theme = _preview.Theme;
+        theme.EnsureDualMode();
+
         SetSwatch(AccentSwatch, AccentHexText, theme.AccentColor, "#0078D4");
-        SetSwatch(BgSwatch, BgHexText, theme.BackgroundColor, "#1E1E1E");
-        SetSwatch(CardSwatch, CardHexText, theme.CardBackgroundColor, "#2D2D2D");
 
-        CardOpacityText.Text = $"卡片不透明度: {Math.Round(theme.CardOpacity * 100)}%";
-        CardRadiusText.Text = $"卡片圆角: {theme.CardBorderRadius} px";
+        if (isLight)
+        {
+            SetSwatch(BgSwatch, BgHexText, theme.LightBackgroundColor, "#FFF5F8");
+            SetSwatch(CardSwatch, CardHexText, theme.LightCardBackgroundColor, "#FFEBF2");
+            var opacity = theme.LightCardOpacity ?? theme.CardOpacity;
+            var radius = theme.LightCardBorderRadius ?? theme.CardBorderRadius;
+            CardOpacityText.Text = $"卡片不透明度: {Math.Round(opacity * 100)}%";
+            CardRadiusText.Text = $"卡片圆角: {radius} px";
+            UpdateWallpaperPreview(_preview.WallpaperLightBytes ?? _preview.WallpaperDarkBytes);
+        }
+        else
+        {
+            SetSwatch(BgSwatch, BgHexText, theme.BackgroundColor, "#1E1E1E");
+            SetSwatch(CardSwatch, CardHexText, theme.CardBackgroundColor, "#2D2D2D");
+            CardOpacityText.Text = $"卡片不透明度: {Math.Round(theme.CardOpacity * 100)}%";
+            CardRadiusText.Text = $"卡片圆角: {theme.CardBorderRadius} px";
+            UpdateWallpaperPreview(_preview.WallpaperDarkBytes ?? _preview.WallpaperLightBytes);
+        }
+    }
 
-        // Wallpaper Preview
-        if (preview.WallpaperBytes is { Length: > 0 })
+    private void PreviewNightButton_Click(object sender, RoutedEventArgs e) =>
+        SetPreviewMode(ThemePreference.Dark);
+
+    private void PreviewDayButton_Click(object sender, RoutedEventArgs e) =>
+        SetPreviewMode(ThemePreference.Light);
+
+    private void UpdateWallpaperPreview(byte[]? bytes)
+    {
+        if (bytes is { Length: > 0 })
         {
             try
             {
                 var bitmap = new BitmapImage();
                 bitmap.BeginInit();
-                bitmap.StreamSource = new MemoryStream(preview.WallpaperBytes);
+                bitmap.StreamSource = new MemoryStream(bytes);
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
                 bitmap.EndInit();
                 bitmap.Freeze();
@@ -93,7 +130,11 @@ public partial class ThemePackageImportWindow : Window
         {
             if (ApplyImmediatelyCheckBox.IsChecked == true)
             {
-                _themeService.ApplyCustomTheme(Result.Theme, Result.WallpaperDestinationPath);
+                _themeService.ApplyCustomTheme(
+                    Result.Theme,
+                    Result.WallpaperDestinationPath,
+                    Result.WallpaperLightDestinationPath,
+                    targetMode: CurrentPreviewMode);
                 AppliedImmediately = true;
             }
             DialogResult = true;

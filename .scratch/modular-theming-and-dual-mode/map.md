@@ -18,6 +18,7 @@
 - [01: WPF-UI 内部强调色总线打通与默认蓝底根治](issues/01-wpf-ui-accent-manager-integration.md) — 接入 ApplicationAccentColorManager 并统一语义代币，消灭主页与关于页残留默认蓝
 - [02: .ummtheme v2 日夜双态数据模型与 v1 智能升级派生](issues/02-dual-mode-theme-schema-and-backward-compatibility.md) — 确立 v2 双模规范与双壁纸支持，实现 EnsureDualMode 浅色自动派生算法
 - [03: 运行时日夜模式联动与全局主题自适应切换](issues/03-theme-service-day-night-runtime-switching.md) — 重构 ThemeService 支持自定义主题白天/夜间态热翻转、双壁纸调度与持久化恢复
+- [04: 导入审查向导 WCAG 对比度达标与日夜交互预览](issues/04-import-wizard-high-contrast-and-dual-preview.md) — 重构向导排版消灭黑字暗底，新增日间/夜间交互预览切换器
 
 ## 尚未明确
 

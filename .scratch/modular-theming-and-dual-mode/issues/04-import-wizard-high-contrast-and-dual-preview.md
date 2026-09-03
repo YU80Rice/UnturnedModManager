@@ -1,7 +1,7 @@
-﻿# 04: 导入审查向导 WCAG 对比度达标与日夜交互预览
+# 04: 导入审查向导 WCAG 对比度达标与日夜交互预览
 
 Type: task
-Status: ready-for-agent
+Status: resolved
 Blocked by: 02
 
 ## 问题
@@ -12,8 +12,15 @@ Blocked by: 02
 
 ## 验收条件
 
-- [ ] 重构 `ThemePackageImportWindow.xaml` 与 `ModPackageImportWindow.xaml` 中所有标题与标签，显式绑定 `{DynamicResource TextFillColorPrimaryBrush}` 与 `{DynamicResource TextFillColorSecondaryBrush}`
-- [ ] 向导中所有展示文本在深色与浅色模式下对比度均严格符合 WCAG AA（正文 ≥ 4.5:1，大标题 ≥ 3:1）
-- [ ] 在主题审查向导中新增“日间预览 / 夜间预览”联动切换控件，默认展示用户当前系统模式
-- [ ] 切换预览模式时，色板色块、Hex 编码、卡片说明及壁纸缩略图即时动态切换为对应形态
-- [ ] 编写测试覆盖双模预览状态机与高对比度文字样式绑定
+- [x] 重构 `ThemePackageImportWindow.xaml` 与 `ModPackageImportWindow.xaml` 中所有标题与标签，显式绑定 `{DynamicResource TextFillColorPrimaryBrush}` 与 `{DynamicResource TextFillColorSecondaryBrush}`
+- [x] 向导中所有展示文本在深色与浅色模式下对比度均严格符合 WCAG AA（正文 ≥ 4.5:1，大标题 ≥ 3:1）
+- [x] 在主题审查向导中新增“日间预览 / 夜间预览”联动切换控件，默认展示用户当前系统模式
+- [x] 切换预览模式时，色板色块、Hex 编码、卡片说明及壁纸缩略图即时动态切换为对应形态
+- [x] 编写测试覆盖双模预览状态机与高对比度文字样式绑定
+
+## 答案
+
+1. 全面重构 `ThemePackageImportWindow.xaml` 与 `ModPackageImportWindow.xaml`：消灭所有未显式设置 `Foreground` 的 TextBlock 与 CheckBox，统一绑定 `{DynamicResource TextFillColorPrimaryBrush}` 与 `{DynamicResource TextFillColorSecondaryBrush}`，根除 Windows 容器黑字暗底与低对比度退化问题；
+2. 在主题审查向导中新增“夜间模式”与“日间模式”交互预览分段切换器（`PreviewNightButton` / `PreviewDayButton`），默认跟随启动器当前运行态；
+3. 点击切换模式时，色块（Accent / Background / Card）、Hex 颜色代码、卡片不透明度、圆角及日夜壁纸（`WallpaperDarkBytes` 与 `WallpaperLightBytes`）即时热刷新呈现，并在确认导入时将双壁纸与用户当前所选预览态一同交由 `ThemeService` 应用；
+4. 编写 `ThemeWizardContrastAndPreviewTests.cs`（2 项测试）覆盖双模交互预览状态机及 XAML 无样式隐患静态断言，全部绿灯通过。
