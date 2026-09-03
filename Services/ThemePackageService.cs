@@ -102,6 +102,56 @@ public sealed class ThemePackageService
         }
     }
 
+    public ThemePackagePreview? InspectPackagePreview(string packagePath)
+    {
+        if (string.IsNullOrWhiteSpace(packagePath) || !File.Exists(packagePath))
+            return null;
+
+        var fileInfo = new FileInfo(packagePath);
+        var preview = new ThemePackagePreview
+        {
+            PackagePath = packagePath,
+            PackageSizeBytes = fileInfo.Length
+        };
+
+        try
+        {
+            using var zip = ZipFile.OpenRead(packagePath);
+            var manifestEntry = zip.GetEntry("theme.json");
+            if (manifestEntry is null) return null;
+
+            using (var reader = new StreamReader(manifestEntry.Open(), Encoding.UTF8))
+            {
+                preview.Theme = JsonSerializer.Deserialize<CustomTheme>(reader.ReadToEnd()) ?? new();
+            }
+
+            foreach (var entry in zip.Entries)
+            {
+                if (string.IsNullOrEmpty(entry.Name)) continue;
+                var normalized = entry.FullName.Replace('\\', '/').TrimStart('/');
+                if (normalized.Equals("theme.json", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var ext = Path.GetExtension(normalized);
+                if (AllowedImageExtensions.Contains(ext))
+                {
+                    preview.WallpaperFileName = entry.Name;
+                    using var ms = new MemoryStream();
+                    using var s = entry.Open();
+                    s.CopyTo(ms);
+                    preview.WallpaperBytes = ms.ToArray();
+                    break;
+                }
+            }
+
+            return preview;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public ThemePackageOperationResult ImportPackage(string packagePath)
     {
         if (string.IsNullOrWhiteSpace(packagePath) || !File.Exists(packagePath))

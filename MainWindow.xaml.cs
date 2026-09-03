@@ -334,6 +334,37 @@ public partial class MainWindow : FluentWindow
             return;
         }
 
+        // 3. 主题包导入向导
+        if (intent.Type == ShellFileIntentType.ThemePackage)
+        {
+            var preview = App.Services.ThemePackages.InspectPackagePreview(intent.FilePath);
+            if (preview is null)
+            {
+                _notifications.Publish(new UserNotice("未能解析该主题包，可能已损坏。", UserNoticeSeverity.Error));
+                onCompleted();
+                return;
+            }
+
+            var wizard = new Windows.ThemePackageImportWindow(preview, App.Services.ThemePackages, _themeService)
+            {
+                Owner = this
+            };
+
+            var confirmed = wizard.ShowDialog() == true;
+            if (confirmed && wizard.Result?.Success == true)
+            {
+                UpdateThemeButton(_themeService.AppliedTheme);
+                _notifications.Publish(new UserNotice(
+                    wizard.AppliedImmediately
+                        ? $"已成功导入并应用主题“{wizard.Result.Theme?.Name}”。"
+                        : $"已成功导入主题“{wizard.Result.Theme?.Name}”至主题库。",
+                    UserNoticeSeverity.Success));
+            }
+
+            onCompleted();
+            return;
+        }
+
         if (ShellFileIntentReceived is not null)
         {
             ShellFileIntentReceived.Invoke(intent, onCompleted);

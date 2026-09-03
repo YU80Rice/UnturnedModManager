@@ -60,3 +60,12 @@ public sealed record ThemePackageOperationResult(
     string Message,
     CustomTheme? Theme = null,
     string? WallpaperDestinationPath = null);
+
+public sealed class ThemePackagePreview
+{
+    public CustomTheme Theme { get; set; } = new();
+    public byte[]? WallpaperBytes { get; set; }
+    public string? WallpaperFileName { get; set; }
+    public long PackageSizeBytes { get; set; }
+    public string PackagePath { get; set; } = string.Empty;
+}
