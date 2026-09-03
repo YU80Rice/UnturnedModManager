@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 
 # Spec: Windows 原生文件关联与安全导入审查向导
 
