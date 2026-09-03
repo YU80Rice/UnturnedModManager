@@ -10,6 +10,7 @@ public partial class App : System.Windows.Application
     public static AppServices Services { get; private set; } = null!;
     private OnboardingWindow? _onboardingWindow;
     private bool _isOnboardingLaunchQueued;
+    private readonly ShellIntentQueue _fileIntentQueue = new();
     private int? _pendingInstallModId;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -29,6 +30,9 @@ public partial class App : System.Windows.Application
             Services.SingleInstance.StartListening();
             ShellAssociationService.EnsureRegistered();
             _pendingInstallModId = ProtocolRegistrar.FindInstallIntent(e.Args);
+            var startupFileIntent = ShellAssociationService.FindFileIntent(e.Args);
+            if (startupFileIntent is not null)
+                _fileIntentQueue.Enqueue(startupFileIntent);
 
             if (!AppSettings.IsOnboardingCompleted)
                 ShowOnboarding(owner: null);
@@ -38,6 +42,7 @@ public partial class App : System.Windows.Application
             ShutdownMode = ShutdownMode.OnMainWindowClose;
             mainWindow.Show();
             ConsumePendingInstallIntent(mainWindow);
+            ProcessNextPendingFileIntent(mainWindow);
         }
         catch (Exception ex)
         {
@@ -94,7 +99,10 @@ public partial class App : System.Windows.Application
 
             ShowOnboarding(MainWindow);
             if (MainWindow is MainWindow mainWindow)
+            {
                 mainWindow.ApplyThemeFromSettings();
+                ProcessNextPendingFileIntent(mainWindow);
+            }
         }));
     }
 
@@ -133,6 +141,10 @@ public partial class App : System.Windows.Application
         _ = Dispatcher.BeginInvoke(new Action(() =>
         {
             var installModId = ProtocolRegistrar.FindInstallIntent(arguments);
+            var fileIntent = ShellAssociationService.FindFileIntent(arguments);
+            if (fileIntent is not null)
+                _fileIntentQueue.Enqueue(fileIntent);
+
             if (_onboardingWindow is not null)
             {
                 if (installModId is not null)
@@ -146,12 +158,31 @@ public partial class App : System.Windows.Application
                 ActivateWindow(mainWindow);
                 if (installModId is { } id)
                     mainWindow.OpenCommunityDetail(id);
+                ProcessNextPendingFileIntent(mainWindow);
                 return;
             }
 
             if (installModId is not null)
                 _pendingInstallModId = installModId;
         }));
+    }
+
+    public void ProcessNextPendingFileIntent(MainWindow? mainWindow)
+    {
+        if (mainWindow is null || _onboardingWindow is not null)
+            return;
+
+        if (!_fileIntentQueue.TryStartNext(out var nextIntent) || nextIntent is null)
+            return;
+
+        mainWindow.HandleShellFileIntent(nextIntent, () =>
+        {
+            _fileIntentQueue.FinishCurrent();
+            _ = Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+            {
+                ProcessNextPendingFileIntent(MainWindow as MainWindow);
+            }));
+        });
     }
 
     private void ConsumePendingInstallIntent(MainWindow mainWindow)

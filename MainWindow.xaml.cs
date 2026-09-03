@@ -293,4 +293,20 @@ public partial class MainWindow : FluentWindow
         _pendingCommunityDetailId = null;
         OpenCommunityDetail(modId);
     }
+
+    public event Action<ShellFileIntent, Action>? ShellFileIntentReceived;
+
+    public void HandleShellFileIntent(ShellFileIntent intent, Action onCompleted)
+    {
+        if (ShellFileIntentReceived is not null)
+        {
+            ShellFileIntentReceived.Invoke(intent, onCompleted);
+            return;
+        }
+
+        _notifications.Publish(new UserNotice(
+            $"已排队接收到文件关联唤醒：{System.IO.Path.GetFileName(intent.FilePath)}",
+            UserNoticeSeverity.Information));
+        onCompleted();
+    }
 }

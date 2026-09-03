@@ -159,6 +159,64 @@ public static class ShellAssociationService
         }
     }
 
+    public static bool TryParseFileIntent(string? argument, out ShellFileIntent? intent)
+    {
+        intent = null;
+        if (string.IsNullOrWhiteSpace(argument))
+            return false;
+
+        var raw = argument.Trim().Trim('"', '\'');
+        if (string.IsNullOrWhiteSpace(raw))
+            return false;
+
+        ShellFileIntentType type;
+        if (raw.EndsWith(ModPackageExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            type = ShellFileIntentType.ModPackage;
+        }
+        else if (raw.EndsWith(ThemePackageExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            type = ShellFileIntentType.ThemePackage;
+        }
+        else
+        {
+            return false;
+        }
+
+        try
+        {
+            var fullPath = Path.GetFullPath(raw);
+            if (!File.Exists(fullPath))
+                return false;
+
+            intent = new ShellFileIntent(fullPath, type);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static ShellFileIntent? FindFileIntent(IEnumerable<string> arguments)
+    {
+        foreach (var argument in arguments)
+        {
+            if (string.IsNullOrWhiteSpace(argument))
+                continue;
+
+            if (string.Equals(argument, "--import", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(argument, "-i", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(argument, "/open", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (TryParseFileIntent(argument, out var intent))
+                return intent;
+        }
+
+        return null;
+    }
+
     private static void TryDeleteSubKeyTree(RegistryKey parent, string subKeyName)
     {
         try
@@ -168,3 +226,64 @@ public static class ShellAssociationService
         catch { }
     }
 }
+
+public enum ShellFileIntentType
+{
+    ModPackage,
+    ThemePackage
+}
+
+public sealed record ShellFileIntent(string FilePath, ShellFileIntentType Type);
+
+/// <summary>
+/// 负责外部文件关联唤醒的 FIFO 任务队列与单一模态守护（Single Modal Guard）。
+/// 确保外部多次连续双击唤醒时，向导窗口依序展示，绝不出现弹窗重叠死锁或并发竞争。
+/// </summary>
+public sealed class ShellIntentQueue
+{
+    private readonly Queue<ShellFileIntent> _queue = new();
+    private bool _isProcessing;
+
+    public int Count
+    {
+        get { lock (_queue) return _queue.Count; }
+    }
+
+    public bool IsProcessing
+    {
+        get { lock (_queue) return _isProcessing; }
+    }
+
+    public void Enqueue(ShellFileIntent intent)
+    {
+        lock (_queue)
+        {
+            _queue.Enqueue(intent);
+        }
+    }
+
+    public bool TryStartNext(out ShellFileIntent? intent)
+    {
+        lock (_queue)
+        {
+            if (_isProcessing || _queue.Count == 0)
+            {
+                intent = null;
+                return false;
+            }
+
+            _isProcessing = true;
+            intent = _queue.Dequeue();
+            return true;
+        }
+    }
+
+    public void FinishCurrent()
+    {
+        lock (_queue)
+        {
+            _isProcessing = false;
+        }
+    }
+}
+
