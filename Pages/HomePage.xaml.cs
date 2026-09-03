@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using UnturnedModManager.Helpers;
 using UnturnedModManager.ViewModels;
 
 namespace UnturnedModManager.Pages;
@@ -18,4 +20,7 @@ public partial class HomePage : Page
 
     private void OnNoticeRaised(UserNotice notice)
         => App.Services.Notifications.Publish(notice);
+
+    private void CardPanel_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        => ScrollWheelRouter.RouteToNearestScrollViewer(sender, e);
 }
