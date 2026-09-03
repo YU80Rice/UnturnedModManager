@@ -743,8 +743,9 @@ public sealed class ModelBehaviorTests
         foreach (var xamlFile in xamlFiles)
         {
             var content = File.ReadAllText(xamlFile);
-            // All pages should use DynamicResource for Background
-            Assert.Contains("Background=\"{DynamicResource ApplicationBackgroundBrush}\"", content);
+            // All pages should use Transparent or DynamicResource for Background
+            Assert.True(content.Contains("Background=\"Transparent\"") || content.Contains("Background=\"{DynamicResource ApplicationBackgroundBrush}\""),
+                $"Page {Path.GetFileName(xamlFile)} must have Transparent or dynamic background.");
         }
     }
 

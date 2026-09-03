@@ -1,5 +1,24 @@
 <ui:FluentWindow x:Class="UnturnedModManager.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" xmlns:pages="clr-namespace:UnturnedModManager.Pages" Title="Unturned Mod Manager" Height="820" Width="1280" MinHeight="620" MinWidth="1000" WindowBackdropType="None" WindowCornerPreference="Round" ExtendsContentIntoTitleBar="True" WindowStartupLocation="CenterScreen" AllowDrop="True" PreviewDragEnter="Window_PreviewDragEnter" PreviewDragOver="Window_PreviewDragOver" PreviewDrop="Window_PreviewDrop">
- <Grid Background="{DynamicResource ApplicationBackgroundBrush}">
+ <Grid>
+  <!-- Layer 0: 纯色底座兜底 (始终存在) -->
+  <Border Background="{DynamicResource ApplicationBackgroundBrush}" />
+
+  <!-- Layer 1: 玩家自定义壁纸宿主层 (单层 GPU 硬件加速 BlurEffect) -->
+  <Image x:Name="WallpaperImage"
+         Stretch="UniformToFill"
+         RenderOptions.BitmapScalingMode="HighQuality"
+         Visibility="Collapsed">
+   <Image.Effect>
+    <BlurEffect x:Name="WallpaperBlurEffect" Radius="15" RenderingBias="Performance" />
+   </Image.Effect>
+  </Image>
+
+  <!-- Layer 2: 动态对比度遮罩层 (绑定当前纯色背景，由 DimOpacity 调节) -->
+  <Border x:Name="WallpaperDimOverlay"
+          Background="{DynamicResource ApplicationBackgroundBrush}"
+          Opacity="0.35"
+          Visibility="Collapsed" />
+
   <ui:NavigationView x:Name="NavigationView" Margin="0,40,0,0" Padding="16,0,16,0" Background="Transparent" PaneDisplayMode="Left" CompactPaneLength="88" IsBackButtonVisible="Collapsed" IsPaneToggleVisible="True" OpenPaneLength="256" AllowDrop="True" PaneOpened="NavigationView_PaneOpened" PaneClosed="NavigationView_PaneClosed" Navigated="NavigationView_Navigated">
    <ui:NavigationView.MenuItems>
     <ui:NavigationViewItem Content="游戏启动" Icon="{ui:SymbolIcon Home24}" TargetPageType="{x:Type pages:HomePage}" NavigationCacheMode="Required"/>

@@ -4,7 +4,7 @@
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:controls="clr-namespace:UnturnedModManager.Controls"
       Title="本地插件"
-      Background="{DynamicResource ApplicationBackgroundBrush}">
+      Background="Transparent">
     <Grid Margin="28"
           PreviewMouseWheel="Panel_PreviewMouseWheel">
         <Grid.RowDefinitions>

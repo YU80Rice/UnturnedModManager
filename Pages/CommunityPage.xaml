@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:controls="clr-namespace:UnturnedModManager.Controls"
-      Title="插件社区" Background="{DynamicResource ApplicationBackgroundBrush}">
+      Title="插件社区" Background="Transparent">
     <Grid Margin="28,22,28,24" PreviewMouseWheel="Page_PreviewMouseWheel">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <Grid Margin="0,0,0,18">

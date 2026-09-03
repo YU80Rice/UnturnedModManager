@@ -10,10 +10,10 @@ namespace UnturnedModManager;
 
 public partial class MainWindow : FluentWindow
 {
-    private readonly ThemeService _themeService = App.Services.Theme;
-    private readonly CommunityAuthService _authService = App.Services.Authentication;
-    private readonly UserNotificationService _notifications = App.Services.Notifications;
-    private readonly LocalModService _localMods = App.Services.LocalMods;
+    private readonly ThemeService _themeService = App.Services?.Theme ?? new ThemeService();
+    private readonly CommunityAuthService _authService = App.Services?.Authentication ?? new CommunityAuthService();
+    private readonly UserNotificationService _notifications = App.Services?.Notifications ?? new UserNotificationService();
+    private readonly LocalModService? _localMods = App.Services?.LocalMods;
     private readonly ObservableCollection<ToastNotification> _toasts = [];
     private readonly SemaphoreSlim _dropImportGate = new(1, 1);
     private Page? _currentPage;
@@ -24,6 +24,7 @@ public partial class MainWindow : FluentWindow
         ToastHost.ItemsSource = _toasts;
         _authService.SessionChanged += UpdateAccountVisual;
         _notifications.NoticePublished += OnNoticePublished;
+        _themeService.ThemeChanged += _ => RefreshCustomWallpaper();
         Loaded += OnLoaded;
         Closing += OnClosing;
         Closed += (_, _) =>
@@ -37,13 +38,40 @@ public partial class MainWindow : FluentWindow
         RestoreWindowBounds();
         _themeService.Initialize(AppSettings.CommunityThemeMode);
         UpdateThemeButton(_themeService.AppliedTheme);
+        RefreshCustomWallpaper();
         NavigationView.IsPaneOpen = AppSettings.IsNavigationPaneOpen;
         ApplyPaneVisualState(NavigationView.IsPaneOpen);
-        _authService.RestoreCachedUser();
+        _authService?.RestoreCachedUser();
         UpdateAccountVisual();
         NavigationView.Navigate(typeof(Pages.HomePage));
         ConsumePendingCommunityDetail();
-        _ = RestoreAccountAsync();
+        if (_authService != null) _ = RestoreAccountAsync();
+    }
+
+    public void RefreshCustomWallpaper()
+    {
+        var path = AppSettings.LauncherCustomWallpaperPath;
+        var bitmap = UnturnedModManager.Helpers.WallpaperHelper.LoadNonBlocking(path);
+        if (bitmap != null)
+        {
+            WallpaperImage.Source = bitmap;
+            WallpaperBlurEffect.Radius = AppSettings.LauncherWallpaperBlurRadius;
+            WallpaperDimOverlay.Opacity = AppSettings.LauncherWallpaperDimOpacity;
+            WallpaperImage.Visibility = Visibility.Visible;
+            WallpaperDimOverlay.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            WallpaperImage.Source = null;
+            WallpaperImage.Visibility = Visibility.Collapsed;
+            WallpaperDimOverlay.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    public void UpdateWallpaperEffects(double blurRadius, double dimOpacity)
+    {
+        WallpaperBlurEffect.Radius = Math.Clamp(blurRadius, 0.0, 40.0);
+        WallpaperDimOverlay.Opacity = Math.Clamp(dimOpacity, 0.10, 0.80);
     }
     private void RestoreWindowBounds()
     {
@@ -189,14 +217,18 @@ public partial class MainWindow : FluentWindow
         }
         if (!_dropImportGate.Wait(0))
         {
-            _notifications.Publish(new UserNotice("已有插件导入任务正在进行，请稍候。", UserNoticeSeverity.Information));
-            return;
-        }
-
-        try
+        if (_notifications is not null)
         {
-            var result = await Task.Run(() => _localMods.Import(files));
-            _notifications.Publish(new UserNotice(
+            _notifications.Publish(new UserNotice("已有插件导入任务正在进行，请稍候。", UserNoticeSeverity.Information));
+        }
+        return;
+    }
+
+    try
+    {
+        if (_localMods is null) return;
+        var result = await Task.Run(() => _localMods.Import(files));
+        _notifications?.Publish(new UserNotice(
                 result.Message,
                 result.Imported > 0 ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning));
 
