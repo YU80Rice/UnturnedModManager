@@ -295,6 +295,7 @@ public sealed class ModelBehaviorTests
         var root = Path.Combine(Path.GetTempPath(), "umm-plugin-profile-" + Guid.NewGuid().ToString("N"));
         try
         {
+            GameLaunchService.IsUnturnedRunningOverride = () => false;
             var gameRoot = Path.Combine(root, "Unturned");
             var plugins = Path.Combine(gameRoot, "BepInEx", "plugins");
             Directory.CreateDirectory(plugins);
@@ -332,6 +333,7 @@ public sealed class ModelBehaviorTests
         }
         finally
         {
+            GameLaunchService.IsUnturnedRunningOverride = null;
             if (Directory.Exists(root)) Directory.Delete(root, true);
         }
     }

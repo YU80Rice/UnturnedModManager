@@ -26,6 +26,7 @@ public sealed class AppServices : IDisposable
     public LocalModService LocalMods { get; }
     public PluginProfileService PluginProfiles { get; }
     public ThemePackageService ThemePackages { get; } = new();
+    public PackageSandboxInspectionService Sandbox { get; } = new();
     public AppNavigationService Navigation => AppNavigationService.Current;
 
     public AppServices()

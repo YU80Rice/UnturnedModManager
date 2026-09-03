@@ -298,6 +298,20 @@ public partial class MainWindow : FluentWindow
 
     public void HandleShellFileIntent(ShellFileIntent intent, Action onCompleted)
     {
+        // 1. 强制执行不可绕过的多层沙箱预检
+        var sandboxResult = App.Services.Sandbox.Inspect(intent);
+        if (!sandboxResult.IsValid)
+        {
+            var alertWindow = new Windows.SandboxAlertWindow(sandboxResult)
+            {
+                Owner = this
+            };
+            alertWindow.ShowDialog();
+            onCompleted();
+            return;
+        }
+
+        // 2. 沙箱通过后，流转到各向导或后续处理（Ticket 04/05 接管）
         if (ShellFileIntentReceived is not null)
         {
             ShellFileIntentReceived.Invoke(intent, onCompleted);
@@ -305,8 +319,8 @@ public partial class MainWindow : FluentWindow
         }
 
         _notifications.Publish(new UserNotice(
-            $"已排队接收到文件关联唤醒：{System.IO.Path.GetFileName(intent.FilePath)}",
-            UserNoticeSeverity.Information));
+            $"沙箱预检通过：{System.IO.Path.GetFileName(intent.FilePath)}",
+            UserNoticeSeverity.Success));
         onCompleted();
     }
 }

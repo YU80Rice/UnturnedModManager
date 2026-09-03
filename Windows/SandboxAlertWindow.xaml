@@ -1,0 +1,152 @@
+﻿<Window x:Class="UnturnedModManager.Windows.SandboxAlertWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="安全沙箱拦截告警"
+        Width="640" Height="560"
+        MinWidth="540" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource ApplicationBackgroundBrush}">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Red Alert Header -->
+        <Border Grid.Row="0"
+                Padding="18,16"
+                CornerRadius="10"
+                Background="#1AE81123"
+                BorderBrush="#66E81123"
+                BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <ui:SymbolIcon Symbol="ShieldDismiss24"
+                               FontSize="36"
+                               Foreground="#E81123"
+                               VerticalAlignment="Top"
+                               Margin="0,2,16,0" />
+
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="已拦截恶意或违规载荷（导入已终止）"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Foreground="#E81123" />
+                    <TextBlock Text="该文件未能通过 UMM 多层安全沙箱检测。为保护您的游戏安全与系统完整性，本次导入已强制终止，且绝不提供任何继续导入选项。"
+                               FontSize="13"
+                               Margin="0,6,0,0"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                    <Border Margin="0,10,0,0"
+                            Padding="8,6"
+                            CornerRadius="6"
+                            Background="{DynamicResource ControlFillColorDefaultBrush}">
+                        <TextBlock x:Name="PackagePathText"
+                                   FontSize="12"
+                                   FontFamily="Consolas, monospace"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Violations List -->
+        <Grid Grid.Row="1" Margin="0,16,0,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Text="检测到的违规条目与安全规则："
+                       FontWeight="SemiBold"
+                       FontSize="14"
+                       Margin="0,0,0,8" />
+
+            <Border Grid.Row="1"
+                    CornerRadius="8"
+                    BorderThickness="1"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <ListView x:Name="ViolationsListView"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          Padding="4">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="10,8"
+                                    Margin="0,2"
+                                    CornerRadius="6"
+                                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderThickness="1"
+                                    BorderBrush="#33E81123">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0"
+                                               Text="{Binding EntryPath}"
+                                               FontFamily="Consolas, monospace"
+                                               FontWeight="Bold"
+                                               FontSize="13"
+                                               Foreground="#E81123" />
+                                    <TextBlock Grid.Row="1"
+                                               Text="{Binding RuleName, StringFormat='安全规则: {0}'}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Margin="0,3,0,0"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock Grid.Row="2"
+                                               Text="{Binding Description}"
+                                               FontSize="12"
+                                               Margin="0,2,0,0"
+                                               TextWrapping="Wrap"
+                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Border>
+        </Grid>
+
+        <!-- Bottom Action Bar -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <ui:Button x:Name="CopyReportButton"
+                       Grid.Column="0"
+                       Icon="{ui:SymbolIcon Copy24}"
+                       Content="复制排障诊断信息"
+                       Click="CopyReportButton_Click" />
+
+            <TextBlock x:Name="CopyStatusText"
+                       Grid.Column="1"
+                       VerticalAlignment="Center"
+                       Margin="12,0,0,0"
+                       FontSize="12"
+                       Foreground="{DynamicResource AccentFillColorDefaultBrush}"
+                       Visibility="Collapsed"
+                       Text="已复制诊断报告到剪贴板" />
+
+            <ui:Button Grid.Column="2"
+                       Content="关闭"
+                       MinWidth="96"
+                       Appearance="Primary"
+                       Click="CloseButton_Click" />
+        </Grid>
+    </Grid>
+</Window>

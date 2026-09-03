@@ -19,9 +19,12 @@ public sealed class GameLaunchService
 
     public bool IsRunning() => IsUnturnedRunning();
 
+    public static Func<bool>? IsUnturnedRunningOverride { get; set; }
+
     public static bool IsUnturnedRunning() =>
+        IsUnturnedRunningOverride?.Invoke() ?? (
         Process.GetProcessesByName("Unturned").Length > 0
-        || Process.GetProcessesByName("Unturned_BE").Length > 0;
+        || Process.GetProcessesByName("Unturned_BE").Length > 0);
 
     public LocalModOperationResult Launch(string gamePath, bool modsEnabled)
     {
