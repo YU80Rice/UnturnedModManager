@@ -111,6 +111,24 @@ public static class AppSettings
         set { _data.ActiveCustomThemeLightWallpaper = value; Save(); }
     }
 
+    public static string? LauncherCustomWallpaperPath
+    {
+        get => _data.LauncherCustomWallpaperPath;
+        set { _data.LauncherCustomWallpaperPath = value; Save(); }
+    }
+
+    public static double LauncherWallpaperBlurRadius
+    {
+        get => Math.Clamp(_data.LauncherWallpaperBlurRadius, 0.0, 40.0);
+        set { _data.LauncherWallpaperBlurRadius = Math.Clamp(value, 0.0, 40.0); Save(); }
+    }
+
+    public static double LauncherWallpaperDimOpacity
+    {
+        get => Math.Clamp(_data.LauncherWallpaperDimOpacity, 0.10, 0.80);
+        set { _data.LauncherWallpaperDimOpacity = Math.Clamp(value, 0.10, 0.80); Save(); }
+    }
+
     public static int? LastSessionExitCode
     {
         get => _data.LastSessionExitCode;
@@ -431,6 +449,9 @@ public static class AppSettings
         public string? ActiveCustomThemeId { get; set; }
         public string? ActiveCustomThemeDarkWallpaper { get; set; }
         public string? ActiveCustomThemeLightWallpaper { get; set; }
+        public string? LauncherCustomWallpaperPath { get; set; }
+        public double LauncherWallpaperBlurRadius { get; set; } = 15.0;
+        public double LauncherWallpaperDimOpacity { get; set; } = 0.35;
         public int? LastSessionExitCode { get; set; }
         public bool LastSessionUsedMods { get; set; }
         public bool LastSessionUsedDxvk { get; set; }
