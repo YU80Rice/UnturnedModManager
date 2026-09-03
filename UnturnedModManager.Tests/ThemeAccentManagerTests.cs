@@ -9,6 +9,7 @@ using Xunit;
 
 namespace UnturnedModManager.Tests;
 
+[Collection("WpfThemeCollection")]
 public sealed class ThemeAccentManagerTests
 {
     private static void RunOnStaThread(Action action)

@@ -16,6 +16,7 @@
 ## 已有决策
 
 - [01: WPF-UI 内部强调色总线打通与默认蓝底根治](issues/01-wpf-ui-accent-manager-integration.md) — 接入 ApplicationAccentColorManager 并统一语义代币，消灭主页与关于页残留默认蓝
+- [02: .ummtheme v2 日夜双态数据模型与 v1 智能升级派生](issues/02-dual-mode-theme-schema-and-backward-compatibility.md) — 确立 v2 双模规范与双壁纸支持，实现 EnsureDualMode 浅色自动派生算法
 
 ## 尚未明确
 

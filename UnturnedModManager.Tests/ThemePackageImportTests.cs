@@ -7,6 +7,7 @@ using Xunit;
 
 namespace UnturnedModManager.Tests;
 
+[Collection("WpfThemeCollection")]
 public sealed class ThemePackageImportTests
 {
     private static string CreateTestUmmTheme(string name, string accentColor, byte[]? wallpaperBytes = null)

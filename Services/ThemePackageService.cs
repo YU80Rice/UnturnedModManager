@@ -60,8 +60,16 @@ public sealed class ThemePackageService
         return list.OrderBy(t => t.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
     }
 
-    public ThemePackageOperationResult ExportPackage(CustomTheme theme, string? wallpaperSourcePath, string outputPackagePath)
+    public ThemePackageOperationResult ExportPackage(CustomTheme theme, string? wallpaperSourcePath, string outputPackagePath) =>
+        ExportDualModePackage(theme, wallpaperSourcePath, null, outputPackagePath);
+
+    public ThemePackageOperationResult ExportDualModePackage(
+        CustomTheme theme,
+        string? wallpaperDarkSourcePath,
+        string? wallpaperLightSourcePath,
+        string outputPackagePath)
     {
+        theme.EnsureDualMode();
         var validation = theme.Validate();
         if (!validation.IsValid) return new(false, validation.Message);
 
@@ -73,15 +81,33 @@ public sealed class ThemePackageService
         {
             using (var zip = ZipFile.Open(tempPackage, ZipArchiveMode.Create))
             {
-                if (!string.IsNullOrWhiteSpace(wallpaperSourcePath) && File.Exists(wallpaperSourcePath))
+                // Dark or single wallpaper
+                if (!string.IsNullOrWhiteSpace(wallpaperDarkSourcePath) && File.Exists(wallpaperDarkSourcePath))
                 {
-                    var ext = Path.GetExtension(wallpaperSourcePath);
+                    var ext = Path.GetExtension(wallpaperDarkSourcePath);
                     if (AllowedImageExtensions.Contains(ext))
                     {
-                        var entryName = "wallpaper" + ext.ToLowerInvariant();
+                        var entryName = string.IsNullOrWhiteSpace(wallpaperLightSourcePath)
+                            ? ("wallpaper" + ext.ToLowerInvariant())
+                            : ("wallpaper_dark" + ext.ToLowerInvariant());
                         theme.BackgroundAsset = entryName;
                         var entry = zip.CreateEntry(entryName, CompressionLevel.Optimal);
-                        using var imgStream = File.OpenRead(wallpaperSourcePath);
+                        using var imgStream = File.OpenRead(wallpaperDarkSourcePath);
+                        using var entryStream = entry.Open();
+                        imgStream.CopyTo(entryStream);
+                    }
+                }
+
+                // Light wallpaper
+                if (!string.IsNullOrWhiteSpace(wallpaperLightSourcePath) && File.Exists(wallpaperLightSourcePath))
+                {
+                    var ext = Path.GetExtension(wallpaperLightSourcePath);
+                    if (AllowedImageExtensions.Contains(ext))
+                    {
+                        var entryName = "wallpaper_light" + ext.ToLowerInvariant();
+                        theme.LightBackgroundAsset = entryName;
+                        var entry = zip.CreateEntry(entryName, CompressionLevel.Optimal);
+                        using var imgStream = File.OpenRead(wallpaperLightSourcePath);
                         using var entryStream = entry.Open();
                         imgStream.CopyTo(entryStream);
                     }
@@ -123,8 +149,10 @@ public sealed class ThemePackageService
             using (var reader = new StreamReader(manifestEntry.Open(), Encoding.UTF8))
             {
                 preview.Theme = JsonSerializer.Deserialize<CustomTheme>(reader.ReadToEnd()) ?? new();
+                preview.Theme.EnsureDualMode();
             }
 
+            var imageEntries = new List<ZipArchiveEntry>();
             foreach (var entry in zip.Entries)
             {
                 if (string.IsNullOrEmpty(entry.Name)) continue;
@@ -135,13 +163,47 @@ public sealed class ThemePackageService
                 var ext = Path.GetExtension(normalized);
                 if (AllowedImageExtensions.Contains(ext))
                 {
-                    preview.WallpaperFileName = entry.Name;
-                    using var ms = new MemoryStream();
+                    imageEntries.Add(entry);
+                }
+            }
+
+            foreach (var entry in imageEntries)
+            {
+                var lowerName = entry.Name.ToLowerInvariant();
+                byte[] bytes;
+                using (var ms = new MemoryStream())
+                {
                     using var s = entry.Open();
                     s.CopyTo(ms);
-                    preview.WallpaperBytes = ms.ToArray();
-                    break;
+                    bytes = ms.ToArray();
                 }
+
+                if (lowerName.Contains("light") || (!string.IsNullOrEmpty(preview.Theme.LightBackgroundAsset) && entry.Name.Equals(preview.Theme.LightBackgroundAsset, StringComparison.OrdinalIgnoreCase)))
+                {
+                    preview.WallpaperLightFileName = entry.Name;
+                    preview.WallpaperLightBytes = bytes;
+                }
+                else if (lowerName.Contains("dark") || (!string.IsNullOrEmpty(preview.Theme.BackgroundAsset) && entry.Name.Equals(preview.Theme.BackgroundAsset, StringComparison.OrdinalIgnoreCase)))
+                {
+                    preview.WallpaperDarkFileName = entry.Name;
+                    preview.WallpaperDarkBytes = bytes;
+                }
+                else
+                {
+                    // Generic fallback
+                    if (preview.WallpaperDarkBytes is null)
+                    {
+                        preview.WallpaperDarkFileName = entry.Name;
+                        preview.WallpaperDarkBytes = bytes;
+                    }
+                }
+            }
+
+            // 若仅有一张壁纸，则白天与夜间均可复用此壁纸
+            if (preview.WallpaperDarkBytes is not null && preview.WallpaperLightBytes is null)
+            {
+                preview.WallpaperLightBytes = preview.WallpaperDarkBytes;
+                preview.WallpaperLightFileName = preview.WallpaperDarkFileName;
             }
 
             return preview;
@@ -173,13 +235,14 @@ public sealed class ThemePackageService
             {
                 theme = JsonSerializer.Deserialize<CustomTheme>(reader.ReadToEnd())
                     ?? throw new InvalidDataException("无法解析 theme.json。");
+                theme.EnsureDualMode();
             }
 
             var validation = theme.Validate();
             if (!validation.IsValid) return new(false, validation.Message);
 
-            // 严格沙箱校验条目
-            string? wallpaperEntryName = null;
+            // 严格沙箱校验条目（仅允许合法图片且无路径穿越）
+            var wallpaperEntries = new List<string>();
             foreach (var entry in zip.Entries)
             {
                 if (string.IsNullOrEmpty(entry.Name)) continue;
@@ -197,7 +260,7 @@ public sealed class ThemePackageService
                 if (normalized.Contains('/') || normalized.Contains('\\') || normalized.Contains(".."))
                     return new(false, "主题包包含非法的嵌套或相对路径。");
 
-                wallpaperEntryName = entry.FullName;
+                wallpaperEntries.Add(entry.FullName);
             }
 
             // 安全解压至主题独立目录
@@ -207,20 +270,35 @@ public sealed class ThemePackageService
             var manifestDest = Path.Combine(themeDir, "theme.json");
             File.WriteAllText(manifestDest, JsonSerializer.Serialize(theme, JsonOptions));
 
-            string? destWallpaper = null;
-            if (!string.IsNullOrWhiteSpace(wallpaperEntryName))
+            string? destWallpaperDark = null;
+            string? destWallpaperLight = null;
+
+            foreach (var wpEntryName in wallpaperEntries)
             {
-                var entry = zip.GetEntry(wallpaperEntryName);
+                var entry = zip.GetEntry(wpEntryName);
                 if (entry is not null)
                 {
-                    destWallpaper = Path.Combine(themeDir, wallpaperEntryName);
+                    var destFile = Path.Combine(themeDir, wpEntryName);
                     using var sourceStream = entry.Open();
-                    using var destStream = File.Create(destWallpaper);
+                    using var destStream = File.Create(destFile);
                     sourceStream.CopyTo(destStream);
+
+                    var lower = wpEntryName.ToLowerInvariant();
+                    if (lower.Contains("light") && !lower.Contains("dark"))
+                    {
+                        destWallpaperLight = destFile;
+                    }
+                    else
+                    {
+                        destWallpaperDark = destFile;
+                    }
                 }
             }
 
-            return new(true, $"已成功导入主题“{theme.Name}”。", theme, destWallpaper);
+            destWallpaperDark ??= destWallpaperLight;
+            destWallpaperLight ??= destWallpaperDark;
+
+            return new(true, $"已成功导入主题“{theme.Name}”。", theme, destWallpaperDark, destWallpaperLight);
         }
         catch (Exception ex)
         {
