@@ -43,4 +43,32 @@ public partial class SettingsPage : Page
 
     private void CardPanel_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         => ScrollWheelRouter.RouteToNearestScrollViewer(sender, e);
+
+    private void SelectWallpaperButton_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "选择启动器背景壁纸",
+            Filter = "图片文件 (*.png;*.jpg;*.jpeg;*.webp;*.bmp)|*.png;*.jpg;*.jpeg;*.webp;*.bmp|所有文件 (*.*)|*.*"
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            _viewModel.SetCustomWallpaper(dialog.FileName);
+        }
+    }
+
+    private void ClearWallpaperButton_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.ClearCustomWallpaper();
+    }
+
+    private void WallpaperBlurSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        _viewModel?.UpdateWallpaperBlur(e.NewValue);
+    }
+
+    private void WallpaperDimSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        _viewModel?.UpdateWallpaperDimPercent(e.NewValue);
+    }
 }

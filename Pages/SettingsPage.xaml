@@ -118,6 +118,96 @@
 
             <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
                     Background="{DynamicResource ControlFillColorDefaultBrush}">
+                <StackPanel>
+                    <TextBlock Text="启动器背景壁纸与个性化" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="选择本地图片作为启动器背景壁纸，支持调节毛玻璃高斯模糊度与自适应对比度遮罩。"
+                               Margin="0,3,0,14"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+                    <!-- 壁纸路径与操作按钮行 -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ui:TextBox x:Name="WallpaperPathTextBox"
+                                    Grid.Column="0"
+                                    IsReadOnly="True"
+                                    Margin="0,0,12,0"
+                                    VerticalAlignment="Center"
+                                    PlaceholderText="未设置壁纸（当前呈现纯净纯色外观）"
+                                    Text="{Binding CurrentWallpaperPath, Mode=OneWay}" />
+                        <ui:Button x:Name="SelectWallpaperButton"
+                                   Grid.Column="1"
+                                   Content="选择壁纸..."
+                                   Appearance="Primary"
+                                   Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
+                                   Icon="{ui:SymbolIcon Image24}"
+                                   Margin="0,0,8,0"
+                                   Click="SelectWallpaperButton_Click" />
+                        <ui:Button x:Name="ClearWallpaperButton"
+                                   Grid.Column="2"
+                                   Content="清除壁纸"
+                                   Appearance="Secondary"
+                                   Icon="{ui:SymbolIcon Dismiss24}"
+                                   Click="ClearWallpaperButton_Click" />
+                    </Grid>
+
+                    <!-- 背景模糊程度调节 -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="130" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="背景模糊程度" Width="130" VerticalAlignment="Center" FontWeight="SemiBold" />
+                        <Slider x:Name="WallpaperBlurSlider"
+                                Grid.Column="1"
+                                Minimum="0"
+                                Maximum="40"
+                                SmallChange="1"
+                                LargeChange="5"
+                                Value="{Binding WallpaperBlurRadius, Mode=TwoWay}"
+                                VerticalAlignment="Center"
+                                Margin="8,0,12,0"
+                                ValueChanged="WallpaperBlurSlider_ValueChanged" />
+                        <TextBlock x:Name="WallpaperBlurLabel"
+                                   Grid.Column="2"
+                                   Text="{Binding WallpaperBlurLabelText, Mode=OneWay}"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+
+                    <!-- 背景遮罩浓度调节 -->
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="130" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="背景遮罩浓度" Width="130" VerticalAlignment="Center" FontWeight="SemiBold" />
+                        <Slider x:Name="WallpaperDimSlider"
+                                Grid.Column="1"
+                                Minimum="10"
+                                Maximum="80"
+                                SmallChange="1"
+                                LargeChange="5"
+                                Value="{Binding WallpaperDimPercent, Mode=TwoWay}"
+                                VerticalAlignment="Center"
+                                Margin="8,0,12,0"
+                                ValueChanged="WallpaperDimSlider_ValueChanged" />
+                        <TextBlock x:Name="WallpaperDimLabel"
+                                   Grid.Column="2"
+                                   Text="{Binding WallpaperDimLabelText, Mode=OneWay}"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />

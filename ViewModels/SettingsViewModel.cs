@@ -16,6 +16,9 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     private readonly CommunityAuthService _authentication;
     private readonly IUserDialogService _dialogs;
     private readonly ThemePackageService _themePackages;
+    private string? _currentWallpaperPath;
+    private double _wallpaperBlurRadius = 15.0;
+    private double _wallpaperDimPercent = 35.0;
     private string _gamePath = "";
     private ThemeChoice? _selectedTheme;
     private ThemePaletteChoice? _selectedPalette;
@@ -112,6 +115,53 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
             _themes.ApplyPalette(value.Value);
         }
     }
+
+    public string? CurrentWallpaperPath
+    {
+        get => _currentWallpaperPath;
+        private set => SetProperty(ref _currentWallpaperPath, value);
+    }
+
+    public double WallpaperBlurRadius
+    {
+        get => _wallpaperBlurRadius;
+        set
+        {
+            if (SetProperty(ref _wallpaperBlurRadius, Math.Clamp(value, 0.0, 40.0)))
+            {
+                OnPropertyChanged(nameof(WallpaperBlurLabelText));
+            }
+        }
+    }
+
+    public double WallpaperDimPercent
+    {
+        get => _wallpaperDimPercent;
+        set
+        {
+            if (SetProperty(ref _wallpaperDimPercent, Math.Clamp(value, 10.0, 80.0)))
+            {
+                OnPropertyChanged(nameof(WallpaperDimLabelText));
+            }
+        }
+    }
+
+    public string WallpaperBlurLabelText
+    {
+        get
+        {
+            var r = (int)Math.Round(WallpaperBlurRadius);
+            return r switch
+            {
+                0 => "0 px (无模糊)",
+                <= 15 => $"{r} px (柔和)",
+                <= 25 => $"{r} px (毛玻璃)",
+                _ => $"{r} px (重度模糊)"
+            };
+        }
+    }
+
+    public string WallpaperDimLabelText => $"{(int)Math.Round(WallpaperDimPercent)}%";
     public bool IsBusy
     {
         get => _isBusy;
@@ -170,6 +220,118 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         RefreshAccount();
         RefreshCustomThemes();
         RefreshShellAssociationStatus();
+
+        _currentWallpaperPath = AppSettings.LauncherCustomWallpaperPath;
+        OnPropertyChanged(nameof(CurrentWallpaperPath));
+        _wallpaperBlurRadius = AppSettings.LauncherWallpaperBlurRadius;
+        OnPropertyChanged(nameof(WallpaperBlurRadius));
+        OnPropertyChanged(nameof(WallpaperBlurLabelText));
+        _wallpaperDimPercent = AppSettings.LauncherWallpaperDimOpacity * 100.0;
+        OnPropertyChanged(nameof(WallpaperDimPercent));
+        OnPropertyChanged(nameof(WallpaperDimLabelText));
+    }
+
+    public void SetCustomWallpaper(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            ClearCustomWallpaper();
+            return;
+        }
+
+        if (!UnturnedModManager.Helpers.WallpaperHelper.IsValidImageFile(path))
+        {
+            RaiseNotice("所选图片格式不受支持或文件已损坏", UserNoticeSeverity.Warning);
+            return;
+        }
+
+        AppSettings.LauncherCustomWallpaperPath = path;
+        CurrentWallpaperPath = path;
+        RaiseNotice("背景壁纸已更新", UserNoticeSeverity.Success);
+        NotifyMainWindowWallpaperChanged();
+    }
+
+    public void ClearCustomWallpaper()
+    {
+        AppSettings.LauncherCustomWallpaperPath = null;
+        CurrentWallpaperPath = null;
+        RaiseNotice("已恢复纯净纯色外观", UserNoticeSeverity.Information);
+        NotifyMainWindowWallpaperChanged();
+    }
+
+    public void UpdateWallpaperBlur(double blur)
+    {
+        var clamped = Math.Clamp(blur, 0.0, 40.0);
+        AppSettings.LauncherWallpaperBlurRadius = clamped;
+        WallpaperBlurRadius = clamped;
+        NotifyMainWindowWallpaperEffects();
+    }
+
+    public void UpdateWallpaperDimPercent(double percent)
+    {
+        var clamped = Math.Clamp(percent, 10.0, 80.0);
+        AppSettings.LauncherWallpaperDimOpacity = clamped / 100.0;
+        WallpaperDimPercent = clamped;
+        NotifyMainWindowWallpaperEffects();
+    }
+
+    private static void NotifyMainWindowWallpaperChanged()
+    {
+        var app = System.Windows.Application.Current;
+        if (app is null) return;
+
+        if (app.Dispatcher.CheckAccess())
+        {
+            if (app.Windows.OfType<MainWindow>().FirstOrDefault() is { } mw)
+            {
+                mw.RefreshCustomWallpaper();
+            }
+        }
+        else if (!app.Dispatcher.HasShutdownStarted && !app.Dispatcher.HasShutdownFinished)
+        {
+            try
+            {
+                app.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (app.Windows.OfType<MainWindow>().FirstOrDefault() is { } mw)
+                    {
+                        mw.RefreshCustomWallpaper();
+                    }
+                }));
+            }
+            catch { }
+        }
+    }
+
+    private void NotifyMainWindowWallpaperEffects()
+    {
+        var app = System.Windows.Application.Current;
+        if (app is null) return;
+
+        var blur = WallpaperBlurRadius;
+        var dim = WallpaperDimPercent / 100.0;
+
+        if (app.Dispatcher.CheckAccess())
+        {
+            if (app.Windows.OfType<MainWindow>().FirstOrDefault() is { } mw)
+            {
+                mw.UpdateWallpaperEffects(blur, dim);
+            }
+        }
+        else if (!app.Dispatcher.HasShutdownStarted && !app.Dispatcher.HasShutdownFinished)
+        {
+            try
+            {
+                app.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (app.Windows.OfType<MainWindow>().FirstOrDefault() is { } mw)
+                    {
+                        mw.UpdateWallpaperEffects(blur, dim);
+                    }
+                }));
+            }
+            catch { }
+        }
     }
 
     public void RefreshCustomThemes()
