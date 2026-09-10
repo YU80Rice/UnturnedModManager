@@ -4778,11 +4778,6 @@
                 badge.innerText = checked ? "已启用" : "已停用";
                 badge.className = `tactical-card-badge ${checked ? 'on' : 'off'} bepBadgeSync`;
             });
-            document.querySelectorAll('.bepDescSync').forEach(desc => {
-                desc.innerText = checked 
-                    ? "BepInEx 5.4.23.5 (x64) · 挂载 12 个社区模组与原生钩子" 
-                    : "已安全旁路脱机 · 原生无注入纯净模式 (适合官方服防封)";
-            });
 
             handleStateLoop();
         }
@@ -4817,6 +4812,10 @@
             const dxvkToggleEl = document.querySelector('.dxvkToggleSync') || document.getElementById('dxvkToggle');
             const dxvkOn = dxvkToggleEl ? dxvkToggleEl.checked : false;
 
+            // 动态响应真实插件总数与当前启用插件数量
+            const totalPluginsCount = (typeof localPlugins !== 'undefined' && Array.isArray(localPlugins)) ? localPlugins.length : 12;
+            const enabledPluginsCount = (typeof localPlugins !== 'undefined' && Array.isArray(localPlugins)) ? localPlugins.filter(p => p.enabled).length : 1;
+
             // 1. 英雄启动按钮联动 (同时同步多视图模式下的启动按钮)
             const heroBtns = document.querySelectorAll('.heroLaunchBtnSync, #heroLaunchBtn');
             heroBtns.forEach(btn => btn.classList.toggle('blue-mode', !bepOn));
@@ -4829,7 +4828,7 @@
             const heroSubtitles = document.querySelectorAll('.heroSubtitleSync, #heroSubtitle');
             heroSubtitles.forEach(el => {
                 el.innerText = bepOn 
-                    ? "模组就绪 · 将加载 12 个本地插件与 BUE"
+                    ? `模组就绪 · 将加载 ${enabledPluginsCount} 个本地插件与 BUE`
                     : (dxvkOn ? "纯净原版 · 直连官方服 (DX11 回退)" : "纯净原版 · 直连官方 BattlEye 服务器");
             });
 
@@ -4863,6 +4862,13 @@
             const dxvkHints = document.querySelectorAll('.dxvkHintSync, #dxvkGpuHint');
             const profilePillBoxes = document.querySelectorAll('#profilePillBox, .profile-pill');
 
+            // 5. 诊断卡片中 BepInEx 描述同步 (动态反映已拦截/启用的插件数量)
+            document.querySelectorAll('.bepDescSync').forEach(desc => {
+                desc.innerText = bepOn 
+                    ? `BepInEx 5.4.23.5 (x64) · 拦截 ${enabledPluginsCount} 个社区模组与原生钩子` 
+                    : "已安全旁路脱机 · 原生无注入纯净模式 (适合官方服防封)";
+            });
+
             if (bepOn) {
                 // 模组模式 (绿色风格 / 自定义调色盘强调色)
                 if (banner) {
@@ -4880,13 +4886,13 @@
                 if (globalModeText) globalModeText.innerText = dxvkOn ? "模组模式 (-NoBattlEye +DXVK)" : "模组模式 (-NoBattlEye)";
                 if (globalBepText) globalBepText.innerText = "BepInEx 5.4.23.5 就绪";
                 if (globalModsText) {
-                    globalModsText.innerText = "已挂载 12 个插件";
+                    globalModsText.innerText = `已挂载 ${enabledPluginsCount} 个插件`;
                     globalModsText.style.color = "var(--theme-accent)";
                 }
 
                 profilePillBoxes.forEach(box => box.classList.remove('disabled-mode'));
                 profileTexts.forEach(el => {
-                    el.innerText = "默认联机优化 (12 Mods)";
+                    el.innerText = `默认联机优化 (${enabledPluginsCount} Mods)`;
                     el.style.color = "var(--theme-accent)";
                 });
 
@@ -6244,12 +6250,8 @@
             if (cUp) cUp.innerText = `(${updatable})`;
             if (tabBadge) tabBadge.innerText = `(已安装 ${total})`;
 
-            // 全局同步：顶栏与启动页模组计数广播
-            const globalText = document.getElementById('globalModsText');
-            if (globalText) globalText.innerText = `已挂载 ${enabled} 个插件`;
-            document.querySelectorAll('.heroSubtitleSync').forEach(el => {
-                el.innerText = `模组就绪 · 将加载 ${enabled} 个本地插件与 BUE`;
-            });
+            // 广播到首页与顶栏全域状态机（保证首页、顶栏、诊断卡片无论何时均绝对同步）
+            handleStateLoop();
         }
 
         // 快速动作函数
