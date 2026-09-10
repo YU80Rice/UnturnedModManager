@@ -307,35 +307,279 @@
             max-width: 1360px;
         }
 
-        /* 顶部通知横条 (演示操作反馈 - 移至右上角浮动，不再遮挡中央状态药丸) */
-        .toast-notification {
+        /* =========================================================
+           方案 A: Emil Kowalski 原创 Sonner 物理堆叠卡片 (Bottom-Right)
+           定位在 bottom: 78px; right: 24px; 绝对避开下方 50px 主题滑动坞
+           ========================================================= */
+        #sonnerToastContainer {
             position: absolute;
-            top: 16px;
+            bottom: 78px;
             right: 24px;
-            background: var(--toast-bg);
-            border: 1px solid var(--toast-border);
-            box-shadow: var(--toast-shadow);
-            color: var(--toast-text);
-            font-size: 12px;
-            font-weight: 600;
-            padding: 8px 18px;
-            border-radius: 20px;
-            z-index: 200;
+            width: 340px;
+            display: flex;
+            flex-direction: column-reverse;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .sonner-toast {
+            pointer-events: auto;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 100%;
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+                        opacity 0.28s ease,
+                        box-shadow 0.28s ease;
+            transform-origin: bottom right;
+            will-change: transform, opacity;
+        }
+
+        body.theme-light .sonner-toast {
+            background: rgba(255, 255, 255, 0.94);
+            border-color: rgba(200, 215, 230, 0.8);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 堆叠态：未悬停时收叠前 3 条 */
+        #sonnerToastContainer:not(:hover) .sonner-toast[data-index="0"] {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            z-index: 30;
+        }
+        #sonnerToastContainer:not(:hover) .sonner-toast[data-index="1"] {
+            transform: translateY(-14px) scale(0.94);
+            opacity: 0.9;
+            z-index: 20;
+        }
+        #sonnerToastContainer:not(:hover) .sonner-toast[data-index="2"] {
+            transform: translateY(-26px) scale(0.88);
+            opacity: 0.75;
+            z-index: 10;
+        }
+        #sonnerToastContainer:not(:hover) .sonner-toast[data-index="3"],
+        #sonnerToastContainer:not(:hover) .sonner-toast[data-index="4"] {
+            transform: translateY(-36px) scale(0.82);
             opacity: 0;
             pointer-events: none;
-            transform: translateY(-16px);
-            transition: all 0.28s var(--ease-spring);
+            z-index: 1;
+        }
+
+        /* 悬停展开态 (Emil Kowalski 手风琴拉开) */
+        #sonnerToastContainer:hover .sonner-toast {
+            box-shadow: 0 14px 32px -6px rgba(0, 0, 0, 0.4);
+        }
+        #sonnerToastContainer:hover .sonner-toast[data-index="0"] {
+            transform: translateY(0) scale(1);
+            z-index: 30;
+        }
+        #sonnerToastContainer:hover .sonner-toast[data-index="1"] {
+            transform: translateY(calc(-100% - 10px)) scale(1);
+            z-index: 20;
+        }
+        #sonnerToastContainer:hover .sonner-toast[data-index="2"] {
+            transform: translateY(calc(-200% - 20px)) scale(1);
+            z-index: 10;
+        }
+        #sonnerToastContainer:hover .sonner-toast[data-index="3"] {
+            transform: translateY(calc(-300% - 30px)) scale(1);
+            z-index: 5;
+        }
+
+        .sonner-toast-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            flex-shrink: 0;
+            margin-top: 1px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        body.theme-light .sonner-toast-icon {
+            background: rgba(0, 0, 0, 0.06);
+        }
+
+        .sonner-toast-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sonner-toast-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sonner-toast-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .sonner-toast-close {
+            opacity: 0;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px 4px;
+            font-size: 12px;
+            transition: opacity 0.2s;
+        }
+        .sonner-toast:hover .sonner-toast-close {
+            opacity: 0.8;
+        }
+        .sonner-toast-close:hover {
+            opacity: 1;
+            color: #ef4444;
+        }
+
+        /* =========================================================
+           方案 D: 任务中心与操作履历一体化侧抽屉 (Side Drawer)
+           ========================================================= */
+        .task-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 1;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: var(--theme-accent);
+            color: #ffffff;
+            margin-left: 6px;
+            transition: all 0.2s ease;
+        }
+        .task-badge.empty {
+            opacity: 0.5;
+            background: var(--surface-card-border);
+            color: var(--text-muted);
+        }
+
+        .activity-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.28s ease;
+        }
+        .activity-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .activity-drawer {
+            position: absolute;
+            top: 38px;
+            right: 0;
+            bottom: 0;
+            width: 340px;
+            background: var(--surface-shell-bg);
+            border-left: 1px solid var(--border-strong);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.4);
+            z-index: 1200;
+            transform: translateX(100%);
+            transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        body.theme-light .activity-drawer {
+            background: #ffffff;
+            border-left-color: rgba(200, 215, 230, 0.8);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.12);
+        }
+        .activity-drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .drawer-header h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: 8px;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
         }
 
-        .toast-notification.show {
-            opacity: 1;
-            transform: translateY(0);
+        .drawer-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
+        .drawer-item {
+            padding: 10px 12px;
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 11px;
+            transition: border-color 0.2s ease;
+        }
+        .drawer-item:hover {
+            border-color: var(--theme-accent);
+        }
+        .drawer-item-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .drawer-item-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+        .drawer-item-desc {
+            color: var(--text-secondary);
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .drawer-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            background: var(--surface-inset-bg);
+        }
+
 
         /* 顶部装饰性窗口栏 */
         .window-titlebar {
@@ -3129,11 +3373,24 @@
 
     <!-- 核心仿真演示视窗 -->
     <section class="simulator-container">
-        <!-- 操作反馈 Toast 气泡 -->
-        <div id="toastNotification" class="toast-notification">
-            <span id="toastIcon">🚀</span>
-            <span id="toastMessage">已调起 Unturned 启动流程</span>
-        </div>
+        <!-- 方案 A: Emil Kowalski 原创 Sonner 物理堆叠卡片容器 (定位在 bottom: 78px; right: 24px; 避让主题坞) -->
+        <div id="sonnerToastContainer" role="status" aria-live="polite"></div>
+
+        <!-- 方案 D: 任务中心一体化侧抽屉 (Side Drawer) -->
+        <div class="activity-overlay" id="activityOverlay" onclick="closeActivityDrawer()"></div>
+        <aside class="activity-drawer" id="activityDrawer" aria-label="任务中心与操作履历">
+            <div class="drawer-header">
+                <h4><span>📋</span> <span>任务中心与操作履历</span></h4>
+                <button onclick="closeActivityDrawer()" class="btn-compact" style="padding: 2px 8px;" title="关闭面板">✕</button>
+            </div>
+            <div class="drawer-list" id="activityDrawerList">
+                <!-- 动态渲染履历条目 -->
+            </div>
+            <div class="drawer-footer">
+                <button class="btn-compact" onclick="clearActivityHistory()">清空履历</button>
+                <button class="btn-compact btn-primary-accent" onclick="closeActivityDrawer()">完成</button>
+            </div>
+        </aside>
 
         <!-- 模拟桌面窗口控制条 (含快捷窗口化尺寸切换：测试小窗滚动效果) -->
         <div class="window-titlebar">
@@ -3178,7 +3435,10 @@
 
                 <!-- 右侧次级浮动入口 -->
                 <div class="top-actions">
-                    <button class="top-action-btn" onclick="showToast('⚡ 任务中心', '当前无后台下载任务，所有插件处于就绪状态。')">⚡ 任务中心</button>
+                    <button id="topTaskCenterBtn" class="top-action-btn" onclick="toggleActivityDrawer()" title="打开任务中心与操作履历">
+                        <span>⚡ 任务中心</span>
+                        <span id="taskCenterBadge" class="task-badge">3</span>
+                    </button>
                     <button class="top-action-btn" onclick="showToast('👤 社区账户', '已连接 unmod.online: YU80Rice (已登录)')">👤 YU80Rice</button>
                     <button class="top-action-btn" onclick="showToast('ℹ️ 关于', 'Unturned Mod Manager v2.2.1 by YU80Rice & contributors')">ℹ️ 关于</button>
                 </div>
@@ -3840,15 +4100,150 @@
         let currentWallpaperMask = 0;
         let customWallpaperActive = false;
 
-        function showToast(icon, msg) {
-            const toast = document.getElementById('toastNotification');
-            document.getElementById('toastIcon').innerText = icon;
-            document.getElementById('toastMessage').innerText = msg;
-            toast.classList.add('show');
-            if (toastTimer) clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+        // ============================================================
+        // 方案 D: 任务中心与操作履历状态管理 (Activity Drawer State)
+        // ============================================================
+        let sonnerToastCount = 0;
+        let activityHistory = [
+            { id: 1, icon: '📦', title: '脱敏诊断包已导出', desc: '已就绪并自动剔除 SteamKey 与敏感密钥', time: '刚刚' },
+            { id: 2, icon: '🎨', title: '应用外观配置', desc: '已应用极夜黑战术 HUD 与协调强调色', time: '5分钟前' },
+            { id: 3, icon: '⚡', title: 'DXVK Vulkan 加速', desc: 'Vulkan 1.3 运行时就绪，提升帧率稳定性', time: '12分钟前' }
+        ];
+
+        function updateActivityBadge() {
+            const badge = document.getElementById('taskCenterBadge');
+            if (badge) {
+                badge.innerText = activityHistory.length;
+                badge.classList.toggle('empty', activityHistory.length === 0);
+            }
+        }
+
+        function renderActivityList() {
+            const list = document.getElementById('activityDrawerList');
+            if (!list) return;
+            if (activityHistory.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:36px 16px; font-size:12px;">暂无历史操作通知</div>';
+                return;
+            }
+            list.innerHTML = activityHistory.map(item => `
+                <div class="drawer-item">
+                    <div class="drawer-item-head">
+                        <span>${item.icon} ${item.title}</span>
+                        <span class="drawer-item-time">${item.time || '刚刚'}</span>
+                    </div>
+                    <div class="drawer-item-desc">${item.desc}</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleActivityDrawer() {
+            const drawer = document.getElementById('activityDrawer');
+            const overlay = document.getElementById('activityOverlay');
+            if (!drawer) return;
+            const isOpen = drawer.classList.contains('open');
+            if (isOpen) {
+                closeActivityDrawer();
+            } else {
+                openActivityDrawer();
+            }
+        }
+
+        function openActivityDrawer() {
+            const drawer = document.getElementById('activityDrawer');
+            const overlay = document.getElementById('activityOverlay');
+            if (drawer) drawer.classList.add('open');
+            if (overlay) overlay.classList.add('open');
+            renderActivityList();
+        }
+
+        function closeActivityDrawer() {
+            const drawer = document.getElementById('activityDrawer');
+            const overlay = document.getElementById('activityOverlay');
+            if (drawer) drawer.classList.remove('open');
+            if (overlay) overlay.classList.remove('open');
+        }
+
+        function clearActivityHistory() {
+            activityHistory = [];
+            updateActivityBadge();
+            renderActivityList();
+        }
+
+        // ============================================================
+        // 方案 A: Emil Kowalski 原创 Sonner 物理堆叠系统 + 抽屉历史联动
+        // ============================================================
+        function showToast(iconOrTitle, msgOrDesc) {
+            let icon = '⚡';
+            let title = iconOrTitle || '操作提示';
+            let desc = msgOrDesc || '';
+
+            // 智能提取 Emoji 图标与标题文字
+            const emojiMatch = title.match(/^(\p{Extended_Pictographic}|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F]|\uD83E[\uDD00-\uDDFF]|[\u2600-\u27BF])\s*(.*)$/u);
+            if (emojiMatch) {
+                icon = emojiMatch[1];
+                title = emojiMatch[2] || title;
+            }
+
+            // 1. 沉淀至方案 D 任务中心履历
+            activityHistory.unshift({
+                id: ++sonnerToastCount,
+                icon: icon,
+                title: title,
+                desc: desc,
+                time: '刚刚'
+            });
+            if (activityHistory.length > 30) activityHistory.pop();
+            updateActivityBadge();
+            renderActivityList();
+
+            // 2. 弹出方案 A Sonner 物理堆叠卡片
+            const container = document.getElementById('sonnerToastContainer');
+            if (!container) return;
+
+            const toastId = `sonner-toast-${sonnerToastCount}`;
+            const toast = document.createElement('div');
+            toast.className = 'sonner-toast';
+            toast.id = toastId;
+
+            toast.innerHTML = `
+                <div class="sonner-toast-icon">${icon}</div>
+                <div class="sonner-toast-content">
+                    <div class="sonner-toast-title">${title}</div>
+                    ${desc ? `<div class="sonner-toast-desc">${desc}</div>` : ''}
+                </div>
+                <button class="sonner-toast-close" title="关闭" onclick="event.stopPropagation(); removeSonnerToast('${toastId}')">✕</button>
+            `;
+
+            // 点击卡片即可快速消除
+            toast.onclick = () => removeSonnerToast(toastId);
+
+            container.appendChild(toast);
+            updateSonnerIndices();
+
+            // 5 秒后自动平滑消除
+            setTimeout(() => {
+                removeSonnerToast(toastId);
+            }, 5000);
+        }
+
+        function updateSonnerIndices() {
+            const container = document.getElementById('sonnerToastContainer');
+            if (!container) return;
+            const toasts = Array.from(container.children).reverse();
+            toasts.forEach((toast, idx) => {
+                toast.setAttribute('data-index', idx);
+            });
+        }
+
+        function removeSonnerToast(id) {
+            const toast = document.getElementById(id);
+            if (!toast) return;
+            toast.style.transform = 'translateY(16px) scale(0.9)';
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                toast.remove();
+                updateSonnerIndices();
+            }, 280);
         }
 
         // =================================================================
@@ -6275,6 +6670,7 @@
             handleStateLoop();
             updateFilterCounts();
             switchSettingsTab('appearance');
+            updateActivityBadge();
         });
     </script>
 </body>
