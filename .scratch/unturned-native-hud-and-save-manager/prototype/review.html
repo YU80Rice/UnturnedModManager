@@ -38,11 +38,19 @@
             --accent-gold-bg: rgba(226, 176, 36, 0.15);
             --accent-gold-border: rgba(226, 176, 36, 0.35);
 
-            --accent-green: #38a169;
-            --accent-green-text: #48bb78;
-            --accent-green-bg: rgba(35, 107, 61, 0.85);
-            --accent-green-banner-bg: rgba(21, 36, 27, 0.88);
-            --accent-green-banner-border: #38a169;
+            /* 4. Unified Theme Accent Bus (全系统第一品牌强调色总线) */
+            --theme-accent: #10b981;
+            --theme-accent-bg: rgba(16, 185, 129, 0.14);
+            --theme-accent-border: rgba(16, 185, 129, 0.42);
+            --theme-accent-glow: rgba(16, 185, 129, 0.35);
+            --theme-accent-text: var(--theme-accent);
+            --theme-accent-contrast-text: #ffffff;
+
+            --accent-green: var(--theme-accent);
+            --accent-green-text: var(--theme-accent);
+            --accent-green-bg: var(--theme-accent);
+            --accent-green-banner-bg: var(--theme-accent-bg);
+            --accent-green-banner-border: var(--theme-accent-border);
 
             --accent-blue: #3b82f6;
             --accent-blue-text: #60a5fa;
@@ -56,9 +64,9 @@
 
             /* Profile Pill Tokens (针对红箭头处重点优化) */
             --pill-profile-bg: rgba(0, 0, 0, 0.45);
-            --pill-profile-border: rgba(56, 161, 105, 0.35);
+            --pill-profile-border: var(--theme-accent-border);
             --pill-profile-label: #a0aec0;
-            --pill-profile-val: #48bb78;
+            --pill-profile-val: var(--theme-accent);
 
             /* Navigation Slots */
             --nav-pill-bg: rgba(26, 33, 40, 0.55);
@@ -66,7 +74,7 @@
             --nav-pill-selected: rgba(32, 41, 51, 0.95);
             --nav-pill-text: #ffffff;
             --nav-pill-border: #2a3441;
-            --nav-pill-active-border: #38a169;
+            --nav-pill-active-border: var(--theme-accent);
 
             /* Buttons & Controls (Graphite Slate 战术中性风 · 彻底消除杂乱暗金色) */
             --btn-compact-bg: #1e252f;
@@ -74,14 +82,14 @@
             --btn-compact-text: #cbd5e0;
             --btn-compact-hover-bg: #2d3748;
             --btn-compact-hover-text: #ffffff;
-            --btn-primary-bg: #38a169;
-            --btn-primary-text: #ffffff;
+            --btn-primary-bg: var(--theme-accent);
+            --btn-primary-text: var(--theme-accent-contrast-text);
 
             /* Custom Accent Color Tokens (由调色盘动态改写) */
-            --accent-custom: #10b981;
-            --accent-custom-bg: rgba(16, 185, 129, 0.16);
-            --accent-custom-border: rgba(16, 185, 129, 0.45);
-            --accent-custom-glow: rgba(16, 185, 129, 0.35);
+            --accent-custom: var(--theme-accent);
+            --accent-custom-bg: var(--theme-accent-bg);
+            --accent-custom-border: var(--theme-accent-border);
+            --accent-custom-glow: var(--theme-accent-glow);
 
             /* Wallpaper & Visual Filter Tokens */
             --wallpaper-blur: 0px;
@@ -91,7 +99,7 @@
 
             /* Floating Docks & Toast */
             --toast-bg: rgba(18, 25, 33, 0.95);
-            --toast-border: #38a169;
+            --toast-border: var(--theme-accent);
             --toast-text: #ffffff;
             --toast-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
 
@@ -131,11 +139,17 @@
             --accent-gold-bg: rgba(245, 158, 11, 0.12);
             --accent-gold-border: rgba(245, 158, 11, 0.4);
 
-            --accent-green: #15803d;       /* Green 700 - 7.0:1 AAA 级森林绿 */
-            --accent-green-text: #166534;  /* Green 800 - 8.1:1 AAA 级状态文字 */
-            --accent-green-bg: #15803d;
-            --accent-green-banner-bg: rgba(34, 197, 94, 0.12);
-            --accent-green-banner-border: rgba(34, 197, 94, 0.45);
+            /* Theme Accent Bus Dynamic Fallthrough (白天模式同步接入全系统主题神经总线) */
+            --accent-green: var(--theme-accent);
+            --accent-green-text: var(--theme-accent);
+            --accent-green-bg: var(--theme-accent);
+            --accent-green-banner-bg: var(--theme-accent-bg);
+            --accent-green-banner-border: var(--theme-accent-border);
+
+            --accent-custom: var(--theme-accent);
+            --accent-custom-bg: var(--theme-accent-bg);
+            --accent-custom-border: var(--theme-accent-border);
+            --accent-custom-glow: var(--theme-accent-glow);
 
             --accent-blue: #1d4ed8;        /* Blue 700 - 7.3:1 AAA 级战术蓝 */
             --accent-blue-text: #1e40af;   /* Blue 800 - 8.4:1 AAA 级蓝标签 */
@@ -147,32 +161,32 @@
             --accent-red-text: #991b1b;
             --accent-red-bg: rgba(239, 68, 68, 0.12);
 
-            /* Profile Pill Tokens - 模组就绪态为战术翡翠绿，纯净官方态联动为冷静中性灰蓝 */
-            --pill-profile-bg: rgba(21, 128, 61, 0.08);
-            --pill-profile-border: rgba(21, 128, 61, 0.3);
+            /* Profile Pill Tokens - 模组就绪态动态联动主题强调色，纯净官方态联动为冷静中性灰蓝 */
+            --pill-profile-bg: var(--theme-accent-bg);
+            --pill-profile-border: var(--theme-accent-border);
             --pill-profile-label: #475569;
-            --pill-profile-val: #166534;   /* Emerald 800 - 8.1:1 AAA 级清晰深绿 */
+            --pill-profile-val: var(--theme-accent);
 
-            /* Navigation Slots */
+            /* Navigation Slots (左侧导航槽位始终遵从启动器全局主题强调色) */
             --nav-pill-bg: rgba(241, 245, 249, 0.85);
             --nav-pill-hover: #e2e8f0;
             --nav-pill-selected: #ffffff;
             --nav-pill-text: #0f172a;
             --nav-pill-border: #cbd5e1;
-            --nav-pill-active-border: #2563eb;
+            --nav-pill-active-border: var(--theme-accent);
 
-            /* Buttons & Controls (Slate Neutral 战术中性风 · 彻底告别到处发暗发黄的杂乱色块) */
+            /* Buttons & Controls (Slate Neutral 战术中性风 · 主操作按钮随主题变色) */
             --btn-compact-bg: #f8fafc;
             --btn-compact-border: #cbd5e1;
             --btn-compact-text: #1e293b;   /* Slate 800 - 沉稳高级，不抢主焦点 */
             --btn-compact-hover-bg: #e2e8f0;
             --btn-compact-hover-text: #0f172a;
-            --btn-primary-bg: #2563eb;
-            --btn-primary-text: #ffffff;
+            --btn-primary-bg: var(--theme-accent);
+            --btn-primary-text: var(--theme-accent-contrast-text);
 
             /* Floating Docks & Toast */
             --toast-bg: rgba(15, 23, 42, 0.95);
-            --toast-border: rgba(37, 99, 235, 0.5);
+            --toast-border: var(--theme-accent);
             --toast-text: #ffffff;
             --toast-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
 
@@ -393,13 +407,16 @@
         }
 
         .brand-logo-text span {
-            color: var(--accent-gold);
-            font-weight: 300;
+            color: var(--theme-accent);
+            font-weight: 500;
+            text-shadow: 0 0 12px var(--theme-accent-glow);
+            transition: color var(--duration-base) var(--ease-spring);
         }
 
         body.theme-light .brand-logo-text span {
-            color: #475569;
-            font-weight: 500;
+            color: var(--theme-accent);
+            font-weight: 700;
+            text-shadow: none;
         }
 
         .brand-sub {
@@ -517,7 +534,7 @@
 
         .nav-pill-btn.active {
             background: var(--nav-pill-selected);
-            border-color: var(--nav-pill-active-border);
+            border-color: var(--theme-accent);
             color: var(--text-primary);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
@@ -530,7 +547,12 @@
             bottom: 10px;
             width: 4px;
             border-radius: 0 4px 4px 0;
-            background: var(--nav-pill-active-border);
+            background: var(--theme-accent);
+            box-shadow: 0 0 10px var(--theme-accent-glow);
+        }
+
+        .nav-pill-btn.active span:first-child {
+            color: var(--theme-accent);
         }
 
         .nav-pill-btn.exit-slot {
@@ -928,9 +950,25 @@
 
         .data-tab-btn.active {
             background: var(--nav-pill-selected);
-            border-color: var(--nav-pill-active-border);
-            color: var(--text-primary);
+            border-color: var(--theme-accent);
+            color: var(--theme-accent);
             font-weight: 700;
+            box-shadow: 0 0 12px var(--theme-accent-glow);
+        }
+
+        .btn-primary-accent {
+            color: var(--theme-accent-contrast-text) !important;
+            background: var(--theme-accent) !important;
+            border: 1px solid var(--theme-accent) !important;
+            box-shadow: 0 2px 10px var(--theme-accent-glow);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s var(--ease-spring);
+        }
+
+        .btn-primary-accent:hover {
+            filter: brightness(1.12);
+            transform: translateY(-1px);
         }
 
         .readonly-guard-box {
@@ -1375,7 +1413,7 @@
                     <span style="color: var(--border-strong);">|</span>
                     <span id="globalBepText" style="color: var(--text-secondary);">BepInEx 5.4.23.5 就绪</span>
                     <span style="color: var(--border-strong);">|</span>
-                    <span id="globalModsText" style="color: var(--accent-green-text);">已挂载 12 个插件</span>
+                    <span id="globalModsText" style="color: var(--theme-accent);">已挂载 12 个插件</span>
                 </div>
 
                 <!-- 右侧次级浮动入口 -->
@@ -1430,7 +1468,7 @@
                                     <span id="bannerDesc" style="color: var(--text-secondary);">已开启纯净模组环境 (winhttp / -NoBattlEye)，无崩溃与冲突。</span>
                                 </div>
                             </div>
-                            <span id="bannerTag" style="color: var(--accent-green-text); font-weight: 700; font-family: var(--unturned-font-mono);">BE 5.4.23.5</span>
+                            <span id="bannerTag" style="color: var(--theme-accent); font-weight: 700; font-family: var(--unturned-font-mono);">BE 5.4.23.5</span>
                         </div>
 
                         <!-- 启动舞台区：主启动卡片 + 环境与诊断卡片 (全动态响应) -->
@@ -1470,7 +1508,7 @@
                                 <div class="env-section-box">
                                     <div class="env-section-row">
                                         <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;">
-                                            <span id="bepStateDot" style="color: var(--accent-green);">●</span>
+                                            <span id="bepStateDot" style="color: var(--theme-accent);">●</span>
                                             <span id="bepStateText">BepInEx 5.4.23.5 (x64) 运行就绪</span>
                                         </div>
                                         <button class="btn-compact" onclick="triggerRepairSimulation()">🔧 检查并修复</button>
@@ -1510,7 +1548,7 @@
                             <div class="hud-card">
                                 <div class="section-header">
                                     <span>精选插件 / 社区推荐</span>
-                                    <span style="color: var(--accent-green-text); font-size: 11px;">社区认证 BepInEx 插件</span>
+                                    <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">社区认证 BepInEx 插件</span>
                                 </div>
                                 <div class="bue-card">
                                     <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px;">BetterUnturnedExperience (BUE)</div>
@@ -1559,7 +1597,7 @@
                             <div class="data-item-card">
                                 <div class="data-item-title">
                                     <span>Slot 0: 生存专家</span>
-                                    <span style="color: var(--accent-green-text); font-size: 11px;">单机</span>
+                                    <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">单机</span>
                                 </div>
                                 <div class="data-item-meta">
                                     生命: 100% | 饱食: 84% | 水分: 92%<br>
@@ -1606,7 +1644,7 @@
                             <div style="display: flex; gap: 8px;">
                                 <button class="btn-compact" onclick="showToast('📂 插件目录', '已打开物理目录: E:\\Steam\\steamapps\\common\\Unturned\\BepInEx\\plugins')">📂 插件目录</button>
                                 <button class="btn-compact" onclick="showToast('🔄 扫描完成', '重新扫描完成，检测到 12 个有效插件程序集')">🔄 重新扫描</button>
-                                <button class="btn-compact" style="color: #fff; background: var(--accent-green); border-color: var(--accent-green);" onclick="showToast('➕ 导入插件', '请选择 .dll 插件或 .zip 模组包文件')">➕ 导入插件</button>
+                                <button class="btn-compact btn-primary-accent" onclick="showToast('➕ 导入插件', '请选择 .dll 插件或 .zip 模组包文件')">➕ 导入插件</button>
                             </div>
                         </div>
 
@@ -1838,25 +1876,22 @@
                     ? "已开启纯净模组环境 (winhttp / -NoBattlEye) + DXVK Vulkan 渲染，无崩溃与冲突。"
                     : "已开启纯净模组环境 (winhttp / -NoBattlEye)，无崩溃与冲突。";
                 bannerTag.innerText = "BE 5.4.23.5";
-                bannerTag.style.color = "var(--accent-green-text)";
+                bannerTag.style.color = "var(--theme-accent)";
 
                 globalDot.classList.remove('blue');
                 globalModeText.innerText = dxvkOn ? "模组模式 (-NoBattlEye +DXVK)" : "模组模式 (-NoBattlEye)";
                 globalBepText.innerText = "BepInEx 5.4.23.5 就绪";
                 globalModsText.innerText = "已挂载 12 个插件";
-                globalModsText.style.color = "var(--accent-green-text)";
+                globalModsText.style.color = "var(--theme-accent)";
 
                 profilePillBox.classList.remove('disabled-mode');
                 profileText.innerText = "默认联机优化 (12 Mods)";
-                profileText.style.color = "var(--pill-profile-val)";
+                profileText.style.color = "var(--theme-accent)";
 
-                bepStateDot.style.color = "var(--accent-green)";
+                bepStateDot.style.color = "var(--theme-accent)";
                 bepStateText.innerText = "BepInEx 5.4.23.5 (x64) 运行就绪";
-
-                // 方案 A 状态共振：导航激活槽位与模组模式/自定义强调色共振
-                document.documentElement.style.setProperty('--nav-pill-active-border', activeCustomAccent || 'var(--accent-green)');
             } else {
-                // 官方纯净模式 (沉稳蓝灰调)
+                // 官方纯净模式 (沉稳蓝灰调，但左侧导航条始终保持启动器全局主题强调色)
                 heroBtn.classList.add('blue-mode');
                 heroBtnText.innerText = "启动游戏 (官方纯净模式)";
                 heroSubtitle.innerText = dxvkOn
@@ -1884,9 +1919,6 @@
 
                 bepStateDot.style.color = "var(--text-muted)";
                 bepStateText.innerText = "BepInEx 5.4.23.5 已停用 (启动原生游戏)";
-
-                // 方案 A 状态共振：导航激活槽位与官方纯净蓝共振！
-                document.documentElement.style.setProperty('--nav-pill-active-border', 'var(--accent-blue)');
             }
 
             // DXVK 渲染器联动 (还原实测 BattlEye 行为)
@@ -1896,7 +1928,7 @@
                 if (bepOn) {
                     launchDxvkTag.innerText = "[+DXVK Vulkan]";
                     dxvkHint.innerText = "✔ 模组模式 (-NoBattlEye) 下 DXVK 完整生效：游戏将使用 Vulkan 渲染器启动以优化帧率稳定性。";
-                    dxvkHint.style.color = "var(--accent-green-text)";
+                    dxvkHint.style.color = "var(--theme-accent)";
                 } else {
                     launchDxvkTag.innerText = "[DXVK受限·回退DX11]";
                     dxvkHint.innerText = "⚠️ 官方 BattlEye 模式下会阻止 dxgi.dll 加载 (游戏将安全回退至 DirectX 11 正常启动，DXVK 不生效；若需 Vulkan 加速请在模组模式下使用)";
@@ -1940,7 +1972,7 @@
             setTimeout(() => {
                 showToast("✔ 校验完毕", "winhttp.dll 与 doorstop 引导配置哈希一致，未损坏！");
                 document.getElementById('diagSummaryText').innerText = "BepInEx 注入完整性校验一致，环境无损坏";
-                document.getElementById('diagSummaryText').style.color = "#48bb78";
+                document.getElementById('diagSummaryText').style.color = "var(--theme-accent)";
             }, 600);
         }
 
@@ -2005,7 +2037,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>BetterUnturnedExperience</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">v1.4.2 · 已启用</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v1.4.2 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: 核心体验增强 | 程序集: <code>BUE.dll</code><br>
@@ -2021,7 +2053,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>AutoPickupOptimizer</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">v1.0.8 · 已启用</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v1.0.8 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: 辅助工具 | 程序集: <code>AutoPickup.dll</code><br>
@@ -2037,7 +2069,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>CompassNavigationHUD</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">v2.1.0 · 已启用</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v2.1.0 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: UI增强 | 程序集: <code>CompassHUD.dll</code><br>
@@ -2053,7 +2085,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>DayNightCycleNotifier</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">v1.2.0 · 已启用</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v1.2.0 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: 生存辅助 | 程序集: <code>DayNightNotifier.dll</code><br>
@@ -2069,7 +2101,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>InventoryQuickMove</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">v1.1.5 · 已启用</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v1.1.5 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: 操作增强 | 程序集: <code>QuickInventory.dll</code><br>
@@ -2085,7 +2117,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>ZombieSpawnFixer</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">v1.0.2 · 已启用</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v1.0.2 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: 补丁修复 | 程序集: <code>ZombieFixer.dll</code><br>
@@ -2105,7 +2137,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>BetterUnturnedExperience (BUE)</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">★ 4.9 · 48.2k</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">★ 4.9 · 48.2k</span>
                         </div>
                         <div class="data-item-meta">
                             作者: <code>YU80Rice</code> | 标签: [官方推荐] [HUD] [BepInEx]<br>
@@ -2113,7 +2145,7 @@
                             最新版本: v1.4.2 (2026-09-08 更新)
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--accent-green-banner-bg); color: var(--accent-green-text); border-color: var(--accent-green-banner-border);" onclick="showToast('✔ 检查完毕', '已安装最新版本 (v1.4.2)，无需更新')">✔ 已是最新版</button>
+                            <button class="btn-compact" style="background: var(--theme-accent-bg); color: var(--theme-accent); border-color: var(--theme-accent-border); font-weight: 700;" onclick="showToast('✔ 检查完毕', '已安装最新版本 (v1.4.2)，无需更新')">✔ 已是最新版</button>
                             <button class="btn-compact" onclick="showToast('🌐 详情页面', '正在打开 unmod.online/plugins/bue 详情页')">查看详情</button>
                         </div>
                     </div>
@@ -2180,7 +2212,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>Map GPS & Landmark Pin</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">★ 4.9 · 26.7k</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">★ 4.9 · 26.7k</span>
                         </div>
                         <div class="data-item-meta">
                             作者: <code>ExplorerTeam</code> | 标签: [地图标注] [导航]<br>
@@ -2204,7 +2236,7 @@
                 document.getElementById('tabChar').classList.add('active');
                 container.innerHTML = `
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Slot 0: 生存专家</span><span style="color: var(--accent-green-text); font-size: 11px;">单机</span></div>
+                        <div class="data-item-title"><span>Slot 0: 生存专家</span><span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">单机</span></div>
                         <div class="data-item-meta">生命: 100% | 饱食: 84% | 水分: 92%<br>经验: 2,450 XP | 击杀: 312<br>路径: Worlds/Singleplayer_0/...</div>
                     </div>
                     <div class="data-item-card">
@@ -2220,11 +2252,11 @@
                 document.getElementById('tabWorld').classList.add('active');
                 container.innerHTML = `
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>PEI (爱德华王子岛)</span><span style="color: var(--accent-green-text); font-size: 11px;">官方关卡</span></div>
+                        <div class="data-item-title"><span>PEI (爱德华王子岛)</span><span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">官方关卡</span></div>
                         <div class="data-item-meta">路障 (Barricades): 42 KB<br>建筑 (Structures): 128 KB<br>载具 (Vehicles): 18 KB<br>最后保存: 2026-09-08 18:22</div>
                     </div>
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Russia (俄罗斯)</span><span style="color: var(--accent-green-text); font-size: 11px;">官方关卡</span></div>
+                        <div class="data-item-title"><span>Russia (俄罗斯)</span><span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">官方关卡</span></div>
                         <div class="data-item-meta">路障: 112 KB | 建筑: 350 KB<br>载具: 46 KB<br>最后保存: 2026-09-05 21:10</div>
                     </div>
                     <div class="data-item-card">
@@ -2248,7 +2280,7 @@
                 document.getElementById('tabBackup').classList.add('active');
                 container.innerHTML = `
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Snapshot-20260908</span><span style="color: var(--accent-green-text); font-size: 11px;">自动备份</span></div>
+                        <div class="data-item-title"><span>Snapshot-20260908</span><span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">自动备份</span></div>
                         <div class="data-item-meta">包含 3 个角色槽位与 PEI 关卡<br>压缩体积: 1.8 MB<br>状态: 哈希校验一致 (完整)</div>
                     </div>
                     <div class="data-item-card">
@@ -2324,27 +2356,27 @@
 
                             <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">精选战术预设配色：</div>
                             <div class="color-swatches-grid">
-                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#10b981' ? 'active' : ''}" onclick="applyCustomAccent('#10b981')">
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#10b981' ? 'active' : ''}" data-hex="#10b981" onclick="applyCustomAccent('#10b981')">
                                     <span class="swatch-dot" style="background: #10b981;"></span>
                                     <span>战术绿 (默认)</span>
                                 </button>
-                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#3b82f6' ? 'active' : ''}" onclick="applyCustomAccent('#3b82f6')">
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#3b82f6' ? 'active' : ''}" data-hex="#3b82f6" onclick="applyCustomAccent('#3b82f6')">
                                     <span class="swatch-dot" style="background: #3b82f6;"></span>
                                     <span>防作弊钴蓝</span>
                                 </button>
-                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#e2b024' ? 'active' : ''}" onclick="applyCustomAccent('#e2b024')">
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#e2b024' ? 'active' : ''}" data-hex="#e2b024" onclick="applyCustomAccent('#e2b024')">
                                     <span class="swatch-dot" style="background: #e2b024;"></span>
                                     <span>废土荒野金</span>
                                 </button>
-                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#a855f7' ? 'active' : ''}" onclick="applyCustomAccent('#a855f7')">
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#a855f7' ? 'active' : ''}" data-hex="#a855f7" onclick="applyCustomAccent('#a855f7')">
                                     <span class="swatch-dot" style="background: #a855f7;"></span>
                                     <span>赛博极光紫</span>
                                 </button>
-                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#ec4899' ? 'active' : ''}" onclick="applyCustomAccent('#ec4899')">
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#ec4899' ? 'active' : ''}" data-hex="#ec4899" onclick="applyCustomAccent('#ec4899')">
                                     <span class="swatch-dot" style="background: #ec4899;"></span>
                                     <span>樱花粉 Sakura</span>
                                 </button>
-                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#ef4444' ? 'active' : ''}" onclick="applyCustomAccent('#ef4444')">
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#ef4444' ? 'active' : ''}" data-hex="#ef4444" onclick="applyCustomAccent('#ef4444')">
                                     <span class="swatch-dot" style="background: #ef4444;"></span>
                                     <span>警戒战术红</span>
                                 </button>
@@ -2385,7 +2417,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>主题包生态契约 (.ummtheme)</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">ZIP 开放格式</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">ZIP 开放格式</span>
                         </div>
                         <div class="data-item-meta">
                             UMM 采用开放的 <code>.ummtheme</code> 压缩包规范（如仓库内置的 <code>SakuraPink.ummtheme</code>）。调色盘所选色彩与壁纸设定可一键序列化输出，或分享给其他玩家。
@@ -2402,7 +2434,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>游戏根目录路径</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">已校验一致</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">已校验一致</span>
                         </div>
                         <div class="data-item-meta">
                             当前检测路径: <code>E:\\Steam\\steamapps\\common\\Unturned</code><br>
@@ -2418,7 +2450,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>BepInEx 模组加载器核心</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">v5.4.23.5 x64</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v5.4.23.5 x64</span>
                         </div>
                         <div class="data-item-meta">
                             注入通道: <code>winhttp.dll</code> (Unity Doorstop 引导器)<br>
@@ -2459,7 +2491,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>官方社区 API 连通性</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">HTTP 200 OK</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">HTTP 200 OK</span>
                         </div>
                         <div class="data-item-meta">
                             API 端点: <code>https://unmod.online/api/v1/</code><br>
@@ -2472,7 +2504,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>模组工坊索引同步</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">已是最新</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">已是最新</span>
                         </div>
                         <div class="data-item-meta">
                             已缓存元数据: 1,420+ 个模组 / 插件<br>
@@ -2497,7 +2529,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>CDN 镜像源加速</span>
-                            <span style="color: var(--accent-green-text); font-size: 11px;">智能优选</span>
+                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">智能优选</span>
                         </div>
                         <div class="data-item-meta">
                             当前首选: <code>Cloudflare Global CDN</code> (优选)<br>
@@ -2556,20 +2588,36 @@
 
             activeCustomAccent = hex;
 
-            const root = document.documentElement;
-            root.style.setProperty('--accent-custom', hex);
-            root.style.setProperty('--accent-custom-bg', hexToRgba(hex, 0.16));
-            root.style.setProperty('--accent-custom-border', hexToRgba(hex, 0.45));
-            root.style.setProperty('--accent-custom-glow', hexToRgba(hex, 0.35));
-            root.style.setProperty('--accent-green', hex);
-            root.style.setProperty('--accent-green-bg', hex);
-            root.style.setProperty('--accent-green-text', hex);
-            root.style.setProperty('--accent-green-banner-border', hex);
-            root.style.setProperty('--accent-green-banner-bg', hexToRgba(hex, 0.16));
-            root.style.setProperty('--pill-profile-val', hex);
-            root.style.setProperty('--pill-profile-border', hexToRgba(hex, 0.35));
-            root.style.setProperty('--btn-primary-bg', hex);
-            root.style.setProperty('--toast-border', hex);
+            const targets = [document.documentElement, document.body];
+            targets.forEach(target => {
+                if (!target) return;
+                target.style.setProperty('--theme-accent', hex);
+                target.style.setProperty('--theme-accent-bg', hexToRgba(hex, 0.16));
+                target.style.setProperty('--theme-accent-border', hexToRgba(hex, 0.45));
+                target.style.setProperty('--theme-accent-glow', hexToRgba(hex, 0.35));
+                target.style.setProperty('--theme-accent-text', hex);
+                target.style.setProperty('--theme-accent-contrast-text', '#ffffff');
+
+                target.style.setProperty('--nav-pill-active-border', hex);
+
+                target.style.setProperty('--accent-custom', hex);
+                target.style.setProperty('--accent-custom-bg', hexToRgba(hex, 0.16));
+                target.style.setProperty('--accent-custom-border', hexToRgba(hex, 0.45));
+                target.style.setProperty('--accent-custom-glow', hexToRgba(hex, 0.35));
+
+                target.style.setProperty('--accent-green', hex);
+                target.style.setProperty('--accent-green-bg', hex);
+                target.style.setProperty('--accent-green-text', hex);
+                target.style.setProperty('--accent-green-banner-border', hex);
+                target.style.setProperty('--accent-green-banner-bg', hexToRgba(hex, 0.16));
+
+                target.style.setProperty('--pill-profile-val', hex);
+                target.style.setProperty('--pill-profile-border', hexToRgba(hex, 0.35));
+                target.style.setProperty('--pill-profile-bg', hexToRgba(hex, 0.16));
+
+                target.style.setProperty('--btn-primary-bg', hex);
+                target.style.setProperty('--toast-border', hex);
+            });
 
             // 更新控件状态
             const picker = document.getElementById('colorPickerAccent');
@@ -2580,9 +2628,10 @@
             const previewText = document.getElementById('accentPreviewText');
             if (previewText) previewText.innerText = hex.toUpperCase();
 
-            // 预设按钮激活态联动
+            // 预设按钮激活态联动：精准对比 data-hex
             document.querySelectorAll('.color-swatch-btn').forEach(btn => {
-                const match = btn.getAttribute('onclick') && btn.getAttribute('onclick').toLowerCase().includes(hex.toLowerCase());
+                const hexAttr = btn.getAttribute('data-hex');
+                const match = hexAttr && hexAttr.toLowerCase() === hex.toLowerCase();
                 btn.classList.toggle('active', !!match);
             });
 
@@ -2719,6 +2768,9 @@
                     themeName = "跟随系统 (检测为浅色环境)";
                 }
             }
+
+            // 确保主题切换后，当前选中的调色盘颜色即刻重播广播到 documentElement 和 body
+            applyCustomAccent(activeCustomAccent, false);
 
             // 若当前处于收拢态，刷新显示当前激活图标
             const dock = document.getElementById('themeFloatingDock');
