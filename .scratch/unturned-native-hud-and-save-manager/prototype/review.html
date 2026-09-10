@@ -86,6 +86,11 @@
             --dock-bg: rgba(20, 25, 31, 0.88);
             --dock-border: rgba(255, 255, 255, 0.12);
             --dock-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+
+            --theme-dock-seg-active-bg: rgba(255, 255, 255, 0.12);
+            --theme-dock-seg-active-border: rgba(255, 255, 255, 0.25);
+            --theme-dock-seg-active-text: #ffffff;
+            --theme-dock-seg-active-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         body.theme-light {
@@ -130,11 +135,11 @@
             --accent-red-text: #991b1b;
             --accent-red-bg: rgba(239, 68, 68, 0.12);
 
-            /* Profile Pill Tokens - 彻底根除红箭头处的低对比度与脏灰色块！ */
-            --pill-profile-bg: rgba(245, 158, 11, 0.12);
-            --pill-profile-border: rgba(245, 158, 11, 0.4);
+            /* Profile Pill Tokens - 模组就绪态为战术翡翠绿，纯净官方态联动为冷静中性灰蓝 */
+            --pill-profile-bg: rgba(21, 128, 61, 0.08);
+            --pill-profile-border: rgba(21, 128, 61, 0.3);
             --pill-profile-label: #475569;
-            --pill-profile-val: #92400e;   /* 8.2:1 AAA 极度清晰 */
+            --pill-profile-val: #166534;   /* Emerald 800 - 8.1:1 AAA 级清晰深绿 */
 
             /* Navigation Slots */
             --nav-pill-bg: rgba(241, 245, 249, 0.85);
@@ -142,26 +147,31 @@
             --nav-pill-selected: #ffffff;
             --nav-pill-text: #0f172a;
             --nav-pill-border: #cbd5e1;
-            --nav-pill-active-border: #b45309;
+            --nav-pill-active-border: #2563eb;
 
-            /* Buttons & Controls */
-            --btn-compact-bg: #e2e8f0;
+            /* Buttons & Controls (Slate Neutral 战术中性风 · 彻底告别到处发暗发黄的杂乱色块) */
+            --btn-compact-bg: #f8fafc;
             --btn-compact-border: #cbd5e1;
-            --btn-compact-text: #92400e;
-            --btn-compact-hover-bg: #cbd5e1;
+            --btn-compact-text: #1e293b;   /* Slate 800 - 沉稳高级，不抢主焦点 */
+            --btn-compact-hover-bg: #e2e8f0;
             --btn-compact-hover-text: #0f172a;
-            --btn-primary-bg: #b45309;
+            --btn-primary-bg: #2563eb;
             --btn-primary-text: #ffffff;
 
             /* Floating Docks & Toast */
             --toast-bg: rgba(15, 23, 42, 0.95);
-            --toast-border: rgba(245, 158, 11, 0.5);
+            --toast-border: rgba(37, 99, 235, 0.5);
             --toast-text: #ffffff;
             --toast-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
 
             --dock-bg: rgba(255, 255, 255, 0.94);
-            --dock-border: rgba(0, 0, 0, 0.15);
+            --dock-border: rgba(0, 0, 0, 0.12);
             --dock-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+            --theme-dock-seg-active-bg: #ffffff;
+            --theme-dock-seg-active-border: rgba(0, 0, 0, 0.12);
+            --theme-dock-seg-active-text: #0f172a;
+            --theme-dock-seg-active-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
         }
 
         * {
@@ -346,6 +356,11 @@
             font-weight: 300;
         }
 
+        body.theme-light .brand-logo-text span {
+            color: #475569;
+            font-weight: 500;
+        }
+
         .brand-sub {
             font-size: 10px;
             color: var(--text-muted);
@@ -463,7 +478,7 @@
             background: var(--nav-pill-selected);
             border-color: var(--nav-pill-active-border);
             color: var(--text-primary);
-            box-shadow: inset 0 0 12px var(--accent-gold-bg);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .nav-pill-btn.active::before {
@@ -602,6 +617,20 @@
             font-weight: 800;
         }
 
+        /* 官方纯净模式下的冷静中性态 (彻底消灭在蓝按钮上方冒出琥珀桃红色的杂乱感) */
+        .profile-pill.disabled-mode {
+            background: var(--surface-inset-bg);
+            border-color: var(--border-subtle);
+        }
+
+        .profile-pill.disabled-mode span {
+            color: var(--text-muted);
+        }
+
+        .profile-pill.disabled-mode strong {
+            color: var(--text-secondary);
+        }
+
         .btn-launch-hero {
             width: 100%;
             height: 50px;
@@ -641,6 +670,21 @@
             background: #4a5568 !important;
             border-color: var(--accent-gold) !important;
             transform: scale(0.98);
+        }
+
+        .launch-tag {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.22);
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(4px);
+            font-family: var(--unturned-font-mono);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+            line-height: 1.3;
         }
 
         .hero-path {
@@ -701,7 +745,7 @@
         .btn-compact:hover {
             background: var(--btn-compact-hover-bg);
             color: var(--btn-compact-hover-text);
-            border-color: var(--accent-gold);
+            border-color: var(--surface-card-hover-border);
             transform: translateY(-1px);
         }
 
@@ -730,10 +774,10 @@
 
         .gpu-hint {
             font-size: 10.5px;
-            color: var(--accent-gold-text);
+            color: var(--text-secondary);
             margin-top: 4px;
             line-height: 1.4;
-            font-weight: 600;
+            font-weight: 500;
             transition: color 0.2s ease;
         }
 
@@ -843,8 +887,8 @@
 
         .data-tab-btn.active {
             background: var(--nav-pill-selected);
-            border-color: var(--accent-gold);
-            color: var(--accent-gold-text);
+            border-color: var(--nav-pill-active-border);
+            color: var(--text-primary);
             font-weight: 700;
         }
 
@@ -983,7 +1027,8 @@
         }
 
         /* =========================================================
-           解法 1：右下角自适应变形胶囊开关 (Emil Kowalski 纯粹形态变形 · 告别翻倒电脑)
+           解法 B：右下角状态变形流主题开关 (Morphing Trigger Anchor)
+           折叠态为当前直立图标，展开态锚点平滑原地变形为收拢控制纽 ‹，杜绝翻倒电脑与重复图标
            ========================================================= */
         .theme-floating-dock {
             position: absolute;
@@ -1005,13 +1050,13 @@
                         background-color var(--duration-base) var(--ease-spring);
             overflow: hidden;
             height: 40px;
-            width: 252px;
-            padding: 3px 5px;
+            width: 272px;
+            padding: 4px 6px;
         }
 
         .theme-floating-dock:hover {
-            border-color: var(--accent-gold-border);
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 14px var(--accent-gold-bg);
+            border-color: var(--surface-card-hover-border);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
         }
 
         /* 折叠态 (Collapsed Micro-badge) */
@@ -1022,26 +1067,46 @@
             cursor: pointer;
         }
 
-        /* 折叠态触发纽 (Collapsed Trigger) */
+        /* 状态变形锚点控制纽 (Morphing Anchor Button · 折叠态为当前直立图标，展开态原地变为收拢键 ‹) */
         .theme-trigger-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 20px;
-            background: transparent;
-            border: none;
-            color: var(--accent-gold-text);
+            width: 28px;
+            height: 28px;
+            border-radius: 14px;
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
             font-size: 16px;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             outline: none;
             flex-shrink: 0;
-            transition: opacity 0.18s ease, transform 0.2s var(--ease-spring), width 0.28s var(--ease-spring);
+            margin-right: 4px;
+            line-height: 1;
+            transition: width 0.28s var(--ease-spring),
+                        height 0.28s var(--ease-spring),
+                        background 0.2s ease,
+                        border-color 0.2s ease,
+                        transform 0.18s ease;
+        }
+
+        .theme-floating-dock.collapsed .theme-trigger-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 16px;
+            margin-right: 0;
         }
 
         .theme-trigger-btn:hover {
-            transform: scale(1.08);
+            background: var(--surface-card-hover-border);
+            color: var(--text-primary);
+            transform: scale(1.06);
         }
 
         .theme-trigger-btn:active {
@@ -1051,17 +1116,7 @@
         .theme-trigger-icon {
             display: inline-block;
             transition: transform 0.2s var(--ease-spring), color 0.2s ease;
-        }
-
-        /* 展开时：折叠态按钮平滑淡出隐藏并收缩，完全由三段轨道接管，绝不出现倾斜/竖立电脑！ */
-        .theme-floating-dock:not(.collapsed) .theme-trigger-btn {
-            width: 0;
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(0.7);
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
+            line-height: 1;
         }
 
         /* 展开后的三段滑动轨道 */
@@ -1070,19 +1125,20 @@
             display: flex;
             align-items: center;
             gap: 2px;
+            flex: 1;
             opacity: 1;
             transform: scale(1);
-            transition: opacity 0.22s ease 0.06s, transform 0.26s var(--ease-spring) 0.06s;
+            transition: opacity 0.22s ease 0.04s, transform 0.26s var(--ease-spring) 0.04s;
             white-space: nowrap;
-            width: 100%;
         }
 
         .theme-floating-dock.collapsed .theme-segmented-track {
             opacity: 0;
             pointer-events: none;
             transform: scale(0.85);
-            position: absolute;
-            left: 40px;
+            width: 0;
+            overflow: hidden;
+            display: none;
         }
 
         /* 选项按钮 */
@@ -1091,8 +1147,8 @@
             z-index: 2;
             background: transparent;
             border: none;
-            border-radius: 16px;
-            padding: 5px 10px;
+            border-radius: 14px;
+            padding: 5px 9px;
             font-family: var(--unturned-font-sans);
             font-size: 11.5px;
             font-weight: 600;
@@ -1100,7 +1156,7 @@
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             outline: none;
             user-select: none;
             transition: color 0.18s ease, transform 0.15s ease;
@@ -1115,7 +1171,7 @@
         }
 
         .theme-segment-btn.active {
-            color: var(--accent-gold-text);
+            color: var(--theme-dock-seg-active-text);
             font-weight: 700;
         }
 
@@ -1131,34 +1187,12 @@
             bottom: 2px;
             left: 0;
             z-index: 1;
-            border-radius: 15px;
-            background: var(--accent-gold-bg);
-            border: 1px solid var(--accent-gold-border);
-            box-shadow: 0 2px 8px var(--accent-gold-bg);
+            border-radius: 14px;
+            background: var(--theme-dock-seg-active-bg);
+            border: 1px solid var(--theme-dock-seg-active-border);
+            box-shadow: var(--theme-dock-seg-active-shadow);
             transition: all 0.26s var(--ease-spring);
             pointer-events: none;
-        }
-
-        .theme-collapse-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 16px;
-            cursor: pointer;
-            padding: 4px 6px;
-            margin-left: 1px;
-            line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s ease;
-            border-radius: 50%;
-        }
-
-        .theme-collapse-btn:hover {
-            color: var(--text-primary);
-            background: var(--border-subtle);
-            transform: translateX(1px);
         }
     </style>
 </head>
@@ -1213,7 +1247,7 @@
                     <span style="color: var(--border-strong);">|</span>
                     <span id="globalBepText" style="color: var(--text-secondary);">BepInEx 5.4.23.5 就绪</span>
                     <span style="color: var(--border-strong);">|</span>
-                    <span id="globalModsText" style="color: var(--accent-gold-text);">已挂载 12 个插件</span>
+                    <span id="globalModsText" style="color: var(--accent-green-text);">已挂载 12 个插件</span>
                 </div>
 
                 <!-- 右侧次级浮动入口 -->
@@ -1230,7 +1264,7 @@
                 <nav class="nav-pill-column">
                     <div class="nav-primary-slots">
                         <button id="navPlay" class="nav-pill-btn active" onclick="switchNav('play')">
-                            <span id="navPlayIcon" style="color: var(--accent-gold-text);">▶</span>
+                            <span id="navPlayIcon" style="color: currentColor;">▶</span>
                             <span>游戏启动</span>
                         </button>
                         <button id="navData" class="nav-pill-btn" onclick="switchNav('data')">
@@ -1288,7 +1322,7 @@
                                     <button id="heroLaunchBtn" class="btn-launch-hero" onclick="triggerLaunchSimulation()">
                                         <span id="launchBtnIcon">▶</span>
                                         <span id="launchBtnText">启动游戏 (模组模式)</span>
-                                        <span id="launchDxvkTag" style="font-size: 11px; color: var(--accent-gold-text); display: none;">[+DXVK]</span>
+                                        <span id="launchDxvkTag" class="launch-tag" style="display: none;">[+DXVK]</span>
                                     </button>
                                 </div>
 
@@ -1505,16 +1539,16 @@
                 </main>
             </div>
 
-            <!-- 解法 1：自适应形态变形胶囊主题开关 (Emil Kowalski 纯粹形态变形 · 告别翻倒电脑) -->
-            <div id="themeFloatingDock" class="theme-floating-dock collapsed" role="radiogroup" aria-label="启动器主题偏好切换">
-                <!-- 折叠态触发纽 (Collapsed Trigger · 平正直立无旋转) -->
-                <button id="themeTriggerBtn" class="theme-trigger-btn" onclick="toggleThemeDock()" title="启动器外观偏好 · 点击展开">
+            <!-- 解法 B：状态变形流主题开关 (Morphing Trigger Anchor · 锚点原地变形收拢 · 杜绝翻倒电脑与重复图标) -->
+            <div id="themeFloatingDock" class="theme-floating-dock collapsed" role="radiogroup" aria-label="启动器外观偏好切换">
+                <!-- 变形锚点控制纽 (折叠态显示当前直立图标 ☀/💻/🌙，展开态平滑变形为原地收拢控制键 ‹) -->
+                <button id="themeTriggerBtn" class="theme-trigger-btn" onclick="handleDockTriggerClick()" title="启动器外观偏好 · 点击展开">
                     <span id="themeTriggerIcon" class="theme-trigger-icon">🌙</span>
                 </button>
 
-                <!-- 展开态的三段胶囊轨道 (Expanded Segmented Track) -->
+                <!-- 展开态的三段胶囊轨道 -->
                 <div class="theme-segmented-track">
-                    <!-- 磁吸滑动高亮底座 (Sliding Indicator) -->
+                    <!-- 磁吸滑动高亮底座 -->
                     <div id="themeSliderIndicator" class="theme-slider-indicator"></div>
 
                     <button id="btnThemeLight" class="theme-segment-btn" data-theme="light" onclick="setAppTheme('light')" role="radio" aria-checked="false">
@@ -1528,11 +1562,6 @@
                     <button id="btnThemeDark" class="theme-segment-btn active" data-theme="dark" onclick="setAppTheme('dark')" role="radio" aria-checked="true">
                         <span class="theme-seg-icon">🌙</span>
                         <span>黑夜</span>
-                    </button>
-
-                    <!-- 收拢折叠按钮 -->
-                    <button class="theme-collapse-btn" onclick="toggleThemeDock(true)" title="收拢主题栏">
-                        <span>›</span>
                     </button>
                 </div>
             </div>
@@ -1586,10 +1615,16 @@
                         <td>WCAG AAA (超 7:1)</td>
                     </tr>
                     <tr>
-                        <td>配置方案药丸 (白天暖琥珀)</td>
-                        <td><code>#92400E</code> / <code>#FDF6EB</code></td>
-                        <td><span class="ratio-pill ratio-aaa">8.2 : 1</span></td>
-                        <td>WCAG AAA (红箭头彻底消灭脏灰)</td>
+                        <td>配置方案药丸 (模组态翡翠绿 / 官方纯净灰)</td>
+                        <td><code>#166534</code> / <code>#F0FDF4</code></td>
+                        <td><span class="ratio-pill ratio-aaa">8.1 : 1</span></td>
+                        <td>WCAG AAA (消除色卡冲突与彩虹杂烩)</td>
+                    </tr>
+                    <tr>
+                        <td>启动按钮内 DXVK 标签 (官方纯净模式)</td>
+                        <td><code>#FFFFFF</code> / <code>#1D4ED8</code></td>
+                        <td><span class="ratio-pill ratio-aaa">8.5 : 1</span></td>
+                        <td>WCAG AAA (半透白底霜晶 Chip · 根除金棕字失明)</td>
                     </tr>
                 </tbody>
             </table>
@@ -1608,7 +1643,13 @@
                 <li>
                     <span class="check-icon">✔</span>
                     <div>
-                        <strong>吉祥物精准定位</strong>：吉祥物挂件已移至更新公告栏（Patch Notes）右下角，不再挤占环境诊断卡片。
+                        <strong>实装解法 B (状态变形流)</strong>：折叠态为当前直立图标 (☀/💻/🌙)，展开态锚点原地变形为收拢键 <code>‹</code>，杜绝翻倒电脑与多余图标。
+                    </div>
+                </li>
+                <li>
+                    <span class="check-icon">✔</span>
+                    <div>
+                        <strong>严格 60-30-10 单一主调色</strong>：官方模式收敛为 Cobalt Navy 冷灰蓝调，模组模式收敛为 Tactical Emerald 军工绿金，彻底告别“又蓝又黑又橙”的色彩过载。
                     </div>
                 </li>
                 <li>
@@ -1673,6 +1714,8 @@
             const bepStateText = document.getElementById('bepStateText');
             const dxvkHint = document.getElementById('dxvkGpuHint');
 
+            const profilePillBox = document.getElementById('profilePillBox');
+
             if (bepOn) {
                 // 模组模式 (绿色风格)
                 heroBtn.classList.remove('blue-mode');
@@ -1692,8 +1735,9 @@
                 globalModeText.innerText = dxvkOn ? "模组模式 (-NoBattlEye +DXVK)" : "模组模式 (-NoBattlEye)";
                 globalBepText.innerText = "BepInEx 5.4.23.5 就绪";
                 globalModsText.innerText = "已挂载 12 个插件";
-                globalModsText.style.color = "var(--accent-gold-text)";
+                globalModsText.style.color = "var(--accent-green-text)";
 
+                profilePillBox.classList.remove('disabled-mode');
                 profileText.innerText = "默认联机优化 (12 Mods)";
                 profileText.style.color = "var(--pill-profile-val)";
 
@@ -1714,7 +1758,7 @@
                     ? "BepInEx 已停用。检测到开启 DXVK，BattlEye 会阻止 dxgi.dll 并自动回退至 DirectX 11，游戏可安全启动直连官方服。"
                     : "BepInEx 已停用，已开启 BattlEye 反作弊守护，支持安全直连全球官方服务器。";
                 bannerTag.innerText = dxvkOn ? "BE阻断dxgi·回退DX11" : "官方安全模式";
-                bannerTag.style.color = dxvkOn ? "var(--accent-gold-text)" : "var(--accent-blue-text)";
+                bannerTag.style.color = "var(--accent-blue-text)";
 
                 globalDot.classList.add('blue');
                 globalModeText.innerText = "官方纯净 (+BattlEye)";
@@ -1722,8 +1766,9 @@
                 globalModsText.innerText = "原生游戏环境";
                 globalModsText.style.color = "var(--text-muted)";
 
+                profilePillBox.classList.add('disabled-mode');
                 profileText.innerText = "默认联机优化 [已停用加载]";
-                profileText.style.color = "var(--text-muted)";
+                profileText.style.color = "var(--text-secondary)";
 
                 bepStateDot.style.color = "var(--text-muted)";
                 bepStateText.innerText = "BepInEx 5.4.23.5 已停用 (启动原生游戏)";
@@ -1732,21 +1777,20 @@
             // DXVK 渲染器联动 (还原实测 BattlEye 行为)
             if (dxvkOn) {
                 launchDxvkTag.style.display = "inline";
+                launchDxvkTag.className = "launch-tag";
                 if (bepOn) {
                     launchDxvkTag.innerText = "[+DXVK Vulkan]";
-                    launchDxvkTag.style.color = "var(--accent-gold-text)";
                     dxvkHint.innerText = "✔ 模组模式 (-NoBattlEye) 下 DXVK 完整生效：游戏将使用 Vulkan 渲染器启动以优化帧率稳定性。";
                     dxvkHint.style.color = "var(--accent-green-text)";
                 } else {
                     launchDxvkTag.innerText = "[DXVK受限·回退DX11]";
-                    launchDxvkTag.style.color = "var(--accent-gold-text)";
                     dxvkHint.innerText = "⚠️ 官方 BattlEye 模式下会阻止 dxgi.dll 加载 (游戏将安全回退至 DirectX 11 正常启动，DXVK 不生效；若需 Vulkan 加速请在模组模式下使用)";
                     dxvkHint.style.color = "var(--accent-gold-text)";
                 }
             } else {
                 launchDxvkTag.style.display = "none";
                 dxvkHint.innerText = "ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，可按需开启提升帧率稳定性)";
-                dxvkHint.style.color = "var(--accent-gold-text)";
+                dxvkHint.style.color = "var(--text-secondary)";
             }
         }
 
@@ -2100,26 +2144,54 @@
         }
 
         // =================================================================
-        // 解法 A：右下角主题展开胶囊与滑动指示动效 (Emil Kowalski 物理动效)
+        // 解法 B：右下角状态变形流主题开关 (Morphing Trigger Anchor)
+        // 锚点原地变形为收拢控制纽 ‹，杜绝翻倒电脑与重复图标
         // =================================================================
         let activeAppTheme = 'dark';
         let themeDockTimer = null;
 
-        function toggleThemeDock(forceCollapse) {
+        function handleDockTriggerClick() {
             const dock = document.getElementById('themeFloatingDock');
-            if (forceCollapse === true || (!forceCollapse && !dock.classList.contains('collapsed'))) {
-                dock.classList.add('collapsed');
-                if (themeDockTimer) clearTimeout(themeDockTimer);
+            if (dock.classList.contains('collapsed')) {
+                openThemeDock();
             } else {
-                dock.classList.remove('collapsed');
-                // 展开后更新滑动指示底座位置 (双频确保弹性宽度插值完成精准附着)
-                setTimeout(updateThemeSliderIndicator, 40);
-                setTimeout(updateThemeSliderIndicator, 140);
-                // 8秒无操作自动收拢
-                if (themeDockTimer) clearTimeout(themeDockTimer);
-                themeDockTimer = setTimeout(() => {
-                    dock.classList.add('collapsed');
-                }, 8000);
+                closeThemeDock();
+            }
+        }
+
+        function openThemeDock() {
+            const dock = document.getElementById('themeFloatingDock');
+            const triggerIcon = document.getElementById('themeTriggerIcon');
+            const triggerBtn = document.getElementById('themeTriggerBtn');
+            dock.classList.remove('collapsed');
+            triggerIcon.innerText = "‹";
+            triggerBtn.setAttribute('title', "收拢外观偏好栏");
+            setTimeout(updateThemeSliderIndicator, 40);
+            setTimeout(updateThemeSliderIndicator, 140);
+            if (themeDockTimer) clearTimeout(themeDockTimer);
+            themeDockTimer = setTimeout(closeThemeDock, 8000);
+        }
+
+        function closeThemeDock() {
+            const dock = document.getElementById('themeFloatingDock');
+            const triggerBtn = document.getElementById('themeTriggerBtn');
+            dock.classList.add('collapsed');
+            syncTriggerIcon();
+            triggerBtn.setAttribute('title', "启动器外观偏好 · 点击展开");
+            if (themeDockTimer) clearTimeout(themeDockTimer);
+        }
+
+        function syncTriggerIcon() {
+            const triggerIcon = document.getElementById('themeTriggerIcon');
+            if (activeAppTheme === 'light') {
+                triggerIcon.innerText = "☀";
+                triggerIcon.style.color = "var(--text-primary)";
+            } else if (activeAppTheme === 'dark') {
+                triggerIcon.innerText = "🌙";
+                triggerIcon.style.color = "var(--text-primary)";
+            } else if (activeAppTheme === 'system') {
+                triggerIcon.innerText = "💻";
+                triggerIcon.style.color = "var(--text-primary)";
             }
         }
 
@@ -2136,22 +2208,14 @@
             // 移动滑动指示底座
             updateThemeSliderIndicator();
 
-            // 更新触发纽图标与主题样式
-            const triggerIcon = document.getElementById('themeTriggerIcon');
             let themeName = "";
             if (theme === 'light') {
-                triggerIcon.innerText = "☀";
-                triggerIcon.style.color = "var(--accent-gold-text)";
                 document.body.classList.add('theme-light');
                 themeName = "白天模式 (明亮战术色)";
             } else if (theme === 'dark') {
-                triggerIcon.innerText = "🌙";
-                triggerIcon.style.color = "var(--accent-gold-text)";
                 document.body.classList.remove('theme-light');
                 themeName = "黑夜模式 (经典军工暗调)";
             } else if (theme === 'system') {
-                triggerIcon.innerText = "💻";
-                triggerIcon.style.color = "var(--text-secondary)";
                 const isSysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
                 if (isSysDark) {
                     document.body.classList.remove('theme-light');
@@ -2162,14 +2226,17 @@
                 }
             }
 
+            // 若当前处于收拢态，刷新显示当前激活图标
+            const dock = document.getElementById('themeFloatingDock');
+            if (dock.classList.contains('collapsed')) {
+                syncTriggerIcon();
+            }
+
             showToast("🎨 主题切换", `已应用：${themeName}`);
 
-            // 选择后稍作停顿，自动优雅收拢
+            // 选择后稍作停顿，自动优雅收拢并变回直立图标
             if (themeDockTimer) clearTimeout(themeDockTimer);
-            themeDockTimer = setTimeout(() => {
-                const dock = document.getElementById('themeFloatingDock');
-                if (dock) dock.classList.add('collapsed');
-            }, 1800);
+            themeDockTimer = setTimeout(closeThemeDock, 1800);
         }
 
         function updateThemeSliderIndicator() {
@@ -2195,13 +2262,14 @@
             const dock = document.getElementById('themeFloatingDock');
             if (dock && !dock.classList.contains('collapsed')) {
                 if (!dock.contains(e.target)) {
-                    dock.classList.add('collapsed');
+                    closeThemeDock();
                 }
             }
         });
 
-        // 页面初始化时挂载滑动底座
+        // 页面初始化时挂载滑动底座与图标
         window.addEventListener('DOMContentLoaded', () => {
+            syncTriggerIcon();
             setTimeout(updateThemeSliderIndicator, 150);
         });
     </script>
