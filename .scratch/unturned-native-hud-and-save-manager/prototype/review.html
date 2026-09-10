@@ -1543,6 +1543,472 @@
             transition: all 0.26s var(--ease-spring);
             pointer-events: none;
         }
+
+        /* ==========================================================================
+           PCL2 风格模组管理列表与交互式选中体系 (PCL2 Mod List & Floating Selection Dock)
+           ========================================================================== */
+        .pcl-plugin-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+        }
+
+        /* 顶部搜索条 (PCL2 经典全宽输入框) */
+        .pcl-search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            gap: 10px;
+            box-shadow: var(--surface-card-shadow);
+            transition: border-color var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) var(--ease-spring);
+        }
+
+        .pcl-search-bar:focus-within {
+            border-color: var(--theme-accent);
+            box-shadow: 0 0 0 3px var(--theme-accent-bg);
+        }
+
+        .pcl-search-icon {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1;
+        }
+
+        .pcl-search-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 12.5px;
+            font-weight: 500;
+            flex: 1;
+            font-family: inherit;
+        }
+
+        .pcl-search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .pcl-search-clear {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: color 0.15s ease, background 0.15s ease;
+            line-height: 1;
+        }
+
+        .pcl-search-clear:hover {
+            color: var(--text-primary);
+            background: var(--surface-card-hover-bg);
+        }
+
+        /* 次级操作工具栏 (PCL2: 打开文件夹 / 从文件安装 / 下载新 Mod / 全选) */
+        .pcl-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pcl-toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pcl-tool-btn {
+            background: var(--surface-card-bg);
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: var(--surface-card-shadow);
+            transition: all var(--duration-fast) var(--ease-spring);
+            font-family: inherit;
+            user-select: none;
+        }
+
+        .pcl-tool-btn:hover {
+            border-color: var(--theme-accent);
+            color: var(--theme-accent);
+            background: var(--surface-card-hover-bg);
+            transform: translateY(-1px);
+        }
+
+        .pcl-tool-btn:active {
+            transform: scale(0.96);
+        }
+
+        .pcl-tool-btn.accent {
+            background: var(--btn-primary-bg);
+            color: var(--btn-primary-text);
+            border-color: var(--theme-accent-border);
+            font-weight: 700;
+        }
+
+        .pcl-tool-btn.accent:hover {
+            filter: brightness(1.12);
+        }
+
+        /* 状态筛选胶囊条 (全部 / 已启用 / 已禁用 / 可更新) */
+        .pcl-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 2px;
+            flex-wrap: wrap;
+        }
+
+        .pcl-filter-pill {
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 4px 12px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all var(--duration-fast) var(--ease-spring);
+            font-family: inherit;
+            user-select: none;
+        }
+
+        .pcl-filter-pill:hover {
+            color: var(--text-primary);
+            border-color: var(--border-strong);
+        }
+
+        .pcl-filter-pill.active {
+            background: var(--theme-accent);
+            color: #ffffff;
+            border-color: var(--theme-accent);
+            font-weight: 700;
+            box-shadow: 0 2px 8px var(--theme-accent-glow);
+        }
+
+        .pcl-pill-count {
+            font-family: var(--unturned-font-mono);
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        /* 模组行流列表 (PCL2 经典列表视图) */
+        .pcl-mod-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 4px;
+            position: relative;
+            min-height: 200px;
+            padding-bottom: 74px; /* 为底部悬浮动作条留出呼吸空间 */
+        }
+
+        .pcl-mod-row {
+            display: flex;
+            align-items: center;
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
+            border-radius: 8px;
+            padding: 9px 14px;
+            gap: 12px;
+            box-shadow: var(--surface-card-shadow);
+            cursor: pointer;
+            user-select: none;
+            transition: background var(--duration-fast) ease, border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease, transform var(--duration-fast) var(--ease-spring);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .pcl-mod-row:hover {
+            border-color: var(--surface-card-hover-border);
+            background: var(--surface-card-hover-bg);
+            transform: translateX(2px);
+        }
+
+        .pcl-mod-row.selected {
+            background: var(--theme-accent-bg) !important;
+            border-color: var(--theme-accent-border) !important;
+            box-shadow: 0 2px 10px var(--theme-accent-glow);
+        }
+
+        .pcl-checkbox {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--theme-accent);
+            cursor: pointer;
+            flex-shrink: 0;
+            border-radius: 3px;
+        }
+
+        .pcl-mod-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            flex-shrink: 0;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+            transition: transform var(--duration-fast) var(--ease-spring);
+        }
+
+        .pcl-mod-row:hover .pcl-mod-avatar {
+            transform: scale(1.06);
+        }
+
+        .pcl-mod-content {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .pcl-mod-title-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pcl-mod-name-cn {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .pcl-mod-name-en {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            font-family: var(--unturned-font-mono);
+        }
+
+        .pcl-mod-ver {
+            font-size: 11px;
+            font-family: var(--unturned-font-mono);
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .pcl-mod-ver.updatable {
+            color: var(--accent-gold-text);
+            font-weight: 700;
+            background: var(--accent-gold-bg);
+            border: 1px solid var(--accent-gold-border);
+            padding: 0 5px;
+            border-radius: 4px;
+        }
+
+        .pcl-mod-status-tag {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 4px;
+        }
+
+        .pcl-mod-status-tag.enabled {
+            background: var(--theme-accent-bg);
+            color: var(--theme-accent);
+            border: 1px solid var(--theme-accent-border);
+        }
+
+        .pcl-mod-status-tag.disabled {
+            background: rgba(229, 62, 62, 0.12);
+            color: var(--accent-red-text);
+            border: 1px solid rgba(229, 62, 62, 0.3);
+        }
+
+        .pcl-mod-desc-line {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .pcl-tag {
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 3px;
+            padding: 1px 5px;
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .pcl-mod-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0.75;
+            transition: opacity var(--duration-fast) ease;
+        }
+
+        .pcl-mod-row:hover .pcl-mod-actions,
+        .pcl-mod-row.selected .pcl-mod-actions {
+            opacity: 1;
+        }
+
+        .pcl-icon-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border-subtle);
+            background: var(--surface-card-bg);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all var(--duration-fast) var(--ease-spring);
+            user-select: none;
+        }
+
+        .pcl-icon-btn:hover {
+            border-color: var(--theme-accent);
+            color: var(--theme-accent);
+            transform: scale(1.08);
+            background: var(--surface-card-hover-bg);
+        }
+
+        .pcl-icon-btn:active {
+            transform: scale(0.92);
+        }
+
+        .pcl-icon-btn.danger:hover {
+            border-color: rgba(229, 62, 62, 0.5);
+            color: var(--accent-red-text);
+            background: rgba(229, 62, 62, 0.1);
+        }
+
+        /* 底部多选/单选悬浮操作栏 (PCL2 经典 Floating Selection Dock) */
+        .pcl-floating-dock {
+            position: sticky;
+            bottom: 16px;
+            left: 50%;
+            margin: -50px auto 0 auto;
+            width: fit-content;
+            max-width: 92%;
+            background: var(--surface-card-bg);
+            border: 1px solid var(--theme-accent-border);
+            border-radius: 28px;
+            padding: 6px 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.32), 0 2px 10px var(--theme-accent-glow);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+            transform: translateY(28px) scale(0.94);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease-out;
+        }
+
+        .pcl-floating-dock.visible {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .dock-select-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--theme-accent);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: var(--unturned-font-mono);
+        }
+
+        .dock-divider {
+            width: 1px;
+            height: 16px;
+            background: var(--border-strong);
+        }
+
+        .dock-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .dock-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all var(--duration-fast) var(--ease-spring);
+            font-family: inherit;
+            user-select: none;
+        }
+
+        .dock-btn:hover {
+            background: var(--surface-inset-bg);
+            border-color: var(--border-strong);
+            color: var(--theme-accent);
+        }
+
+        .dock-btn:active {
+            transform: scale(0.95);
+        }
+
+        .dock-btn.danger:hover {
+            border-color: rgba(229, 62, 62, 0.4);
+            color: var(--accent-red-text);
+            background: rgba(229, 62, 62, 0.1);
+        }
+
+        .dock-btn.primary {
+            background: var(--theme-accent-bg);
+            border-color: var(--theme-accent-border);
+            color: var(--theme-accent);
+            font-weight: 700;
+        }
+
+        .dock-btn.primary:hover {
+            background: var(--theme-accent);
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -2023,24 +2489,28 @@
                         </div>
                     </div>
 
-                    <!-- C. 插件工坊 (PrototypeModsView: 本地插件与社区市场二级双 Tab) -->
+                    <!-- C. 插件工坊 (PrototypeModsView: 本地插件与社区市场二级双 Tab · PCL2 模组列表与交互式选中) -->
                     <div id="viewMods" class="data-view" style="display: none;">
-                        <!-- 顶部次级药丸选项卡与快捷操作栏 -->
+                        <!-- 顶部次级药丸选项卡与全局指示 -->
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
                             <div class="data-nav-tabs" style="border-bottom: none; padding-bottom: 0;">
-                                <button id="tabModLocal" class="data-tab-btn active" onclick="switchModTab('local')">📦 本地插件 (已安装 12)</button>
-                                <button id="tabModStore" class="data-tab-btn" onclick="switchModTab('store')">🌐 社区发现 / 插件市场 (unmod.online)</button>
+                                <button id="tabModLocal" class="data-tab-btn active" onclick="switchModTab('local')">
+                                    <span>📦 本地插件</span>
+                                    <span id="tabLocalBadge" style="font-family: var(--unturned-font-mono); font-size: 11px; opacity: 0.9;">(已安装 12)</span>
+                                </button>
+                                <button id="tabModStore" class="data-tab-btn" onclick="switchModTab('store')">
+                                    <span>🌐 社区发现 / 插件市场 (unmod.online)</span>
+                                </button>
                             </div>
-                            <div style="display: flex; gap: 8px;">
-                                <button class="btn-compact" onclick="showToast('📂 插件目录', '已打开物理目录: E:\\Steam\\steamapps\\common\\Unturned\\BepInEx\\plugins')">📂 插件目录</button>
-                                <button class="btn-compact" onclick="showToast('🔄 扫描完成', '重新扫描完成，检测到 12 个有效插件程序集')">🔄 重新扫描</button>
-                                <button class="btn-compact btn-primary-accent" onclick="showToast('➕ 导入插件', '请选择 .dll 插件或 .zip 模组包文件')">➕ 导入插件</button>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 11px; color: var(--text-muted); font-family: var(--unturned-font-mono);">BepInEx 5.4.23.5 / plugins</span>
+                                <button class="btn-compact btn-primary-accent" onclick="importPluginFromFile()">➕ 导入插件 (.dll/.zip)</button>
                             </div>
                         </div>
 
-                        <!-- 插件工坊内容区 (动态切换本地/社区) -->
-                        <div id="modContent" class="data-card-grid">
-                            <!-- 由 switchModTab 渲染 -->
+                        <!-- 插件工坊内容挂载容器 -->
+                        <div id="modContent">
+                            <!-- 由 switchModTab 渲染 PCL2 列表或社区市场 -->
                         </div>
 
                         <!-- Ticket 03 契约解耦注记 -->
@@ -2497,113 +2967,298 @@
             }
         }
 
+        // =========================================================================
+        // PCL2 风格模组管理列表体系 (PCL2 Mod Management System)
+        // =========================================================================
+        const initialLocalPlugins = [
+            {
+                id: "bue",
+                nameCn: "BUE 核心体验增强",
+                nameEn: "BetterUnturnedExperience",
+                assembly: "BUE.dll",
+                version: "v1.4.2",
+                hasUpdate: true,
+                updateVersion: "v1.4.5",
+                enabled: true,
+                icon: "🧭",
+                tags: ["核心增强", "HUD罗盘", "生存优化"],
+                desc: "原生罗盘 HUD、背包快捷整理、网络插值平滑，官方纯净旁路安全通道。",
+                configFile: "BUE.cfg"
+            },
+            {
+                id: "autopickup",
+                nameCn: "自动拾取与分类优化器",
+                nameEn: "AutoPickupOptimizer",
+                assembly: "AutoPickup.dll",
+                version: "v1.0.8",
+                hasUpdate: false,
+                enabled: true,
+                icon: "🎒",
+                tags: ["辅助工具", "自动化", "箱子管理"],
+                desc: "拾取距离与背包自动分类优化，支持白名单过滤与垃圾物品自动丢弃。",
+                configFile: "AutoPickup.cfg"
+            },
+            {
+                id: "compasshud",
+                nameCn: "仿战术射击罗盘 HUD",
+                nameEn: "CompassNavigationHUD",
+                assembly: "CompassHUD.dll",
+                version: "v2.1.0",
+                hasUpdate: true,
+                updateVersion: "v2.1.2",
+                enabled: true,
+                icon: "🎯",
+                tags: ["UI增强", "队友方位", "罗盘标点"],
+                desc: "屏幕顶部 360° 仿战术射击罗盘与小队队友实时方位标与距离指示。",
+                configFile: "CompassHUD.cfg"
+            },
+            {
+                id: "daynight",
+                nameCn: "日夜交替与空投通知器",
+                nameEn: "DayNightCycleNotifier",
+                assembly: "DayNightNotifier.dll",
+                version: "v1.2.0",
+                hasUpdate: false,
+                enabled: true,
+                icon: "🌙",
+                tags: ["生存辅助", "事件提醒", "空投监测"],
+                desc: "满月、直升机空投与日夜交替前 60 秒屏幕边缘呼吸灯式通知与声音提示。",
+                configFile: "DayNightNotifier.cfg"
+            },
+            {
+                id: "quickinventory",
+                nameCn: "背包快捷整理与箱子收纳",
+                nameEn: "InventoryQuickMove",
+                assembly: "QuickInventory.dll",
+                version: "v1.1.5",
+                hasUpdate: false,
+                enabled: true,
+                icon: "📦",
+                tags: ["操作增强", "收纳快捷键", "箱子分类"],
+                desc: "Shift/Ctrl 快捷存取收纳、一键分类箱子同类物品与弹药快速合并。",
+                configFile: "QuickInventory.cfg"
+            },
+            {
+                id: "zombiefixer",
+                nameCn: "僵尸穿模穿墙修复补丁",
+                nameEn: "ZombieSpawnFixer",
+                assembly: "ZombieFixer.dll",
+                version: "v1.0.2",
+                hasUpdate: false,
+                enabled: true,
+                icon: "🧟",
+                tags: ["补丁修复", "碰撞修正", "物理引擎"],
+                desc: "修复自定义地图僵尸穿模穿墙掉落出地图边缘物理漏洞与攻击距离异常。",
+                configFile: "ZombieFixer.cfg"
+            },
+            {
+                id: "vehicletuning",
+                nameCn: "载具操控物理平滑优化",
+                nameEn: "VehiclePhysicsTuning",
+                assembly: "VehicleTuning.dll",
+                version: "v1.3.1",
+                hasUpdate: false,
+                enabled: true,
+                icon: "🚗",
+                tags: ["载具手感", "悬挂调校", "防侧翻"],
+                desc: "优化原版越野车与装甲车阻尼和摩擦力，减轻高速转向侧翻失控概率。",
+                configFile: "VehicleTuning.cfg"
+            },
+            {
+                id: "netbypass",
+                nameCn: "局域网纯净测试旁路卫士",
+                nameEn: "LocalNetBypassGuard",
+                assembly: "NetBypass.dll",
+                version: "v2.0.0",
+                hasUpdate: false,
+                enabled: true,
+                icon: "🛡️",
+                tags: ["网络工具", "开发测试", "旁路保护"],
+                desc: "单机与本地自建服调试时提供独立的网络模拟环境，防止意外冲突封锁。",
+                configFile: "NetBypass.cfg"
+            },
+            {
+                id: "quickcraft",
+                nameCn: "快速合成配方树状图鉴",
+                nameEn: "QuickCraftRecipeBook",
+                assembly: "QuickCraft.dll",
+                version: "v1.2.4",
+                hasUpdate: false,
+                enabled: false,
+                icon: "🛠️",
+                tags: ["合成辅助", "图鉴查询", "材质树"],
+                desc: "在合成界面内嵌树状层级配方查询，点击材料自动追踪产出地图分布。",
+                configFile: "QuickCraft.cfg"
+            },
+            {
+                id: "serverstats",
+                nameCn: "网络延迟与掉帧实时监控",
+                nameEn: "PingAndPerformanceOverlay",
+                assembly: "ServerStats.dll",
+                version: "v1.0.5",
+                hasUpdate: true,
+                updateVersion: "v1.0.8",
+                enabled: true,
+                icon: "📊",
+                tags: ["性能监控", "帧率显示", "网络诊断"],
+                desc: "以超低开销在屏幕角展示 1% Low FPS、帧生成时间曲线与丢包率诊断。",
+                configFile: "ServerStats.cfg"
+            },
+            {
+                id: "weaponrecoil",
+                nameCn: "枪械后坐力插值平滑组件",
+                nameEn: "GunplaySmoothInterpolator",
+                assembly: "WeaponRecoil.dll",
+                version: "v1.1.0",
+                hasUpdate: false,
+                enabled: true,
+                icon: "🔫",
+                tags: ["射击手感", "后坐力", "动画平滑"],
+                desc: "重构开火镜头跳动插值算法，提供更加现代化平顺的射击视觉反馈体验。",
+                configFile: "WeaponRecoil.cfg"
+            },
+            {
+                id: "weatherambient",
+                nameCn: "动态天气与环境音效增强",
+                nameEn: "WeatherAmbientEnhancer",
+                assembly: "WeatherAmbience.dll",
+                version: "v0.9.8",
+                hasUpdate: false,
+                enabled: false,
+                icon: "🌧️",
+                tags: ["环境氛围", "暴风雨", "音效包"],
+                desc: "增强暴风雨、大雾与极光环境粒子密度，提供更沉浸的末日生存视听音画。",
+                configFile: "WeatherAmbience.cfg"
+            }
+        ];
+
+        let localPlugins = [...initialLocalPlugins];
+        let selectedModIds = new Set();
+        let currentModTab = 'local';
+        let modSearchKeyword = '';
+        let modFilterMode = 'all'; // 'all' | 'enabled' | 'disabled' | 'updatable'
+
         function switchModTab(tab) {
-            document.getElementById('tabModLocal').classList.remove('active');
-            document.getElementById('tabModStore').classList.remove('active');
+            currentModTab = tab;
+            const tabLocal = document.getElementById('tabModLocal');
+            const tabStore = document.getElementById('tabModStore');
             const container = document.getElementById('modContent');
 
+            if (!container) return;
+
             if (tab === 'local') {
-                document.getElementById('tabModLocal').classList.add('active');
+                if (tabLocal) tabLocal.classList.add('active');
+                if (tabStore) tabStore.classList.remove('active');
+
+                // 挂载 PCL2 骨架：搜索条 + 工具栏 + 过滤药丸 + 列表容器 + 底部悬浮动作条
+                container.className = 'pcl-plugin-container';
                 container.innerHTML = `
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>BetterUnturnedExperience</span>
-                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v1.4.2 · 已启用</span>
+                    <!-- 1. 顶部搜索条 (PCL2 经典全宽输入框) -->
+                    <div class="pcl-search-bar">
+                        <span class="pcl-search-icon">🔍</span>
+                        <input type="text" id="pclSearchInput" class="pcl-search-input" placeholder="搜索 Mod 名称 / 描述 / 标签..." value="${modSearchKeyword}" oninput="handleModSearch(this.value)">
+                        <button id="pclSearchClear" class="pcl-search-clear" onclick="clearModSearch()" style="display: ${modSearchKeyword ? 'inline-block' : 'none'};" title="清空搜索">✕</button>
+                    </div>
+
+                    <!-- 2. 次级操作工具栏 (PCL2 经典工具条) -->
+                    <div class="pcl-toolbar">
+                        <div class="pcl-toolbar-group">
+                            <button class="pcl-tool-btn" onclick="openPluginsFolder()">
+                                <span>📂</span>
+                                <span>打开文件夹</span>
+                            </button>
+                            <button class="pcl-tool-btn" onclick="importPluginFromFile()">
+                                <span>➕</span>
+                                <span>从文件安装</span>
+                            </button>
+                            <button class="pcl-tool-btn" onclick="switchModTab('store')">
+                                <span>🌐</span>
+                                <span>下载新 Mod</span>
+                            </button>
+                            <button id="pclSelectAllBtn" class="pcl-tool-btn" onclick="toggleSelectAllMods()">
+                                <span>☑️</span>
+                                <span id="selectAllBtnText">全选</span>
+                            </button>
                         </div>
-                        <div class="data-item-meta">
-                            类型: 核心体验增强 | 程序集: <code>BUE.dll</code><br>
-                            功能: 原生罗盘 HUD、背包快捷整理、网络插值平滑<br>
-                            挂载状态: BepInEx 运行时活跃加载
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 BetterUnturnedExperience (下次启动生效)')">禁用</button>
-                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 BUE.cfg 配置文件')">⚙ 配置</button>
-                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 BepInEx/plugins/BUE.dll')">📂 目录</button>
+                        <div class="pcl-toolbar-group">
+                            <button class="pcl-tool-btn" onclick="rescanPlugins()">
+                                <span>🔄</span>
+                                <span>重新扫描</span>
+                            </button>
                         </div>
                     </div>
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>AutoPickupOptimizer</span>
-                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v1.0.8 · 已启用</span>
-                        </div>
-                        <div class="data-item-meta">
-                            类型: 辅助工具 | 程序集: <code>AutoPickup.dll</code><br>
-                            功能: 拾取距离与背包自动分类优化，支持白名单<br>
-                            挂载状态: BepInEx 运行时活跃加载
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 AutoPickupOptimizer')">禁用</button>
-                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 AutoPickup.cfg 配置文件')">⚙ 配置</button>
-                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 BepInEx/plugins/AutoPickup.dll')">📂 目录</button>
-                        </div>
+
+                    <!-- 3. 状态筛选胶囊条 (全部 / 已启用 / 已禁用 / 可更新) -->
+                    <div class="pcl-filter-bar">
+                        <button class="pcl-filter-pill ${modFilterMode === 'all' ? 'active' : ''}" data-filter="all" onclick="setModFilter('all')">
+                            <span>全部</span>
+                            <span id="pillCountAll" class="pcl-pill-count">(12)</span>
+                        </button>
+                        <button class="pcl-filter-pill ${modFilterMode === 'enabled' ? 'active' : ''}" data-filter="enabled" onclick="setModFilter('enabled')">
+                            <span>已启用</span>
+                            <span id="pillCountEnabled" class="pcl-pill-count">(10)</span>
+                        </button>
+                        <button class="pcl-filter-pill ${modFilterMode === 'disabled' ? 'active' : ''}" data-filter="disabled" onclick="setModFilter('disabled')">
+                            <span>已禁用</span>
+                            <span id="pillCountDisabled" class="pcl-pill-count">(2)</span>
+                        </button>
+                        <button class="pcl-filter-pill ${modFilterMode === 'updatable' ? 'active' : ''}" data-filter="updatable" onclick="setModFilter('updatable')">
+                            <span>可更新</span>
+                            <span id="pillCountUpdatable" class="pcl-pill-count">(3)</span>
+                        </button>
                     </div>
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>CompassNavigationHUD</span>
-                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v2.1.0 · 已启用</span>
-                        </div>
-                        <div class="data-item-meta">
-                            类型: UI增强 | 程序集: <code>CompassHUD.dll</code><br>
-                            功能: 屏幕顶部 360° 仿战术射击罗盘与队友方位标<br>
-                            挂载状态: BepInEx 运行时活跃加载
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 CompassNavigationHUD')">禁用</button>
-                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 CompassHUD.cfg 配置文件')">⚙ 配置</button>
-                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 BepInEx/plugins/CompassHUD.dll')">📂 目录</button>
-                        </div>
+
+                    <!-- 4. 模组行流列表 (PCL2 经典列表视图) -->
+                    <div id="pclModList" class="pcl-mod-list">
+                        <!-- 由 renderPclModRows 动态渲染 -->
                     </div>
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>DayNightCycleNotifier</span>
-                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v1.2.0 · 已启用</span>
+
+                    <!-- 5. 底部多选/单选悬浮操作栏 (PCL2 经典 Floating Selection Dock) -->
+                    <div id="pclFloatingDock" class="pcl-floating-dock ${selectedModIds.size > 0 ? 'visible' : ''}">
+                        <div class="dock-select-label">
+                            <span>已选择</span>
+                            <span id="dockSelectCount">${selectedModIds.size}</span>
+                            <span>个文件</span>
                         </div>
-                        <div class="data-item-meta">
-                            类型: 生存辅助 | 程序集: <code>DayNightNotifier.dll</code><br>
-                            功能: 满月、空投与日夜交替前 60s 屏幕边缘通知<br>
-                            挂载状态: BepInEx 运行时活跃加载
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 DayNightCycleNotifier')">禁用</button>
-                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 DayNightNotifier.cfg')">⚙ 配置</button>
-                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 DayNightNotifier.dll')">📂 目录</button>
-                        </div>
-                    </div>
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>InventoryQuickMove</span>
-                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v1.1.5 · 已启用</span>
-                        </div>
-                        <div class="data-item-meta">
-                            类型: 操作增强 | 程序集: <code>QuickInventory.dll</code><br>
-                            功能: Shift/Ctrl 快捷存取收纳、一键分类箱子物品<br>
-                            挂载状态: BepInEx 运行时活跃加载
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 InventoryQuickMove')">禁用</button>
-                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 QuickInventory.cfg')">⚙ 配置</button>
-                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 QuickInventory.dll')">📂 目录</button>
-                        </div>
-                    </div>
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>ZombieSpawnFixer</span>
-                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">v1.0.2 · 已启用</span>
-                        </div>
-                        <div class="data-item-meta">
-                            类型: 补丁修复 | 程序集: <code>ZombieFixer.dll</code><br>
-                            功能: 修复自定义地图僵尸穿模穿墙掉落出地图漏洞<br>
-                            挂载状态: BepInEx 运行时活跃加载
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 ZombieSpawnFixer')">禁用</button>
-                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 ZombieFixer.cfg')">⚙ 配置</button>
-                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 ZombieFixer.dll')">📂 目录</button>
+                        <div class="dock-divider"></div>
+                        <div class="dock-actions">
+                            <button class="dock-btn primary" onclick="batchUpdateMods()">
+                                <span>⇧</span>
+                                <span>更新已选</span>
+                            </button>
+                            <button class="dock-btn" onclick="batchToggleEnable(true)">
+                                <span>✓</span>
+                                <span>启用</span>
+                            </button>
+                            <button class="dock-btn" onclick="batchToggleEnable(false)">
+                                <span>⊖</span>
+                                <span>禁用</span>
+                            </button>
+                            <button class="dock-btn" onclick="batchOpenConfig()">
+                                <span>⚙</span>
+                                <span>配置</span>
+                            </button>
+                            <button class="dock-btn danger" onclick="batchDeleteMods()">
+                                <span>🗑</span>
+                                <span>删除</span>
+                            </button>
+                            <button class="dock-btn" onclick="clearModSelection()">
+                                <span>✕</span>
+                                <span>取消选择</span>
+                            </button>
                         </div>
                     </div>
                 `;
+
+                renderPclModRows();
+                updateFilterCounts();
+                updateFloatingDock();
             } else if (tab === 'store') {
-                document.getElementById('tabModStore').classList.add('active');
+                if (tabLocal) tabLocal.classList.remove('active');
+                if (tabStore) tabStore.classList.add('active');
+
+                // 切换到社区发现市场卡片
+                container.className = 'data-card-grid';
                 container.innerHTML = `
                     <div class="data-item-card">
                         <div class="data-item-title">
@@ -2697,6 +3352,315 @@
                     </div>
                 `;
             }
+        }
+
+        // 渲染 PCL2 模组列表行流
+        function renderPclModRows() {
+            const listEl = document.getElementById('pclModList');
+            if (!listEl) return;
+
+            // 1. 依据当前过滤状态与关键词筛选
+            const filtered = localPlugins.filter(p => {
+                if (modFilterMode === 'enabled' && !p.enabled) return false;
+                if (modFilterMode === 'disabled' && p.enabled) return false;
+                if (modFilterMode === 'updatable' && !p.hasUpdate) return false;
+
+                if (modSearchKeyword) {
+                    const matchNameCn = p.nameCn.toLowerCase().includes(modSearchKeyword);
+                    const matchNameEn = p.nameEn.toLowerCase().includes(modSearchKeyword);
+                    const matchDll = p.assembly.toLowerCase().includes(modSearchKeyword);
+                    const matchDesc = p.desc.toLowerCase().includes(modSearchKeyword);
+                    const matchTags = p.tags.some(t => t.toLowerCase().includes(modSearchKeyword));
+                    return matchNameCn || matchNameEn || matchDll || matchDesc || matchTags;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; color: var(--text-muted); background: var(--surface-card-bg); border: 1px dashed var(--border-strong); border-radius: 8px;">
+                        <div style="font-size: 32px; margin-bottom: 8px;">🔍</div>
+                        <div style="font-size: 13px; font-weight: 700; color: var(--text-primary);">未找到符合条件的插件模组</div>
+                        <div style="font-size: 11px; margin-top: 4px; color: var(--text-secondary);">请尝试更改搜索关键词或切换筛选条件</div>
+                        <button class="btn-compact" style="margin-top: 12px;" onclick="clearModSearch(); setModFilter('all');">清空搜索与筛选</button>
+                    </div>
+                `;
+                updateSelectAllBtnState(0, 0);
+                return;
+            }
+
+            let html = '';
+            let visibleSelectedCount = 0;
+
+            filtered.forEach(p => {
+                const isSelected = selectedModIds.has(p.id);
+                if (isSelected) visibleSelectedCount++;
+
+                const tagsHtml = p.tags.map(t => `<span class="pcl-tag">${t}</span>`).join('');
+                const statusTag = p.enabled
+                    ? `<span class="pcl-mod-status-tag enabled">已启用</span>`
+                    : `<span class="pcl-mod-status-tag disabled">已禁用</span>`;
+
+                const verBadge = p.hasUpdate
+                    ? `<span class="pcl-mod-ver updatable" title="检测到新版本: ${p.updateVersion}">${p.version} ⇧ (${p.updateVersion})</span>`
+                    : `<span class="pcl-mod-ver">${p.version}</span>`;
+
+                html += `
+                    <div class="pcl-mod-row ${isSelected ? 'selected' : ''}" data-id="${p.id}" onclick="toggleSelectMod('${p.id}', event)">
+                        <input type="checkbox" class="pcl-checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectMod('${p.id}', event);" title="勾选/取消勾选">
+                        <div class="pcl-mod-avatar" title="${p.nameEn}">${p.icon}</div>
+                        <div class="pcl-mod-content">
+                            <div class="pcl-mod-title-line">
+                                <span class="pcl-mod-name-cn">${p.nameCn}</span>
+                                <span class="pcl-mod-name-en">${p.nameEn} · <code>${p.assembly}</code></span>
+                                ${verBadge}
+                                ${statusTag}
+                            </div>
+                            <div class="pcl-mod-desc-line">
+                                <div style="display: flex; gap: 4px; flex-shrink: 0;">${tagsHtml}</div>
+                                <span title="${p.desc}">${p.desc}</span>
+                            </div>
+                        </div>
+                        <div class="pcl-mod-actions">
+                            <button class="pcl-icon-btn" onclick="showPluginInfo('${p.id}', event)" title="查看模组详情信息">ⓘ</button>
+                            <button class="pcl-icon-btn" onclick="openPluginConfig('${p.id}', event)" title="打开配置文件 (${p.configFile})">⚙</button>
+                            <button class="pcl-icon-btn" onclick="openPluginFolder('${p.id}', event)" title="定位插件目录 (${p.assembly})">📂</button>
+                            <button class="pcl-icon-btn" onclick="toggleSinglePluginEnable('${p.id}', event)" title="${p.enabled ? '禁用插件' : '启用插件'}">${p.enabled ? '⊖' : '✓'}</button>
+                            <button class="pcl-icon-btn danger" onclick="deleteSinglePlugin('${p.id}', event)" title="删除插件">🗑</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            listEl.innerHTML = html;
+            updateSelectAllBtnState(visibleSelectedCount, filtered.length);
+        }
+
+        // 搜索处理 (响应实时输入)
+        function handleModSearch(val) {
+            modSearchKeyword = (val || '').trim().toLowerCase();
+            const clearBtn = document.getElementById('pclSearchClear');
+            if (clearBtn) clearBtn.style.display = modSearchKeyword ? 'inline-block' : 'none';
+            renderPclModRows();
+        }
+
+        function clearModSearch() {
+            modSearchKeyword = '';
+            const input = document.getElementById('pclSearchInput');
+            if (input) input.value = '';
+            const clearBtn = document.getElementById('pclSearchClear');
+            if (clearBtn) clearBtn.style.display = 'none';
+            renderPclModRows();
+        }
+
+        // 状态筛选切换
+        function setModFilter(filter) {
+            modFilterMode = filter;
+            document.querySelectorAll('.pcl-filter-pill').forEach(pill => {
+                pill.classList.toggle('active', pill.getAttribute('data-filter') === filter);
+            });
+            renderPclModRows();
+        }
+
+        // 单选/多选切换
+        function toggleSelectMod(id, event) {
+            if (selectedModIds.has(id)) {
+                selectedModIds.delete(id);
+            } else {
+                selectedModIds.add(id);
+            }
+            renderPclModRows();
+            updateFloatingDock();
+        }
+
+        // 全选 / 取消全选
+        function toggleSelectAllMods() {
+            const currentVisible = localPlugins.filter(p => {
+                if (modFilterMode === 'enabled' && !p.enabled) return false;
+                if (modFilterMode === 'disabled' && p.enabled) return false;
+                if (modFilterMode === 'updatable' && !p.hasUpdate) return false;
+                if (modSearchKeyword) {
+                    return p.nameCn.toLowerCase().includes(modSearchKeyword) ||
+                           p.nameEn.toLowerCase().includes(modSearchKeyword) ||
+                           p.assembly.toLowerCase().includes(modSearchKeyword);
+                }
+                return true;
+            });
+
+            const allVisibleSelected = currentVisible.length > 0 && currentVisible.every(p => selectedModIds.has(p.id));
+
+            if (allVisibleSelected) {
+                currentVisible.forEach(p => selectedModIds.delete(p.id));
+                showToast("◻ 取消全选", `已取消选中当前页模组`);
+            } else {
+                currentVisible.forEach(p => selectedModIds.add(p.id));
+                showToast("☑️ 全选", `已选中当前页 ${currentVisible.length} 个模组`);
+            }
+
+            renderPclModRows();
+            updateFloatingDock();
+        }
+
+        function clearModSelection() {
+            selectedModIds.clear();
+            renderPclModRows();
+            updateFloatingDock();
+            showToast("✕ 取消选择", "已清空所有选中项");
+        }
+
+        function updateSelectAllBtnState(selectedCount, totalCount) {
+            const btnText = document.getElementById('selectAllBtnText');
+            if (btnText) {
+                btnText.innerText = (selectedCount > 0 && selectedCount === totalCount) ? "取消全选" : "全选";
+            }
+        }
+
+        function updateFloatingDock() {
+            const dock = document.getElementById('pclFloatingDock');
+            const countEl = document.getElementById('dockSelectCount');
+            const count = selectedModIds.size;
+
+            if (countEl) countEl.innerText = count;
+            if (dock) {
+                if (count > 0) {
+                    dock.classList.add('visible');
+                } else {
+                    dock.classList.remove('visible');
+                }
+            }
+        }
+
+        function updateFilterCounts() {
+            const total = localPlugins.length;
+            const enabled = localPlugins.filter(p => p.enabled).length;
+            const disabled = localPlugins.filter(p => !p.enabled).length;
+            const updatable = localPlugins.filter(p => p.hasUpdate).length;
+
+            const cAll = document.getElementById('pillCountAll');
+            const cEn = document.getElementById('pillCountEnabled');
+            const cDis = document.getElementById('pillCountDisabled');
+            const cUp = document.getElementById('pillCountUpdatable');
+            const tabBadge = document.getElementById('tabLocalBadge');
+
+            if (cAll) cAll.innerText = `(${total})`;
+            if (cEn) cEn.innerText = `(${enabled})`;
+            if (cDis) cDis.innerText = `(${disabled})`;
+            if (cUp) cUp.innerText = `(${updatable})`;
+            if (tabBadge) tabBadge.innerText = `(已安装 ${total})`;
+
+            // 全局同步：顶栏与启动页模组计数广播
+            const globalText = document.getElementById('globalModsText');
+            if (globalText) globalText.innerText = `已挂载 ${enabled} 个插件`;
+            document.querySelectorAll('.heroSubtitleSync').forEach(el => {
+                el.innerText = `模组就绪 · 将加载 ${enabled} 个本地插件与 BUE`;
+            });
+        }
+
+        // 快速动作函数
+        function openPluginsFolder() {
+            showToast("📂 插件目录", "已打开物理目录: E:\\Steam\\steamapps\\common\\Unturned\\BepInEx\\plugins");
+        }
+
+        function importPluginFromFile() {
+            showToast("➕ 从文件安装", "模拟文件选取器: 已载入 .dll / .zip 模组文件至 BepInEx/plugins");
+        }
+
+        function rescanPlugins() {
+            showToast("🔄 扫描完成", `重新扫描完毕，已校验 ${localPlugins.length} 个插件程序集依赖`);
+            updateFilterCounts();
+            renderPclModRows();
+        }
+
+        function showPluginInfo(id, event) {
+            if (event) event.stopPropagation();
+            const p = localPlugins.find(item => item.id === id);
+            if (!p) return;
+            showToast("ⓘ " + p.nameEn, `${p.nameCn} | 版本: ${p.version} | 程序集: ${p.assembly}`);
+        }
+
+        function openPluginConfig(id, event) {
+            if (event) event.stopPropagation();
+            const p = localPlugins.find(item => item.id === id);
+            if (!p) return;
+            showToast("⚙ 配置文件", `已在编辑器中打开: BepInEx/config/${p.configFile}`);
+        }
+
+        function openPluginFolder(id, event) {
+            if (event) event.stopPropagation();
+            const p = localPlugins.find(item => item.id === id);
+            if (!p) return;
+            showToast("📂 模组位置", `定位文件: BepInEx/plugins/${p.assembly}`);
+        }
+
+        function toggleSinglePluginEnable(id, event) {
+            if (event) event.stopPropagation();
+            const p = localPlugins.find(item => item.id === id);
+            if (!p) return;
+            p.enabled = !p.enabled;
+            showToast(p.enabled ? "✓ 插件已启用" : "⊖ 插件已禁用", `${p.nameCn} (${p.assembly}) 现已切换为: ${p.enabled ? '启用' : '禁用'}`);
+            renderPclModRows();
+            updateFilterCounts();
+        }
+
+        function deleteSinglePlugin(id, event) {
+            if (event) event.stopPropagation();
+            const p = localPlugins.find(item => item.id === id);
+            if (!p) return;
+            localPlugins = localPlugins.filter(item => item.id !== id);
+            selectedModIds.delete(id);
+            showToast("🗑 插件已卸载", `已从 BepInEx/plugins 移除: ${p.nameCn} (${p.assembly})`);
+            renderPclModRows();
+            updateFilterCounts();
+            updateFloatingDock();
+        }
+
+        // 底部悬浮栏批量操作
+        function batchUpdateMods() {
+            let updateCount = 0;
+            localPlugins.forEach(p => {
+                if (selectedModIds.has(p.id) && p.hasUpdate) {
+                    p.version = p.updateVersion;
+                    p.hasUpdate = false;
+                    updateCount++;
+                }
+            });
+            if (updateCount > 0) {
+                showToast("⇧ 更新成功", `已将选中的 ${updateCount} 个插件更新至最新版本！`);
+            } else {
+                showToast("✔ 检查完毕", "所选插件均已是最新版本，无需更新");
+            }
+            renderPclModRows();
+            updateFilterCounts();
+        }
+
+        function batchToggleEnable(enableState) {
+            if (selectedModIds.size === 0) return;
+            let count = 0;
+            localPlugins.forEach(p => {
+                if (selectedModIds.has(p.id)) {
+                    p.enabled = enableState;
+                    count++;
+                }
+            });
+            showToast(enableState ? "✓ 批量启用" : "⊖ 批量禁用", `已将选中的 ${count} 个插件全部设置为: ${enableState ? '启用' : '禁用'}`);
+            renderPclModRows();
+            updateFilterCounts();
+        }
+
+        function batchOpenConfig() {
+            if (selectedModIds.size === 0) return;
+            showToast("⚙ 批量配置", `已在外部编辑器中依次打开选中的 ${selectedModIds.size} 个插件配置`);
+        }
+
+        function batchDeleteMods() {
+            if (selectedModIds.size === 0) return;
+            const count = selectedModIds.size;
+            localPlugins = localPlugins.filter(p => !selectedModIds.has(p.id));
+            selectedModIds.clear();
+            showToast("🗑 批量删除", `已成功卸载并删除 ${count} 个插件文件`);
+            renderPclModRows();
+            updateFilterCounts();
+            updateFloatingDock();
         }
 
         function switchDataTab(tab) {
@@ -3295,6 +4259,7 @@
             syncTriggerIcon();
             setTimeout(updateThemeSliderIndicator, 150);
             handleStateLoop();
+            updateFilterCounts();
             switchSettingsTab('appearance');
         });
     </script>
