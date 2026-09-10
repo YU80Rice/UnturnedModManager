@@ -750,7 +750,298 @@
             color: var(--unturned-accent-green);
             font-weight: bold;
         }
-    </style>
+
+        /* =========================================================
+           解法 A：右下角呼吸展开胶囊开关 (emil-design-eng 物理动效)
+           ========================================================= */
+        .theme-floating-dock {
+            position: absolute;
+            right: 24px;
+            bottom: 20px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            background: rgba(20, 25, 31, 0.88);
+            border: 1px solid var(--unturned-stroke-subtle);
+            border-radius: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+            height: 40px;
+            padding: 2px 4px;
+        }
+
+        .theme-floating-dock:hover {
+            border-color: var(--unturned-stroke-strong);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), 0 0 14px rgba(226, 176, 36, 0.2);
+        }
+
+        /* 折叠态 (Collapsed Micro-badge) */
+        .theme-floating-dock.collapsed {
+            width: 40px;
+            padding: 0;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .theme-trigger-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--unturned-accent-gold);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            outline: none;
+            flex-shrink: 0;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .theme-trigger-btn:hover {
+            transform: scale(1.08);
+        }
+
+        .theme-trigger-btn:active {
+            transform: scale(0.92);
+        }
+
+        .theme-trigger-icon {
+            display: inline-block;
+            transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+        }
+
+        /* 展开时的图标顺畅旋转 90 度 */
+        .theme-floating-dock:not(.collapsed) .theme-trigger-icon {
+            transform: rotate(90deg) scale(0.9);
+        }
+
+        /* 展开后的三段滑动轨道 */
+        .theme-segmented-track {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            opacity: 1;
+            transform: translateX(0);
+            transition: opacity 0.24s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+        }
+
+        .theme-floating-dock.collapsed .theme-segmented-track {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(24px);
+            position: absolute;
+        }
+
+        /* 选项按钮 */
+        .theme-segment-btn {
+            position: relative;
+            z-index: 2;
+            background: transparent;
+            border: none;
+            border-radius: 16px;
+            padding: 5px 11px;
+            font-family: var(--unturned-font-sans);
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--unturned-text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            outline: none;
+            user-select: none;
+            transition: color 0.18s ease, transform 0.15s ease;
+        }
+
+        .theme-segment-btn:hover {
+            color: #ffffff;
+        }
+
+        .theme-segment-btn:active {
+            transform: scale(0.94);
+        }
+
+        .theme-segment-btn.active {
+            color: var(--unturned-accent-gold);
+            font-weight: 700;
+        }
+
+        .theme-seg-icon {
+            font-size: 12.5px;
+            line-height: 1;
+        }
+
+        /* 磁吸高亮滑动底座 (Sliding Pill Indicator) */
+        .theme-slider-indicator {
+            position: absolute;
+            top: 2px;
+            bottom: 2px;
+            left: 0;
+            z-index: 1;
+            border-radius: 15px;
+            background: rgba(226, 176, 36, 0.18);
+            border: 1px solid var(--unturned-accent-gold);
+            box-shadow: 0 2px 8px rgba(226, 176, 36, 0.25);
+            transition: all 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        .theme-collapse-btn {
+            background: transparent;
+            border: none;
+            color: var(--unturned-text-muted);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px 6px;
+            margin-left: 2px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            border-radius: 50%;
+        }
+
+        .theme-collapse-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* =========================================================
+           白天明亮战术主题 (Tactical Light Theme) 实时渲染覆盖
+           ========================================================= */
+        body.theme-light {
+            background-color: #e2e8f0;
+            color: #1a202c;
+        }
+
+        body.theme-light .shell-viewport {
+            background: radial-gradient(circle at 80% 20%, rgba(203, 213, 225, 0.8) 0%, rgba(241, 245, 249, 0.98) 75%),
+                        linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
+        }
+
+        body.theme-light .window-titlebar {
+            background: #cbd5e0;
+            color: #2d3748;
+            border-bottom-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.theme-light .header-bar,
+        body.theme-light .audit-card,
+        body.theme-light .hud-card {
+            background: rgba(255, 255, 255, 0.88);
+            border-color: rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            color: #1a202c;
+        }
+
+        body.theme-light .nav-pill-btn {
+            background: rgba(241, 245, 249, 0.85);
+            border-color: rgba(0, 0, 0, 0.08);
+            color: #2d3748;
+        }
+
+        body.theme-light .nav-pill-btn:hover {
+            background: #e2e8f0;
+            color: #1a202c;
+            border-color: rgba(0, 0, 0, 0.15);
+        }
+
+        body.theme-light .nav-pill-btn.active {
+            background: #ffffff;
+            border-color: var(--unturned-accent-gold);
+            box-shadow: 0 4px 12px rgba(226, 176, 36, 0.2);
+            color: #1a202c;
+        }
+
+        body.theme-light .global-status-pill {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.12);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        body.theme-light .global-status-pill strong {
+            color: #1a202c !important;
+        }
+
+        body.theme-light .top-action-btn {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: #4a5568;
+        }
+
+        body.theme-light .top-action-btn:hover {
+            background: #ffffff;
+            color: #1a202c;
+        }
+
+        body.theme-light .hero-title,
+        body.theme-light .env-card-header,
+        body.theme-light .section-header,
+        body.theme-light .brand-logo-text,
+        body.theme-light .data-item-title {
+            color: #1a202c;
+        }
+
+        body.theme-light .hero-subtitle,
+        body.theme-light .env-section-box span,
+        body.theme-light .patch-list,
+        body.theme-light .data-item-meta {
+            color: #4a5568;
+        }
+
+        body.theme-light .env-section-box,
+        body.theme-light .bue-card,
+        body.theme-light .data-item-card {
+            background: rgba(248, 250, 252, 0.9);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body.theme-light .btn-compact {
+            background: #e2e8f0;
+            border-color: #cbd5e0;
+            color: #b7791f;
+        }
+
+        body.theme-light .btn-compact:hover {
+            background: #cbd5e0;
+            color: #1a202c;
+        }
+
+        body.theme-light .status-banner {
+            background: rgba(56, 161, 105, 0.12);
+            border-color: rgba(56, 161, 105, 0.35);
+        }
+
+        body.theme-light .status-banner strong {
+            color: #1a202c !important;
+        }
+
+        body.theme-light .theme-floating-dock {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        body.theme-light .theme-segment-btn {
+            color: #718096;
+        }
+
+        body.theme-light .theme-segment-btn:hover {
+            color: #1a202c;
+        }
+
+        body.theme-light .theme-segment-btn.active {
+            color: #b7791f;
+        }
 </head>
 <body>
 
@@ -1094,6 +1385,39 @@
 
                 </main>
             </div>
+
+            <!-- 解法 A：右下角呼吸展开胶囊主题开关 (emil-design-eng 旋转展开微动效) -->
+            <div id="themeFloatingDock" class="theme-floating-dock collapsed" role="radiogroup" aria-label="启动器主题偏好切换">
+                <!-- 折叠态触发纽 (Collapsed Trigger) -->
+                <button id="themeTriggerBtn" class="theme-trigger-btn" onclick="toggleThemeDock()" title="主题模式 · 点击旋转展开">
+                    <span id="themeTriggerIcon" class="theme-trigger-icon">🌙</span>
+                </button>
+
+                <!-- 展开态的三段胶囊轨道 (Expanded Segmented Track) -->
+                <div class="theme-segmented-track">
+                    <!-- 磁吸滑动高亮底座 (Sliding Indicator) -->
+                    <div id="themeSliderIndicator" class="theme-slider-indicator"></div>
+
+                    <button id="btnThemeLight" class="theme-segment-btn" data-theme="light" onclick="setAppTheme('light')" role="radio" aria-checked="false">
+                        <span class="theme-seg-icon">☀</span>
+                        <span>白天</span>
+                    </button>
+                    <button id="btnThemeSystem" class="theme-segment-btn" data-theme="system" onclick="setAppTheme('system')" role="radio" aria-checked="false">
+                        <span class="theme-seg-icon">💻</span>
+                        <span>跟随</span>
+                    </button>
+                    <button id="btnThemeDark" class="theme-segment-btn active" data-theme="dark" onclick="setAppTheme('dark')" role="radio" aria-checked="true">
+                        <span class="theme-seg-icon">🌙</span>
+                        <span>黑夜</span>
+                    </button>
+
+                    <!-- 收拢折叠按钮 -->
+                    <button class="theme-collapse-btn" onclick="toggleThemeDock(true)" title="收拢主题栏">
+                        <span>›</span>
+                    </button>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -1643,6 +1967,111 @@
                 `;
             }
         }
+
+        // =================================================================
+        // 解法 A：右下角主题展开胶囊与滑动指示动效 (Emil Kowalski 物理动效)
+        // =================================================================
+        let activeAppTheme = 'dark';
+        let themeDockTimer = null;
+
+        function toggleThemeDock(forceCollapse) {
+            const dock = document.getElementById('themeFloatingDock');
+            if (forceCollapse === true || (!forceCollapse && !dock.classList.contains('collapsed'))) {
+                dock.classList.add('collapsed');
+                if (themeDockTimer) clearTimeout(themeDockTimer);
+            } else {
+                dock.classList.remove('collapsed');
+                // 展开后更新滑动指示底座位置
+                setTimeout(updateThemeSliderIndicator, 40);
+                // 8秒无操作自动收拢
+                if (themeDockTimer) clearTimeout(themeDockTimer);
+                themeDockTimer = setTimeout(() => {
+                    dock.classList.add('collapsed');
+                }, 8000);
+            }
+        }
+
+        function setAppTheme(theme) {
+            activeAppTheme = theme;
+
+            // 更新按钮 active 态与 ARIA
+            document.querySelectorAll('.theme-segment-btn').forEach(btn => {
+                const isMatch = btn.getAttribute('data-theme') === theme;
+                btn.classList.toggle('active', isMatch);
+                btn.setAttribute('aria-checked', isMatch ? 'true' : 'false');
+            });
+
+            // 移动滑动指示底座
+            updateThemeSliderIndicator();
+
+            // 更新触发纽图标与主题样式
+            const triggerIcon = document.getElementById('themeTriggerIcon');
+            let themeName = "";
+            if (theme === 'light') {
+                triggerIcon.innerText = "☀";
+                triggerIcon.style.color = "#b7791f";
+                document.body.classList.add('theme-light');
+                themeName = "白天模式 (明亮战术色)";
+            } else if (theme === 'dark') {
+                triggerIcon.innerText = "🌙";
+                triggerIcon.style.color = "var(--unturned-accent-gold)";
+                document.body.classList.remove('theme-light');
+                themeName = "黑夜模式 (经典军工暗调)";
+            } else if (theme === 'system') {
+                triggerIcon.innerText = "💻";
+                triggerIcon.style.color = "#cbd5e0";
+                const isSysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (isSysDark) {
+                    document.body.classList.remove('theme-light');
+                    themeName = "跟随系统 (检测为深色环境)";
+                } else {
+                    document.body.classList.add('theme-light');
+                    themeName = "跟随系统 (检测为浅色环境)";
+                }
+            }
+
+            showToast("🎨 主题切换", `已应用：${themeName}`);
+
+            // 选择后稍作停顿，自动优雅收拢
+            if (themeDockTimer) clearTimeout(themeDockTimer);
+            themeDockTimer = setTimeout(() => {
+                const dock = document.getElementById('themeFloatingDock');
+                if (dock) dock.classList.add('collapsed');
+            }, 1800);
+        }
+
+        function updateThemeSliderIndicator() {
+            const activeBtn = document.querySelector('.theme-segment-btn.active');
+            const indicator = document.getElementById('themeSliderIndicator');
+            if (!activeBtn || !indicator) return;
+
+            indicator.style.left = activeBtn.offsetLeft + 'px';
+            indicator.style.width = activeBtn.offsetWidth + 'px';
+        }
+
+        // 监听系统主题变化
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                if (activeAppTheme === 'system') {
+                    setAppTheme('system');
+                }
+            });
+        }
+
+        // 点击页面外部空白区域自动收拢
+        document.addEventListener('click', e => {
+            const dock = document.getElementById('themeFloatingDock');
+            if (dock && !dock.classList.contains('collapsed')) {
+                if (!dock.contains(e.target)) {
+                    dock.classList.add('collapsed');
+                }
+            }
+        });
+
+        // 页面初始化时挂载滑动底座
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(updateThemeSliderIndicator, 150);
+        });
     </script>
 </body>
 </html>
