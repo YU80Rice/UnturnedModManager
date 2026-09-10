@@ -876,15 +876,294 @@
             color: var(--theme-accent);
         }
 
+        .nav-bottom-cluster {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
         .nav-pill-btn.exit-slot {
             border-color: rgba(229, 62, 62, 0.4);
             color: var(--accent-red-text);
-            margin-top: auto;
+            margin-top: 0; /* 在集群内部由 flex gap 控制 */
         }
 
         .nav-pill-btn.exit-slot:hover {
             background: var(--accent-red-bg);
             border-color: var(--accent-red);
+        }
+
+        /* 左下角：本机环境与社区中枢触发微卡片 */
+        .nav-hub-card {
+            width: 100%;
+            height: 46px;
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
+            border-radius: 8px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            transition: background var(--duration-fast) ease, border-color var(--duration-fast) ease, transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-fast) ease;
+            text-align: left;
+            position: relative;
+        }
+
+        .nav-hub-card:hover {
+            background: var(--surface-card-hover-bg);
+            border-color: var(--theme-accent);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px var(--theme-accent-glow);
+        }
+
+        .nav-hub-card:active {
+            transform: scale(0.97);
+        }
+
+        .nav-hub-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        body.theme-light .nav-hub-avatar {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        .nav-hub-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .nav-hub-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .hub-live-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--theme-accent);
+            box-shadow: 0 0 6px var(--theme-accent);
+            display: inline-block;
+            animation: hubPulse 2s infinite ease-in-out;
+        }
+        .hub-live-dot.large {
+            width: 9px;
+            height: 9px;
+        }
+
+        @keyframes hubPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.55; transform: scale(0.8); }
+        }
+
+        .nav-hub-sub {
+            font-size: 10px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 左下角弹出式中枢面板 (Popover) */
+        .hub-backdrop {
+            position: absolute;
+            inset: 0;
+            background: transparent;
+            z-index: 1240;
+            display: none;
+        }
+        .hub-backdrop.open {
+            display: block;
+        }
+
+        .profile-hub-flyout {
+            position: absolute;
+            left: 14px;
+            bottom: 74px; /* 紧贴左下角触发区上方 */
+            width: 320px;
+            background: var(--surface-card-bg);
+            border: 1px solid var(--border-strong);
+            border-radius: 14px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1250;
+            opacity: 0;
+            pointer-events: none;
+            transform-origin: bottom left;
+            transform: scale(0.92) translateY(12px);
+            transition: opacity 0.22s ease, transform 0.28s var(--ease-spring);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        body.theme-light .profile-hub-flyout {
+            background: rgba(255, 255, 255, 0.96);
+            border-color: rgba(200, 215, 230, 0.9);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+        }
+
+        .profile-hub-flyout.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1) translateY(0);
+        }
+
+        .hub-panel-header {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .hub-header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .hub-panel-body {
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .hub-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .hub-section-label {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .hub-account-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+        }
+
+        .hub-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .hub-user-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .hub-user-name {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .hub-tag-verified {
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 3px;
+            background: var(--theme-accent-bg);
+            color: var(--theme-accent);
+            border: 1px solid var(--theme-accent-border);
+        }
+
+        .hub-user-meta {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+
+        .hub-steam-status {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 8px 10px;
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            font-size: 11px;
+        }
+
+        .hub-steam-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .hub-badge-safe {
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 3px;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--theme-accent);
+            margin-left: auto;
+            font-weight: normal;
+        }
+
+        .hub-steam-path {
+            font-size: 10px;
+            color: var(--text-secondary);
+            font-family: Consolas, monospace;
+        }
+
+        .hub-theme-rail-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 0 2px;
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
         }
 
         /* 右侧主内容 Frame 区域 (高品质独立平滑纵向滚动容器) */
@@ -3516,7 +3795,7 @@
                         <span>⚡ 任务中心</span>
                         <span id="taskCenterBadge" class="task-badge">3</span>
                     </button>
-                    <button class="top-action-btn" onclick="showToast('👤 社区账户', '已连接 unmod.online: YU80Rice (已登录)')">👤 YU80Rice</button>
+                    <button class="top-action-btn" onclick="toggleProfileHub()" title="打开本机环境、社区账户与外观中枢">👤 YU80Rice</button>
                     <button class="top-action-btn" onclick="showToast('ℹ️ 关于', 'Unturned Mod Manager v2.2.1 by YU80Rice & contributors')">ℹ️ 关于</button>
                 </div>
             </div>
@@ -3544,11 +3823,24 @@
                         </button>
                     </div>
 
-                    <!-- 底部固定第 5 槽位 -->
-                    <button class="nav-pill-btn exit-slot" onclick="showToast('◀ 退出启动器', '模拟优雅关闭 UMM 启动器（不会影响正在运行的 Unturned 游戏）')">
-                        <span>◀</span>
-                        <span>退出 UMM</span>
-                    </button>
+                    <!-- 底部集群：本机环境与社区中枢触发卡片 + 退出启动器 -->
+                    <div class="nav-bottom-cluster">
+                        <button id="navHubTrigger" class="nav-hub-card" onclick="toggleProfileHub()" title="打开本机环境、社区账户与外观中枢">
+                            <div class="nav-hub-avatar">💻</div>
+                            <div class="nav-hub-info">
+                                <div class="nav-hub-name">
+                                    <span>YU80Rice</span>
+                                    <span class="hub-live-dot" title="Steam 客户端运行中"></span>
+                                </div>
+                                <div class="nav-hub-sub">Steam 就绪 · 社区活跃</div>
+                            </div>
+                        </button>
+
+                        <button class="nav-pill-btn exit-slot" onclick="showToast('◀ 退出启动器', '模拟优雅关闭 UMM 启动器（不会影响正在运行的 Unturned 游戏）')">
+                            <span>◀</span>
+                            <span>退出 UMM</span>
+                        </button>
+                    </div>
                 </nav>
 
                 <!-- 右侧可插拔 Page Frame 挂载容器 -->
@@ -4028,41 +4320,88 @@
                 </main>
             </div>
 
-            <!-- 解法 B 升级版：天体轴线串珠滑动条 (Celestial Magnetic Rail Slider · Emoji 内嵌于滑动天体 · 挡位零遮挡) -->
-            <div id="themeFloatingDock" class="theme-floating-dock collapsed" role="radiogroup" aria-label="启动器外观偏好切换">
-                <!-- 变形锚点控制纽 (折叠态显示当前直立天体 ☀️/💻/🌙，展开态原地变为收拢键 ‹) -->
-                <button id="themeTriggerBtn" class="theme-trigger-btn" onclick="handleDockTriggerClick()" title="启动器外观偏好 · 点击展开">
-                    <span id="themeTriggerIcon" class="theme-trigger-icon">🌙</span>
-                </button>
+            <!-- 左下角中枢背景遮罩 -->
+            <div id="profileHubBackdrop" class="hub-backdrop" onclick="closeProfileHub()"></div>
 
-                <!-- 展开态的天体串珠滑轨轨道 -->
-                <div id="celestialRailTrack" class="celestial-rail-track">
-                    <!-- 1. 中央贯穿导轨轴线与能量光流 -->
-                    <div class="axis-wire">
-                        <div id="wireGlow" class="axis-wire-glow"></div>
+            <!-- 左下角：本机环境与社区中枢弹出面板 (Popover) -->
+            <div id="profileHubFlyout" class="profile-hub-flyout" role="dialog" aria-label="本机环境与社区中枢">
+                <div class="hub-panel-header">
+                    <div class="hub-header-title">
+                        <span style="font-size: 15px;">💻</span>
+                        <span>本机环境与社区中枢</span>
+                    </div>
+                    <button class="btn-compact" onclick="closeProfileHub()" style="padding: 2px 8px;" title="关闭面板">✕</button>
+                </div>
+
+                <div class="hub-panel-body">
+                    <!-- Section 1: 社区账户与登录 -->
+                    <div class="hub-section">
+                        <div class="hub-section-label">社区账户认证</div>
+                        <div class="hub-account-card">
+                            <div class="hub-user-avatar">👤</div>
+                            <div class="hub-user-details">
+                                <div class="hub-user-name">
+                                    <strong>YU80Rice</strong>
+                                    <span class="hub-tag-verified">已认证创作者</span>
+                                </div>
+                                <div class="hub-user-meta">unmod.online 凭据活跃 · Token 有效</div>
+                            </div>
+                        </div>
+                        <button class="btn-compact btn-primary-accent" style="width: 100%; margin-top: 2px;" onclick="showToast('🌐 社区门户', '调起浏览器打开 unmod.online 创作者账户管理页面');">
+                            🌐 管理社区账户 (打开网页)
+                        </button>
                     </div>
 
-                    <!-- 2. 轴线上串联的 3 个挡位 (刻度在轴线上，文字在轴线下方，绝不遮挡) -->
-                    <div class="rail-gears-layer">
-                        <div id="gearLight" class="rail-gear" onclick="jumpToThemeNode(0)" data-theme="light" data-index="0" role="radio" aria-checked="false" title="切换至白天模式">
-                            <div class="gear-tick"></div>
-                            <span class="gear-label">白天</span>
-                        </div>
-
-                        <div id="gearSystem" class="rail-gear" onclick="jumpToThemeNode(1)" data-theme="system" data-index="1" role="radio" aria-checked="false" title="跟随操作系统">
-                            <div class="gear-tick"></div>
-                            <span class="gear-label">跟随</span>
-                        </div>
-
-                        <div id="gearDark" class="rail-gear active" onclick="jumpToThemeNode(2)" data-theme="dark" data-index="2" role="radio" aria-checked="true" title="切换至黑夜模式">
-                            <div class="gear-tick"></div>
-                            <span class="gear-label">黑夜</span>
+                    <!-- Section 2: Steam 运行环境探测 (本地免密安全) -->
+                    <div class="hub-section">
+                        <div class="hub-section-label">本地 Steam 运行就绪</div>
+                        <div class="hub-steam-status">
+                            <div class="hub-steam-indicator">
+                                <span class="hub-live-dot large"></span>
+                                <span>Steam 客户端已运行</span>
+                                <span class="hub-badge-safe" title="纯本地进程探测，免绑定无密码安全隐患">免绑定安全</span>
+                            </div>
+                            <div class="hub-steam-path">
+                                <span>探测源:</span> <code>Steam.exe (PID: 14208)</code>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 3. 核心滑动天体：Emoji 直接位于天体中心，随拖拽挡位动态演变 -->
-                    <div id="slidingBead" class="celestial-puck" title="按住天体沿轴线自由拖拽，或直接点击挡位">
-                        <span id="puckEmoji" class="puck-emoji">🌙</span>
+                    <!-- Section 3: 外观与昼夜导轨切换 -->
+                    <div class="hub-section" style="margin-bottom: 0;">
+                        <div class="hub-section-label">客户端外观偏好</div>
+                        <div class="hub-theme-rail-box">
+                            <!-- 天体轴线滑动条无缝内嵌在此 -->
+                            <div id="celestialRailTrack" class="celestial-rail-track" style="margin: 0 auto;">
+                                <!-- 1. 中央贯穿导轨轴线与能量光流 -->
+                                <div class="axis-wire">
+                                    <div id="wireGlow" class="axis-wire-glow"></div>
+                                </div>
+
+                                <!-- 2. 轴线上串联的 3 个挡位 -->
+                                <div class="rail-gears-layer">
+                                    <div id="gearLight" class="rail-gear" onclick="jumpToThemeNode(0)" data-theme="light" data-index="0" role="radio" aria-checked="false" title="切换至白天模式">
+                                        <div class="gear-tick"></div>
+                                        <span class="gear-label">白天</span>
+                                    </div>
+
+                                    <div id="gearSystem" class="rail-gear" onclick="jumpToThemeNode(1)" data-theme="system" data-index="1" role="radio" aria-checked="false" title="跟随操作系统">
+                                        <div class="gear-tick"></div>
+                                        <span class="gear-label">跟随</span>
+                                    </div>
+
+                                    <div id="gearDark" class="rail-gear active" onclick="jumpToThemeNode(2)" data-theme="dark" data-index="2" role="radio" aria-checked="true" title="切换至黑夜模式">
+                                        <div class="gear-tick"></div>
+                                        <span class="gear-label">黑夜</span>
+                                    </div>
+                                </div>
+
+                                <!-- 3. 核心滑动天体：Emoji 直接位于天体中心 -->
+                                <div id="slidingBead" class="celestial-puck" title="按住天体沿轴线自由拖拽，或直接点击挡位">
+                                    <span id="puckEmoji" class="puck-emoji">🌙</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -6465,7 +6804,6 @@
         const GEAR_X = [28, 128, 228]; // 固定绝对坐标，与展开态容器完美对应
         let activeAppTheme = 'dark';
         let activePreviewIndex = 2;
-        let themeDockTimer = null;
         let isBeadDragging = false;
         let dragStartX = 0;
         let beadStartLeft = 228;
@@ -6538,45 +6876,31 @@
             setAppTheme(THEMES[index]);
         }
 
-        function handleDockTriggerClick() {
-            const dock = document.getElementById('themeFloatingDock');
-            if (dock.classList.contains('collapsed')) {
-                openThemeDock();
+        function toggleProfileHub() {
+            const flyout = document.getElementById('profileHubFlyout');
+            if (!flyout) return;
+            if (flyout.classList.contains('open')) {
+                closeProfileHub();
             } else {
-                closeThemeDock();
+                openProfileHub();
             }
         }
 
-        function openThemeDock() {
-            const dock = document.getElementById('themeFloatingDock');
-            const triggerIcon = document.getElementById('themeTriggerIcon');
-            const triggerBtn = document.getElementById('themeTriggerBtn');
+        function openProfileHub() {
+            const flyout = document.getElementById('profileHubFlyout');
+            const backdrop = document.getElementById('profileHubBackdrop');
+            if (flyout) flyout.classList.add('open');
+            if (backdrop) backdrop.classList.add('open');
             
-            // 展开前立即静默就位当前挡位坐标（无动画），确保初态 100% 正确，绝对不发生从左飞滑！
+            // 展开前静默将天体滑块就位到当前模式挡位（无动画）
             updateBeadPosition(themeToIndex(activeAppTheme), false);
-
-            dock.classList.remove('collapsed');
-            triggerIcon.innerText = "‹";
-            triggerBtn.setAttribute('title', "收拢外观偏好栏");
-
-            if (themeDockTimer) clearTimeout(themeDockTimer);
-            themeDockTimer = setTimeout(closeThemeDock, 8000);
         }
 
-        function closeThemeDock() {
-            const dock = document.getElementById('themeFloatingDock');
-            const triggerBtn = document.getElementById('themeTriggerBtn');
-            dock.classList.add('collapsed');
-            syncTriggerIcon();
-            triggerBtn.setAttribute('title', "启动器外观偏好 · 点击展开");
-            if (themeDockTimer) clearTimeout(themeDockTimer);
-        }
-
-        function syncTriggerIcon() {
-            const triggerIcon = document.getElementById('themeTriggerIcon');
-            const idx = themeToIndex(activeAppTheme);
-            triggerIcon.innerText = THEME_EMOJIS[idx] || "🌙";
-            triggerIcon.style.color = "var(--text-primary)";
+        function closeProfileHub() {
+            const flyout = document.getElementById('profileHubFlyout');
+            const backdrop = document.getElementById('profileHubBackdrop');
+            if (flyout) flyout.classList.remove('open');
+            if (backdrop) backdrop.classList.remove('open');
         }
 
         function setAppTheme(theme) {
@@ -6605,20 +6929,12 @@
             // 确保主题切换后，当前选中的调色盘颜色即刻重播广播到 documentElement 和 body
             applyCustomAccent(activeCustomAccent, false);
 
-            const dock = document.getElementById('themeFloatingDock');
-            if (dock.classList.contains('collapsed')) {
-                syncTriggerIcon();
-            }
-
             const settingsThemeBadge = document.getElementById('settingsThemeBadge');
             if (settingsThemeBadge) {
                 settingsThemeBadge.innerText = themeName;
             }
 
             showToast("🎨 主题切换", `已应用：${themeName}`);
-
-            if (themeDockTimer) clearTimeout(themeDockTimer);
-            themeDockTimer = setTimeout(closeThemeDock, 3000);
         }
 
         // ============================================================
@@ -6671,7 +6987,6 @@
                 bead.style.transition = "none";
                 if (glow) glow.style.transition = "none";
                 bead.setPointerCapture(e.pointerId);
-                if (themeDockTimer) clearTimeout(themeDockTimer);
             });
 
             bead.addEventListener('pointermove', (e) => {
@@ -6712,12 +7027,16 @@
             });
         }
 
-        // 点击页面外部空白区域自动收拢
+        // 点击页面外部空白区域自动收拢本机环境与社区中枢
         document.addEventListener('click', e => {
-            const dock = document.getElementById('themeFloatingDock');
-            if (dock && !dock.classList.contains('collapsed')) {
-                if (!dock.contains(e.target)) {
-                    closeThemeDock();
+            const flyout = document.getElementById('profileHubFlyout');
+            const navTrigger = document.getElementById('navHubTrigger');
+            const topProfileBtn = document.querySelector('.top-action-btn[onclick*="toggleProfileHub"]');
+            if (flyout && flyout.classList.contains('open')) {
+                if (!flyout.contains(e.target) && 
+                    (!navTrigger || !navTrigger.contains(e.target)) &&
+                    (!topProfileBtn || !topProfileBtn.contains(e.target))) {
+                    closeProfileHub();
                 }
             }
         });
@@ -6745,7 +7064,6 @@
 
         // 页面初始化时挂载天体串珠拖拽与图标、状态机共振与设置页初始化
         window.addEventListener('DOMContentLoaded', () => {
-            syncTriggerIcon();
             initBeadDragging();
             setTimeout(() => updateBeadPosition(themeToIndex(activeAppTheme), false), 150);
             handleStateLoop();
