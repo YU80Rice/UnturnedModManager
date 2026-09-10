@@ -2456,16 +2456,93 @@
         .pcl-mod-row.selected {
             background: var(--theme-accent-bg) !important;
             border-color: var(--theme-accent-border) !important;
-            box-shadow: 0 2px 10px var(--theme-accent-glow);
+            box-shadow: 0 2px 14px var(--theme-accent-glow);
         }
 
-        .pcl-checkbox {
+        /* 方案 4: Unturned 军武战术弧形包角卡扣 (与 8px 卡片圆角 100% 严丝合缝一致) */
+        .bracket-tl,
+        .bracket-br {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.25s var(--ease-spring);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .bracket-tl {
+            top: -1px;
+            left: -1px;
+            border-top: 2.5px solid var(--theme-accent);
+            border-left: 2.5px solid var(--theme-accent);
+            border-top-left-radius: 8px; /* 弧度与卡片圆角完全同构 */
+            transform: scale(1.18);
+        }
+
+        .bracket-br {
+            bottom: -1px;
+            right: -1px;
+            border-bottom: 2.5px solid var(--theme-accent);
+            border-right: 2.5px solid var(--theme-accent);
+            border-bottom-right-radius: 8px; /* 弧度与卡片圆角完全同构 */
+            transform: scale(1.18);
+        }
+
+        .pcl-mod-row.selected .bracket-tl,
+        .pcl-mod-row.selected .bracket-br {
+            opacity: 1;
+            transform: scale(1); /* 选中时像瞄准镜锁焦一样向内锁紧圆角 */
+            filter: drop-shadow(0 0 5px var(--theme-accent));
+        }
+
+        /* 战术雷达菱形信标 (Tactical Diamond Beacon) */
+        .tactical-diamond {
             width: 16px;
             height: 16px;
-            accent-color: var(--theme-accent);
-            cursor: pointer;
+            border: 1.5px solid var(--border-strong);
+            transform: rotate(45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
-            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.22s var(--ease-spring);
+            margin: 0 4px 0 2px;
+            background: rgba(0, 0, 0, 0.08);
+            border-radius: 2px;
+        }
+        body.theme-light .tactical-diamond {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(140, 160, 180, 0.8);
+        }
+
+        .tactical-diamond-inner {
+            width: 7px;
+            height: 7px;
+            background: var(--theme-accent);
+            opacity: 0;
+            transform: scale(0.2);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 1px;
+        }
+
+        .pcl-mod-row:hover .tactical-diamond {
+            border-color: var(--theme-accent);
+            transform: rotate(45deg) scale(1.1);
+        }
+
+        .pcl-mod-row.selected .tactical-diamond {
+            border-color: var(--theme-accent);
+            background: rgba(16, 185, 129, 0.2);
+            box-shadow: 0 0 10px var(--theme-accent-glow);
+            transform: rotate(45deg) scale(1.05);
+        }
+
+        .pcl-mod-row.selected .tactical-diamond-inner {
+            opacity: 1;
+            transform: scale(1);
+            box-shadow: 0 0 6px var(--theme-accent);
         }
 
         .pcl-mod-avatar {
@@ -5661,7 +5738,11 @@
 
                 html += `
                     <div class="pcl-mod-row ${isSelected ? 'selected' : ''}" data-id="${p.id}" onclick="toggleSelectMod('${p.id}', event)">
-                        <input type="checkbox" class="pcl-checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectMod('${p.id}', event);" title="勾选/取消勾选">
+                        <div class="bracket-tl"></div>
+                        <div class="bracket-br"></div>
+                        <div class="tactical-diamond" onclick="event.stopPropagation(); toggleSelectMod('${p.id}', event);" title="选择/取消选择 (${isSelected ? '已选中' : '未选中'})">
+                            <div class="tactical-diamond-inner"></div>
+                        </div>
                         <div class="pcl-mod-avatar" title="${p.nameEn}">${p.icon}</div>
                         <div class="pcl-mod-content">
                             <div class="pcl-mod-title-line">
