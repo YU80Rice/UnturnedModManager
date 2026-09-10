@@ -1144,6 +1144,173 @@
             transition: color 0.2s ease;
         }
 
+        /* ==========================================================================
+           方案 D 整卡联动开关卡片 + 方案 C 战术方形硬件拨动开关 (Tactical Switch Suite)
+           ========================================================================== */
+        .tactical-card-switch {
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--surface-inset-border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-spring);
+            user-select: none;
+            position: relative;
+        }
+
+        .tactical-card-switch:hover {
+            border-color: var(--theme-accent-border);
+            background: var(--surface-card-hover-bg);
+            transform: translateY(-1px);
+        }
+
+        .tactical-card-switch.active {
+            border-color: var(--theme-accent-border);
+            background: var(--theme-accent-bg);
+            box-shadow: 0 4px 14px var(--theme-accent-glow);
+        }
+
+        .tactical-card-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tactical-card-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            background: var(--surface-card-bg);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            transition: transform var(--duration-fast) var(--ease-spring);
+        }
+
+        .tactical-card-switch:hover .tactical-card-icon {
+            transform: scale(1.08);
+        }
+
+        .tactical-card-main {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tactical-card-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tactical-card-title {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .tactical-card-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-family: var(--unturned-font-mono);
+            transition: all var(--duration-fast) ease;
+        }
+
+        .tactical-card-badge.on {
+            background: var(--theme-accent-bg);
+            color: var(--theme-accent);
+            border: 1px solid var(--theme-accent-border);
+        }
+
+        .tactical-card-badge.off {
+            background: var(--surface-card-bg);
+            color: var(--text-muted);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .tactical-card-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tactical-card-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        /* 方案 C 样式的方形战术硬件拨杆 (Tactical Military Lever Switch) */
+        .tactical-square-switch {
+            width: 50px;
+            height: 25px;
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-strong);
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 2px;
+            transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+        }
+
+        .tactical-square-switch.active {
+            border-color: var(--theme-accent);
+            box-shadow: 0 0 10px var(--theme-accent-glow), inset 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .tactical-square-lever {
+            width: 22px;
+            height: 19px;
+            background: #334155;
+            border: 1px solid #64748b;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translateX(0);
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background var(--duration-fast) ease, border-color var(--duration-fast) ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+        }
+
+        .tactical-square-switch.active .tactical-square-lever {
+            transform: translateX(23px);
+            background: var(--theme-accent);
+            border-color: var(--theme-accent);
+        }
+
+        .tactical-square-led {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #64748b;
+            transition: background var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+        }
+
+        .tactical-square-switch.active .tactical-square-led {
+            background: #ffffff;
+            box-shadow: 0 0 6px #ffffff, 0 0 8px var(--theme-accent-glow);
+        }
+
         /* 更新公告卡片与吉祥物挂件 */
         .patch-notes-card {
             position: relative;
@@ -2970,29 +3137,52 @@
                                             </div>
                                         </div>
 
-                                        <!-- BepInEx 子项 -->
-                                        <div class="env-section-box">
-                                            <div class="env-section-row">
-                                                <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;">
-                                                    <span id="bepStateDot" class="bepStateDotSync" style="color: var(--theme-accent);">●</span>
-                                                    <span id="bepStateText" class="bepStateTextSync">BepInEx 5.4.23.5 (x64) 运行就绪</span>
+                                        <!-- BepInEx 子项 (方案 D 整卡联动 + 方案 C 战术方形硬件拨动开关) -->
+                                        <div class="tactical-card-switch bepCardSync active" onclick="toggleTacticalBep()" title="点击整卡任意位置切换 BepInEx 状态">
+                                            <input type="checkbox" id="bepToggle" class="bepToggleSync" checked style="display: none;">
+                                            <div class="tactical-card-left">
+                                                <div class="tactical-card-icon">⚙️</div>
+                                                <div class="tactical-card-main">
+                                                    <div class="tactical-card-title-row">
+                                                        <span class="tactical-card-title">启用 BepInEx 模组加载器 (winhttp.dll)</span>
+                                                        <span class="tactical-card-badge on bepBadgeSync">已启用</span>
+                                                    </div>
+                                                    <div class="tactical-card-desc bepDescSync">
+                                                        BepInEx 5.4.23.5 (x64) · 挂载 12 个社区模组与原生钩子
+                                                    </div>
                                                 </div>
-                                                <button class="btn-compact" onclick="triggerRepairSimulation()">🔧 检查并修复</button>
                                             </div>
-                                            <label class="switch-label">
-                                                <input type="checkbox" id="bepToggle" class="bepToggleSync" checked onchange="syncBepToggle(this.checked)">
-                                                <span>启用 BepInEx 模组加载器 (winhttp.dll)</span>
-                                            </label>
+                                            <div class="tactical-card-right">
+                                                <button class="btn-compact" style="padding: 4px 9px;" onclick="event.stopPropagation(); triggerRepairSimulation();" title="校验 BepInEx 核心文件哈希完整性">🔧 检查并修复</button>
+                                                <div class="tactical-square-switch bepSwitchSync active" title="点击切换 BepInEx 模组加载器">
+                                                    <div class="tactical-square-lever">
+                                                        <div class="tactical-square-led"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <!-- DXVK 子项 -->
-                                        <div class="env-section-box">
-                                            <label class="switch-label" style="margin-top: 0;">
-                                                <input type="checkbox" id="dxvkToggle" class="dxvkToggleSync" onchange="syncDxvkToggle(this.checked)">
-                                                <span>启用 DXVK (DirectX 转 Vulkan 渲染提升帧率)</span>
-                                            </label>
-                                            <div id="dxvkGpuHint" class="gpu-hint dxvkHintSync">
-                                                ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，可按需开启提升帧率稳定性)
+                                        <!-- DXVK 子项 (方案 D 整卡联动 + 方案 C 战术方形硬件拨动开关) -->
+                                        <div class="tactical-card-switch dxvkCardSync" onclick="toggleTacticalDxvk()" title="点击整卡任意位置切换 DXVK Vulkan 渲染加速">
+                                            <input type="checkbox" id="dxvkToggle" class="dxvkToggleSync" style="display: none;">
+                                            <div class="tactical-card-left">
+                                                <div class="tactical-card-icon">⚡</div>
+                                                <div class="tactical-card-main">
+                                                    <div class="tactical-card-title-row">
+                                                        <span class="tactical-card-title">启用 DXVK (DirectX 转 Vulkan 渲染)</span>
+                                                        <span class="tactical-card-badge off dxvkBadgeSync">已停用</span>
+                                                    </div>
+                                                    <div class="tactical-card-desc dxvkDescSync">
+                                                        ℹ️ 检测到 RTX 4070 (Vulkan 1.3) · 按需开启提升帧率与多核稳定性
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="tactical-card-right">
+                                                <div class="tactical-square-switch dxvkSwitchSync" title="点击切换 DXVK 渲染加速">
+                                                    <div class="tactical-square-lever">
+                                                        <div class="tactical-square-led"></div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -3047,27 +3237,43 @@
                                         </div>
                                     </div>
                                     <div class="row-card-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
-                                        <div class="row-sub-panel">
-                                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                <label class="switch-label" style="margin: 0; font-weight: 700;">
-                                                    <input type="checkbox" class="bepToggleSync" checked onchange="syncBepToggle(this.checked)">
-                                                    <span>启用 BepInEx 模组加载器 (winhttp.dll)</span>
-                                                </label>
-                                                <span class="bepStateDotSync" style="color: var(--theme-accent); font-size: 12px;">●</span>
+                                        <!-- BepInEx 战术整卡 -->
+                                        <div class="tactical-card-switch bepCardSync active" onclick="toggleTacticalBep()" title="点击整卡任意位置切换 BepInEx 状态">
+                                            <input type="checkbox" class="bepToggleSync" checked style="display: none;">
+                                            <div class="tactical-card-left">
+                                                <div class="tactical-card-icon">⚙️</div>
+                                                <div class="tactical-card-main">
+                                                    <div class="tactical-card-title-row">
+                                                        <span class="tactical-card-title">启用 BepInEx 模组加载器 (winhttp.dll)</span>
+                                                        <span class="tactical-card-badge on bepBadgeSync">已启用</span>
+                                                    </div>
+                                                    <div class="tactical-card-desc bepDescSync">BepInEx 5.4.23.5 (x64) · 挂载 12 个社区模组与原生钩子</div>
+                                                </div>
                                             </div>
-                                            <div class="bepStateTextSync" style="font-size: 10.5px; color: var(--text-secondary); margin-top: 4px; margin-left: 24px;">
-                                                通道: winhttp.dll | 目录: BepInEx/plugins | 纯净模式自动安全旁路
+                                            <div class="tactical-card-right">
+                                                <div class="tactical-square-switch bepSwitchSync active" title="点击切换 BepInEx 模组加载器">
+                                                    <div class="tactical-square-lever"><div class="tactical-square-led"></div></div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="row-sub-panel">
-                                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                                <label class="switch-label" style="margin: 0; font-weight: 700;">
-                                                    <input type="checkbox" class="dxvkToggleSync" onchange="syncDxvkToggle(this.checked)">
-                                                    <span>启用 DXVK Vulkan 渲染加速 (dxgi.dll)</span>
-                                                </label>
+
+                                        <!-- DXVK 战术整卡 -->
+                                        <div class="tactical-card-switch dxvkCardSync" onclick="toggleTacticalDxvk()" title="点击整卡任意位置切换 DXVK Vulkan 渲染加速">
+                                            <input type="checkbox" class="dxvkToggleSync" style="display: none;">
+                                            <div class="tactical-card-left">
+                                                <div class="tactical-card-icon">⚡</div>
+                                                <div class="tactical-card-main">
+                                                    <div class="tactical-card-title-row">
+                                                        <span class="tactical-card-title">启用 DXVK (DirectX 转 Vulkan 渲染)</span>
+                                                        <span class="tactical-card-badge off dxvkBadgeSync">已停用</span>
+                                                    </div>
+                                                    <div class="tactical-card-desc dxvkDescSync">ℹ️ 检测到 RTX 4070 (Vulkan 1.3) · 按需开启提升帧率与多核稳定性</div>
+                                                </div>
                                             </div>
-                                            <div class="dxvkHintSync" style="font-size: 10.5px; color: var(--text-secondary); margin-top: 4px; margin-left: 24px;">
-                                                ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，可按需开启提升帧率稳定性)
+                                            <div class="tactical-card-right">
+                                                <div class="tactical-square-switch dxvkSwitchSync" title="点击切换 DXVK 渲染加速">
+                                                    <div class="tactical-square-lever"><div class="tactical-square-led"></div></div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -3175,14 +3381,20 @@
                                 <div class="compact-row-strip">
                                     <div style="display: flex; align-items: center; gap: 16px;">
                                         <span style="font-size: 12px; font-weight: 700;">🔧 运行环境:</span>
-                                        <label class="switch-label" style="margin: 0; font-size: 11px;">
-                                            <input type="checkbox" class="bepToggleSync" checked onchange="syncBepToggle(this.checked)">
-                                            <span>BepInEx (x64)</span>
-                                        </label>
-                                        <label class="switch-label" style="margin: 0; font-size: 11px;">
-                                            <input type="checkbox" class="dxvkToggleSync" onchange="syncDxvkToggle(this.checked)">
-                                            <span>DXVK Vulkan 加速</span>
-                                        </label>
+                                        <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="toggleTacticalBep()" title="点击切换 BepInEx">
+                                            <input type="checkbox" class="bepToggleSync" checked style="display: none;">
+                                            <span style="font-size: 11px; font-weight: 600;">BepInEx (x64)</span>
+                                            <div class="tactical-square-switch bepSwitchSync active" style="transform: scale(0.85); transform-origin: left center;">
+                                                <div class="tactical-square-lever"><div class="tactical-square-led"></div></div>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="toggleTacticalDxvk()" title="点击切换 DXVK">
+                                            <input type="checkbox" class="dxvkToggleSync" style="display: none;">
+                                            <span style="font-size: 11px; font-weight: 600;">DXVK 加速</span>
+                                            <div class="tactical-square-switch dxvkSwitchSync" style="transform: scale(0.85); transform-origin: left center;">
+                                                <div class="tactical-square-lever"><div class="tactical-square-led"></div></div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div style="display: flex; gap: 8px;">
                                         <button class="btn-compact" onclick="triggerRepairSimulation()">🔧 校验修复</button>
@@ -3501,10 +3713,36 @@
             }
         }
 
+        function toggleTacticalBep() {
+            const bepEl = document.querySelector('.bepToggleSync');
+            const currentChecked = bepEl ? bepEl.checked : true;
+            syncBepToggle(!currentChecked);
+        }
+
+        function toggleTacticalDxvk() {
+            const dxvkEl = document.querySelector('.dxvkToggleSync');
+            const currentChecked = dxvkEl ? dxvkEl.checked : false;
+            syncDxvkToggle(!currentChecked);
+        }
+
         function syncBepToggle(checked) {
             document.querySelectorAll('.bepToggleSync').forEach(el => el.checked = checked);
             const legacy = document.getElementById('bepToggle');
             if (legacy) legacy.checked = checked;
+
+            // 同步战术卡片与方形开关状态
+            document.querySelectorAll('.bepCardSync').forEach(card => card.classList.toggle('active', checked));
+            document.querySelectorAll('.bepSwitchSync').forEach(sw => sw.classList.toggle('active', checked));
+            document.querySelectorAll('.bepBadgeSync').forEach(badge => {
+                badge.innerText = checked ? "已启用" : "已停用";
+                badge.className = `tactical-card-badge ${checked ? 'on' : 'off'} bepBadgeSync`;
+            });
+            document.querySelectorAll('.bepDescSync').forEach(desc => {
+                desc.innerText = checked 
+                    ? "BepInEx 5.4.23.5 (x64) · 挂载 12 个社区模组与原生钩子" 
+                    : "已安全旁路脱机 · 原生无注入纯净模式 (适合官方服防封)";
+            });
+
             handleStateLoop();
         }
 
@@ -3512,6 +3750,20 @@
             document.querySelectorAll('.dxvkToggleSync').forEach(el => el.checked = checked);
             const legacy = document.getElementById('dxvkToggle');
             if (legacy) legacy.checked = checked;
+
+            // 同步战术卡片与方形开关状态
+            document.querySelectorAll('.dxvkCardSync').forEach(card => card.classList.toggle('active', checked));
+            document.querySelectorAll('.dxvkSwitchSync').forEach(sw => sw.classList.toggle('active', checked));
+            document.querySelectorAll('.dxvkBadgeSync').forEach(badge => {
+                badge.innerText = checked ? "已启用" : "已停用";
+                badge.className = `tactical-card-badge ${checked ? 'on' : 'off'} dxvkBadgeSync`;
+            });
+            document.querySelectorAll('.dxvkDescSync').forEach(desc => {
+                desc.innerText = checked
+                    ? "DXVK Vulkan 渲染加速已就绪 · 提升帧率与多核稳定性"
+                    : "ℹ️ 检测到 RTX 4070 (Vulkan 1.3) · 按需开启提升帧率与多核稳定性";
+            });
+
             handleStateLoop();
         }
 
