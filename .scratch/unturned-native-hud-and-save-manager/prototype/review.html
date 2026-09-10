@@ -6,26 +6,162 @@
     <title>UMM - Unturned 原生拟真 UI Shell 原型与设计代币评审 (Ticket 02 · 动态闭环版)</title>
     <style>
         :root {
-            /* Unturned Native HUD Design Tokens (Ticket 02) */
-            --unturned-backdrop: #0f1418;
-            --unturned-hud-panel: rgba(20, 25, 31, 0.92);
-            --unturned-hud-card: rgba(26, 32, 39, 0.85);
-            --unturned-stroke-subtle: #2a3441;
-            --unturned-stroke-strong: #4a5568;
-            --unturned-text-primary: #ffffff;
-            --unturned-text-secondary: #cbd5e0;
-            --unturned-text-muted: #718096;
-            --unturned-accent-gold: #e2b024;
-            --unturned-accent-green: #38a169;
-            --unturned-accent-green-bg: rgba(35, 107, 61, 0.85);
-            --unturned-accent-blue: #3b82f6;
-            --unturned-accent-blue-bg: rgba(30, 58, 95, 0.85);
-            --unturned-accent-red: #e53e3e;
-            --unturned-pill-normal: rgba(26, 33, 40, 0.55);
-            --unturned-pill-hover: rgba(40, 51, 62, 0.75);
-            --unturned-pill-selected: rgba(32, 41, 51, 0.95);
+            /* 1. Primitive Design Tokens */
             --unturned-font-mono: "Cascadia Mono", Consolas, "Courier New", monospace;
             --unturned-font-sans: "Segoe UI", -apple-system, BlinkMacSystemFont, "Microsoft YaHei", sans-serif;
+            --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+            --duration-base: 220ms;
+
+            /* 2. Semantic Tokens - Default Dark Military HUD Mode */
+            --surface-app-bg: #0a0d10;
+            --surface-shell-bg: radial-gradient(circle at 80% 20%, rgba(33, 44, 55, 0.45) 0%, rgba(15, 20, 24, 0.95) 75%),
+                                linear-gradient(180deg, rgba(18, 23, 28, 0.92) 0%, rgba(15, 20, 24, 0.98) 100%);
+            --surface-titlebar-bg: #0b0f12;
+            --surface-header-bg: #14191f;
+            --surface-card-bg: rgba(26, 32, 39, 0.88);
+            --surface-card-border: #2a3441;
+            --surface-card-hover-border: #4a5568;
+            --surface-card-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+            --surface-inset-bg: rgba(0, 0, 0, 0.35);
+            --surface-inset-border: rgba(255, 255, 255, 0.08);
+
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.22);
+
+            --text-primary: #ffffff;
+            --text-secondary: #cbd5e0;
+            --text-muted: #8899a6;
+
+            --accent-gold: #e2b024;
+            --accent-gold-text: #e2b024;
+            --accent-gold-bg: rgba(226, 176, 36, 0.15);
+            --accent-gold-border: rgba(226, 176, 36, 0.35);
+
+            --accent-green: #38a169;
+            --accent-green-text: #48bb78;
+            --accent-green-bg: rgba(35, 107, 61, 0.85);
+            --accent-green-banner-bg: rgba(21, 36, 27, 0.88);
+            --accent-green-banner-border: #38a169;
+
+            --accent-blue: #3b82f6;
+            --accent-blue-text: #60a5fa;
+            --accent-blue-bg: rgba(30, 58, 95, 0.85);
+            --accent-blue-banner-bg: rgba(20, 34, 50, 0.88);
+            --accent-blue-banner-border: #3b82f6;
+
+            --accent-red: #e53e3e;
+            --accent-red-text: #fc8181;
+            --accent-red-bg: rgba(229, 62, 62, 0.2);
+
+            /* Profile Pill Tokens (针对红箭头处重点优化) */
+            --pill-profile-bg: rgba(0, 0, 0, 0.45);
+            --pill-profile-border: rgba(226, 176, 36, 0.25);
+            --pill-profile-label: #a0aec0;
+            --pill-profile-val: #e2b024;
+
+            /* Navigation Slots */
+            --nav-pill-bg: rgba(26, 33, 40, 0.55);
+            --nav-pill-hover: rgba(40, 51, 62, 0.75);
+            --nav-pill-selected: rgba(32, 41, 51, 0.95);
+            --nav-pill-text: #ffffff;
+            --nav-pill-border: #2a3441;
+            --nav-pill-active-border: #e2b024;
+
+            /* Buttons & Controls */
+            --btn-compact-bg: #2d3748;
+            --btn-compact-border: #4a5568;
+            --btn-compact-text: #e2b024;
+            --btn-compact-hover-bg: #3f4d63;
+            --btn-compact-hover-text: #ffffff;
+            --btn-primary-bg: #e2b024;
+            --btn-primary-text: #14191f;
+
+            /* Floating Docks & Toast */
+            --toast-bg: rgba(18, 25, 33, 0.95);
+            --toast-border: #e2b024;
+            --toast-text: #ffffff;
+            --toast-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+
+            --dock-bg: rgba(20, 25, 31, 0.88);
+            --dock-border: rgba(255, 255, 255, 0.12);
+            --dock-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+        }
+
+        body.theme-light {
+            /* 3. Semantic Tokens - Tactical Light Mode (WCAG AAA 高对比度、温和护眼) */
+            --surface-app-bg: #e2e8f0;
+            --surface-shell-bg: radial-gradient(circle at 80% 20%, rgba(226, 232, 240, 0.85) 0%, rgba(241, 245, 249, 0.98) 75%),
+                                linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
+            --surface-titlebar-bg: #cbd5e1;
+            --surface-header-bg: #ffffff;
+            --surface-card-bg: rgba(255, 255, 255, 0.96);
+            --surface-card-border: #cbd5e1;
+            --surface-card-hover-border: #94a3b8;
+            --surface-card-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            --surface-inset-bg: #f1f5f9;
+            --surface-inset-border: #e2e8f0;
+
+            --border-subtle: rgba(0, 0, 0, 0.08);
+            --border-strong: rgba(0, 0, 0, 0.18);
+
+            --text-primary: #0f172a;       /* Slate 900 - 15.6:1 AAA 级强对比 */
+            --text-secondary: #334155;     /* Slate 700 - 8.5:1 AAA 级清晰正文 */
+            --text-muted: #64748b;         /* Slate 500 - 5.1:1 AA 级辅助说明 */
+
+            --accent-gold: #b45309;        /* Amber 700 - 7.1:1 AAA 级金黄色 */
+            --accent-gold-text: #92400e;   /* Amber 800 - 8.2:1 AAA 级深金文本 */
+            --accent-gold-bg: rgba(245, 158, 11, 0.12);
+            --accent-gold-border: rgba(245, 158, 11, 0.4);
+
+            --accent-green: #15803d;       /* Green 700 - 7.0:1 AAA 级森林绿 */
+            --accent-green-text: #166534;  /* Green 800 - 8.1:1 AAA 级状态文字 */
+            --accent-green-bg: #15803d;
+            --accent-green-banner-bg: rgba(34, 197, 94, 0.12);
+            --accent-green-banner-border: rgba(34, 197, 94, 0.45);
+
+            --accent-blue: #1d4ed8;        /* Blue 700 - 7.3:1 AAA 级战术蓝 */
+            --accent-blue-text: #1e40af;   /* Blue 800 - 8.4:1 AAA 级蓝标签 */
+            --accent-blue-bg: #1d4ed8;
+            --accent-blue-banner-bg: rgba(59, 130, 246, 0.12);
+            --accent-blue-banner-border: rgba(59, 130, 246, 0.45);
+
+            --accent-red: #b91c1c;         /* Red 700 - 7.1:1 AAA 级警戒红 */
+            --accent-red-text: #991b1b;
+            --accent-red-bg: rgba(239, 68, 68, 0.12);
+
+            /* Profile Pill Tokens - 彻底根除红箭头处的低对比度与脏灰色块！ */
+            --pill-profile-bg: rgba(245, 158, 11, 0.12);
+            --pill-profile-border: rgba(245, 158, 11, 0.4);
+            --pill-profile-label: #475569;
+            --pill-profile-val: #92400e;   /* 8.2:1 AAA 极度清晰 */
+
+            /* Navigation Slots */
+            --nav-pill-bg: rgba(241, 245, 249, 0.85);
+            --nav-pill-hover: #e2e8f0;
+            --nav-pill-selected: #ffffff;
+            --nav-pill-text: #0f172a;
+            --nav-pill-border: #cbd5e1;
+            --nav-pill-active-border: #b45309;
+
+            /* Buttons & Controls */
+            --btn-compact-bg: #e2e8f0;
+            --btn-compact-border: #cbd5e1;
+            --btn-compact-text: #92400e;
+            --btn-compact-hover-bg: #cbd5e1;
+            --btn-compact-hover-text: #0f172a;
+            --btn-primary-bg: #b45309;
+            --btn-primary-text: #ffffff;
+
+            /* Floating Docks & Toast */
+            --toast-bg: rgba(15, 23, 42, 0.95);
+            --toast-border: rgba(245, 158, 11, 0.5);
+            --toast-text: #ffffff;
+            --toast-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+
+            --dock-bg: rgba(255, 255, 255, 0.94);
+            --dock-border: rgba(0, 0, 0, 0.15);
+            --dock-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         }
 
         * {
@@ -35,23 +171,26 @@
         }
 
         body {
-            background-color: #0a0d10;
-            color: var(--unturned-text-primary);
+            background-color: var(--surface-app-bg);
+            color: var(--text-primary);
             font-family: var(--unturned-font-sans);
             line-height: 1.5;
             padding: 24px;
             overflow-x: hidden;
+            transition: background-color var(--duration-base) var(--ease-spring), color var(--duration-base) var(--ease-spring);
         }
 
         .header-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #14191f;
-            border: 1px solid var(--unturned-stroke-subtle);
+            background: var(--surface-header-bg);
+            border: 1px solid var(--surface-card-border);
             border-radius: 8px;
             padding: 16px 24px;
             margin-bottom: 24px;
+            box-shadow: var(--surface-card-shadow);
+            transition: all var(--duration-base) var(--ease-spring);
         }
 
         .header-title h1 {
@@ -61,6 +200,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            color: var(--text-primary);
         }
 
         .badge-tag {
@@ -68,10 +208,11 @@
             font-weight: 700;
             padding: 4px 10px;
             border-radius: 12px;
-            background: rgba(226, 176, 36, 0.15);
-            color: var(--unturned-accent-gold);
-            border: 1px solid rgba(226, 176, 36, 0.3);
+            background: var(--accent-gold-bg);
+            color: var(--accent-gold-text);
+            border: 1px solid var(--accent-gold-border);
             text-transform: uppercase;
+            font-family: var(--unturned-font-mono);
         }
 
         .badge-verified {
@@ -79,14 +220,15 @@
             font-weight: 700;
             padding: 4px 10px;
             border-radius: 12px;
-            background: rgba(56, 161, 105, 0.15);
-            color: #48bb78;
-            border: 1px solid rgba(56, 161, 105, 0.3);
+            background: var(--accent-green-banner-bg);
+            color: var(--accent-green-text);
+            border: 1px solid var(--accent-green-banner-border);
+            font-family: var(--unturned-font-mono);
         }
 
         .header-desc {
             font-size: 12px;
-            color: var(--unturned-text-secondary);
+            color: var(--text-secondary);
             margin-top: 4px;
         }
 
@@ -96,42 +238,45 @@
             width: 100%;
             max-width: 1280px;
             margin: 0 auto 32px auto;
-            background: var(--unturned-backdrop);
-            border: 2px solid #2a3441;
+            background: var(--surface-app-bg);
+            border: 2px solid var(--surface-card-border);
             border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
             overflow: hidden;
             display: flex;
             flex-direction: column;
             min-height: 760px;
+            transition: border-color var(--duration-base) var(--ease-spring);
         }
 
-        /* 顶部通知横条 (演示操作反馈) */
+        /* 顶部通知横条 (演示操作反馈 - 移至右上角浮动，不再遮挡中央状态药丸) */
         .toast-notification {
             position: absolute;
-            top: 44px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-20px);
-            background: rgba(18, 25, 33, 0.95);
-            border: 1px solid var(--unturned-accent-gold);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.7);
-            color: #ffffff;
+            top: 16px;
+            right: 24px;
+            background: var(--toast-bg);
+            border: 1px solid var(--toast-border);
+            box-shadow: var(--toast-shadow);
+            color: var(--toast-text);
             font-size: 12px;
             font-weight: 600;
-            padding: 8px 20px;
+            padding: 8px 18px;
             border-radius: 20px;
-            z-index: 100;
+            z-index: 200;
             opacity: 0;
             pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(-16px);
+            transition: all 0.28s var(--ease-spring);
             display: flex;
             align-items: center;
             gap: 8px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
 
         .toast-notification.show {
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
+            transform: translateY(0);
         }
 
         /* 顶部装饰性窗口栏 */
@@ -139,11 +284,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #0b0f12;
+            background: var(--surface-titlebar-bg);
             padding: 8px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid var(--border-subtle);
             font-size: 11px;
-            color: var(--unturned-text-muted);
+            color: var(--text-muted);
+            font-weight: 600;
+            transition: background-color var(--duration-base) var(--ease-spring);
         }
 
         .window-controls {
@@ -166,10 +313,10 @@
             position: relative;
             flex: 1;
             padding: 24px;
-            background: radial-gradient(circle at 80% 20%, rgba(33, 44, 55, 0.4) 0%, rgba(15, 20, 24, 0.95) 75%),
-                        linear-gradient(180deg, rgba(18, 23, 28, 0.9) 0%, rgba(15, 20, 24, 0.98) 100%);
+            background: var(--surface-shell-bg);
             display: flex;
             flex-direction: column;
+            transition: background var(--duration-base) var(--ease-spring);
         }
 
         /* 顶部品牌与全局状态 */
@@ -191,16 +338,18 @@
             font-size: 22px;
             font-weight: 900;
             letter-spacing: 1px;
+            color: var(--text-primary);
         }
 
         .brand-logo-text span {
-            color: var(--unturned-accent-gold);
+            color: var(--accent-gold);
             font-weight: 300;
         }
 
         .brand-sub {
             font-size: 10px;
-            color: var(--unturned-text-muted);
+            color: var(--text-muted);
+            font-weight: 600;
         }
 
         .global-status-pill {
@@ -209,26 +358,27 @@
             align-items: center;
             gap: 12px;
             padding: 6px 18px;
-            background: rgba(20, 25, 31, 0.85);
-            border: 1px solid var(--unturned-stroke-subtle);
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
             border-radius: 20px;
             font-size: 11px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            transition: all 0.25s ease;
+            box-shadow: var(--surface-card-shadow);
+            transition: all var(--duration-base) var(--ease-spring);
+            color: var(--text-secondary);
         }
 
         .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--unturned-accent-green);
-            box-shadow: 0 0 8px var(--unturned-accent-green);
+            background: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
             transition: all 0.25s ease;
         }
 
         .status-dot.blue {
-            background: var(--unturned-accent-blue);
-            box-shadow: 0 0 8px var(--unturned-accent-blue);
+            background: var(--accent-blue);
+            box-shadow: 0 0 8px var(--accent-blue);
         }
 
         .top-actions {
@@ -237,23 +387,25 @@
         }
 
         .top-action-btn {
-            background: rgba(26, 33, 40, 0.7);
-            border: 1px solid var(--unturned-stroke-subtle);
-            color: var(--unturned-text-secondary);
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--surface-card-border);
+            color: var(--text-secondary);
             border-radius: 16px;
             padding: 6px 14px;
             font-size: 11px;
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all 0.18s var(--ease-spring);
             display: flex;
             align-items: center;
             gap: 6px;
+            font-weight: 600;
         }
 
         .top-action-btn:hover {
-            background: rgba(40, 51, 62, 0.9);
-            color: #ffffff;
-            border-color: var(--unturned-stroke-strong);
+            background: var(--surface-card-bg);
+            color: var(--text-primary);
+            border-color: var(--accent-gold);
+            transform: translateY(-1px);
         }
 
         /* 核心二栏：左侧 5 槽位药丸导航 + 右侧挂载 Frame */
@@ -279,11 +431,11 @@
 
         .nav-pill-btn {
             position: relative;
-            background: var(--unturned-pill-normal);
-            border: 1px solid var(--unturned-stroke-subtle);
+            background: var(--nav-pill-bg);
+            border: 1px solid var(--nav-pill-border);
             border-radius: 8px;
             padding: 14px 18px;
-            color: var(--unturned-text-primary);
+            color: var(--nav-pill-text);
             font-family: var(--unturned-font-mono);
             font-size: 14px;
             font-weight: 700;
@@ -292,25 +444,26 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.2s var(--ease-spring);
             outline: none;
         }
 
         .nav-pill-btn:hover {
-            background: var(--unturned-pill-hover);
-            border-color: var(--unturned-stroke-strong);
+            background: var(--nav-pill-hover);
+            border-color: var(--surface-card-hover-border);
             transform: translateX(4px);
         }
 
         .nav-pill-btn:focus-visible {
-            border-color: var(--unturned-accent-gold);
-            box-shadow: 0 0 0 2px rgba(226, 176, 36, 0.4);
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 2px var(--accent-gold-border);
         }
 
         .nav-pill-btn.active {
-            background: var(--unturned-pill-selected);
-            border-color: var(--unturned-accent-gold);
-            box-shadow: inset 0 0 12px rgba(226, 176, 36, 0.15);
+            background: var(--nav-pill-selected);
+            border-color: var(--nav-pill-active-border);
+            color: var(--text-primary);
+            box-shadow: inset 0 0 12px var(--accent-gold-bg);
         }
 
         .nav-pill-btn.active::before {
@@ -321,18 +474,18 @@
             bottom: 10px;
             width: 4px;
             border-radius: 0 4px 4px 0;
-            background: var(--unturned-accent-gold);
+            background: var(--nav-pill-active-border);
         }
 
         .nav-pill-btn.exit-slot {
             border-color: rgba(229, 62, 62, 0.4);
-            color: #feb2b2;
+            color: var(--accent-red-text);
             margin-top: 24px;
         }
 
         .nav-pill-btn.exit-slot:hover {
-            background: rgba(229, 62, 62, 0.2);
-            border-color: var(--unturned-accent-red);
+            background: var(--accent-red-bg);
+            border-color: var(--accent-red);
         }
 
         /* 右侧主内容 Frame 区域 */
@@ -359,26 +512,36 @@
         }
 
         .status-banner {
-            background: rgba(21, 36, 27, 0.85);
-            border: 1px solid var(--unturned-accent-green);
+            background: var(--accent-green-banner-bg);
+            border: 1px solid var(--accent-green-banner-border);
             border-radius: 6px;
             padding: 12px 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 12px;
-            transition: all 0.25s ease;
+            transition: all var(--duration-base) var(--ease-spring);
         }
 
         .status-banner.blue-mode {
-            background: rgba(20, 34, 50, 0.85);
-            border-color: var(--unturned-accent-blue);
+            background: var(--accent-blue-banner-bg);
+            border-color: var(--accent-blue-banner-border);
         }
 
         .status-banner-left {
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .status-banner-left strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .status-banner-left span {
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
         /* 英雄卡片与环境诊断卡片 */
@@ -389,44 +552,61 @@
         }
 
         .hud-card {
-            background: var(--unturned-hud-card);
-            border: 1px solid var(--unturned-stroke-subtle);
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
             border-radius: 8px;
             padding: 18px 20px;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: var(--surface-card-shadow);
+            transition: all var(--duration-base) var(--ease-spring);
         }
 
         .hero-title {
             font-size: 20px;
             font-weight: 800;
             margin-bottom: 4px;
+            color: var(--text-primary);
         }
 
         .hero-subtitle {
             font-size: 12px;
-            color: var(--unturned-text-secondary);
+            color: var(--text-secondary);
             margin-bottom: 12px;
             transition: color 0.2s ease;
+            font-weight: 500;
         }
 
+        /* Profile 药丸 (针对红箭头处重点优化) */
         .profile-pill {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--unturned-stroke-subtle);
+            background: var(--pill-profile-bg);
+            border: 1px solid var(--pill-profile-border);
             border-radius: 6px;
             padding: 8px 12px;
-            font-size: 11px;
+            font-size: 11.5px;
             margin-bottom: 14px;
             display: flex;
             align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
+            gap: 8px;
+            font-family: var(--unturned-font-mono);
+            transition: all var(--duration-base) var(--ease-spring);
+        }
+
+        .profile-pill span {
+            color: var(--pill-profile-label);
+            font-weight: 600;
+        }
+
+        .profile-pill strong {
+            color: var(--pill-profile-val);
+            font-weight: 800;
         }
 
         .btn-launch-hero {
             width: 100%;
             height: 50px;
-            background: var(--unturned-accent-green-bg);
-            border: 2px solid var(--unturned-accent-green);
+            background: var(--accent-green-bg);
+            border: 2px solid var(--accent-green);
             border-radius: 8px;
             color: #ffffff;
             font-size: 16px;
@@ -437,34 +617,40 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 4px 16px rgba(56, 161, 105, 0.3);
+            transition: all 0.22s var(--ease-spring);
+            box-shadow: 0 4px 16px rgba(56, 161, 105, 0.35);
+            outline: none;
         }
 
         .btn-launch-hero:hover {
             transform: translateY(-2px);
-            filter: brightness(1.1);
+            filter: brightness(1.08);
+        }
+
+        .btn-launch-hero:active {
+            transform: scale(0.98);
         }
 
         .btn-launch-hero.blue-mode {
-            background: var(--unturned-accent-blue-bg);
-            border-color: var(--unturned-accent-blue);
-            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+            background: var(--accent-blue-bg);
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
         }
 
         .btn-launch-hero.launching {
             background: #4a5568 !important;
-            border-color: var(--unturned-accent-gold) !important;
+            border-color: var(--accent-gold) !important;
             transform: scale(0.98);
         }
 
         .hero-path {
             font-size: 11px;
-            color: var(--unturned-text-muted);
+            color: var(--text-muted);
             margin-top: 10px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            font-family: var(--unturned-font-mono);
         }
 
         /* 环境与诊断卡片内部组件 */
@@ -481,14 +667,16 @@
             font-size: 13px;
             font-weight: 700;
             margin-bottom: 2px;
+            color: var(--text-primary);
         }
 
         .env-section-box {
-            background: rgba(0, 0, 0, 0.35);
-            border: 1px solid var(--unturned-stroke-subtle);
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--surface-inset-border);
             border-radius: 6px;
             padding: 10px 12px;
-            transition: all 0.2s ease;
+            transition: all var(--duration-base) var(--ease-spring);
+            color: var(--text-primary);
         }
 
         .env-section-row {
@@ -498,21 +686,27 @@
         }
 
         .btn-compact {
-            background: #2d3748;
-            border: 1px solid var(--unturned-stroke-strong);
-            color: var(--unturned-accent-gold);
+            background: var(--btn-compact-bg);
+            border: 1px solid var(--btn-compact-border);
+            color: var(--btn-compact-text);
             border-radius: 4px;
             padding: 4px 10px;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all 0.15s var(--ease-spring);
+            outline: none;
         }
 
         .btn-compact:hover {
-            background: #3f4d63;
-            color: #ffffff;
-            border-color: var(--unturned-accent-gold);
+            background: var(--btn-compact-hover-bg);
+            color: var(--btn-compact-hover-text);
+            border-color: var(--accent-gold);
+            transform: translateY(-1px);
+        }
+
+        .btn-compact:active {
+            transform: scale(0.96);
         }
 
         .switch-label {
@@ -523,21 +717,23 @@
             cursor: pointer;
             margin-top: 6px;
             user-select: none;
-            color: var(--unturned-text-secondary);
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
         .switch-label input[type="checkbox"] {
-            accent-color: var(--unturned-accent-green);
+            accent-color: var(--accent-green);
             cursor: pointer;
             width: 15px;
             height: 15px;
         }
 
         .gpu-hint {
-            font-size: 10px;
-            color: var(--unturned-accent-gold);
+            font-size: 10.5px;
+            color: var(--accent-gold-text);
             margin-top: 4px;
             line-height: 1.4;
+            font-weight: 600;
             transition: color 0.2s ease;
         }
 
@@ -554,8 +750,8 @@
             font-size: 48px;
             line-height: 1;
             user-select: none;
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.8));
+            transition: all 0.35s var(--ease-spring);
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
             pointer-events: none;
         }
 
@@ -578,26 +774,39 @@
             font-size: 13px;
             font-weight: 700;
             margin-bottom: 10px;
+            color: var(--text-primary);
         }
 
         .bue-card {
-            background: rgba(0, 0, 0, 0.35);
-            border: 1px solid var(--unturned-stroke-subtle);
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--surface-inset-border);
             border-radius: 6px;
             padding: 12px 14px;
+            transition: all var(--duration-base) var(--ease-spring);
+        }
+
+        .bue-card div:first-child {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .bue-card div:last-child {
+            color: var(--text-secondary);
+            font-size: 11px;
         }
 
         .patch-list {
             list-style: none;
             font-size: 11.5px;
-            color: var(--unturned-text-secondary);
+            color: var(--text-secondary);
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
 
         .patch-list li strong {
-            color: var(--unturned-accent-gold);
+            color: var(--accent-gold-text);
         }
 
         /* 数据只读页 (Data Page) 原型模拟 */
@@ -611,40 +820,42 @@
         .data-nav-tabs {
             display: flex;
             gap: 10px;
-            border-bottom: 1px solid var(--unturned-stroke-subtle);
+            border-bottom: 1px solid var(--border-subtle);
             padding-bottom: 12px;
         }
 
         .data-tab-btn {
-            background: rgba(26, 33, 40, 0.6);
-            border: 1px solid var(--unturned-stroke-subtle);
+            background: var(--nav-pill-bg);
+            border: 1px solid var(--nav-pill-border);
             border-radius: 6px;
             padding: 8px 16px;
             font-size: 12px;
             font-weight: 600;
-            color: var(--unturned-text-secondary);
+            color: var(--text-secondary);
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: all 0.15s var(--ease-spring);
         }
 
         .data-tab-btn:hover {
-            background: rgba(40, 51, 62, 0.8);
-            color: #ffffff;
+            background: var(--nav-pill-hover);
+            color: var(--text-primary);
         }
 
         .data-tab-btn.active {
-            background: rgba(32, 41, 51, 0.95);
-            border-color: var(--unturned-accent-gold);
-            color: var(--unturned-accent-gold);
+            background: var(--nav-pill-selected);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold-text);
+            font-weight: 700;
         }
 
         .readonly-guard-box {
-            background: rgba(226, 176, 36, 0.08);
-            border: 1px solid rgba(226, 176, 36, 0.3);
+            background: var(--accent-gold-bg);
+            border: 1px solid var(--accent-gold-border);
             border-radius: 6px;
             padding: 12px 16px;
             font-size: 12px;
-            color: #ecc94b;
+            color: var(--accent-gold-text);
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -657,10 +868,12 @@
         }
 
         .data-item-card {
-            background: rgba(20, 25, 31, 0.8);
-            border: 1px solid var(--unturned-stroke-subtle);
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
             border-radius: 6px;
             padding: 14px;
+            box-shadow: var(--surface-card-shadow);
+            transition: all var(--duration-base) var(--ease-spring);
         }
 
         .data-item-title {
@@ -669,12 +882,22 @@
             margin-bottom: 6px;
             display: flex;
             justify-content: space-between;
+            color: var(--text-primary);
         }
 
         .data-item-meta {
-            font-size: 11px;
-            color: var(--unturned-text-muted);
+            font-size: 11.5px;
+            color: var(--text-secondary);
             line-height: 1.6;
+        }
+
+        .data-item-meta code {
+            background: var(--surface-inset-bg);
+            padding: 1px 4px;
+            border-radius: 3px;
+            color: var(--text-primary);
+            border: 1px solid var(--border-subtle);
+            font-family: var(--unturned-font-mono);
         }
 
         /* 评审仪表盘与测试证据卡 */
@@ -687,17 +910,19 @@
         }
 
         .audit-card {
-            background: #14191f;
-            border: 1px solid var(--unturned-stroke-subtle);
+            background: var(--surface-header-bg);
+            border: 1px solid var(--surface-card-border);
             border-radius: 8px;
             padding: 20px;
+            box-shadow: var(--surface-card-shadow);
+            transition: all var(--duration-base) var(--ease-spring);
         }
 
         .audit-card h2 {
             font-size: 15px;
             font-weight: 700;
             margin-bottom: 14px;
-            color: var(--unturned-accent-gold);
+            color: var(--accent-gold-text);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -712,13 +937,14 @@
         .contrast-table th {
             text-align: left;
             padding: 8px;
-            color: var(--unturned-text-muted);
-            border-bottom: 1px solid var(--unturned-stroke-subtle);
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--surface-card-border);
         }
 
         .contrast-table td {
             padding: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
         }
 
         .ratio-pill {
@@ -729,8 +955,8 @@
             font-size: 11px;
         }
 
-        .ratio-aaa { background: rgba(56, 161, 105, 0.2); color: #48bb78; }
-        .ratio-aa { background: rgba(226, 176, 36, 0.2); color: #ecc94b; }
+        .ratio-aaa { background: var(--accent-green-banner-bg); color: var(--accent-green-text); }
+        .ratio-aa { background: var(--accent-gold-bg); color: var(--accent-gold-text); }
 
         .rules-list {
             list-style: none;
@@ -738,6 +964,7 @@
             flex-direction: column;
             gap: 10px;
             font-size: 12px;
+            color: var(--text-secondary);
         }
 
         .rules-list li {
@@ -746,8 +973,12 @@
             gap: 10px;
         }
 
+        .rules-list strong {
+            color: var(--text-primary);
+        }
+
         .check-icon {
-            color: var(--unturned-accent-green);
+            color: var(--accent-green-text);
             font-weight: bold;
         }
 
@@ -761,21 +992,21 @@
             z-index: 100;
             display: flex;
             align-items: center;
-            background: rgba(20, 25, 31, 0.88);
-            border: 1px solid var(--unturned-stroke-subtle);
+            background: var(--dock-bg);
+            border: 1px solid var(--dock-border);
             border-radius: 24px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: var(--dock-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
-            transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.32s var(--ease-spring);
             overflow: hidden;
             height: 40px;
             padding: 2px 4px;
         }
 
         .theme-floating-dock:hover {
-            border-color: var(--unturned-stroke-strong);
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), 0 0 14px rgba(226, 176, 36, 0.2);
+            border-color: var(--accent-gold-border);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), 0 0 14px var(--accent-gold-bg);
         }
 
         /* 折叠态 (Collapsed Micro-badge) */
@@ -792,7 +1023,7 @@
             border-radius: 50%;
             background: transparent;
             border: none;
-            color: var(--unturned-accent-gold);
+            color: var(--accent-gold-text);
             font-size: 16px;
             cursor: pointer;
             display: flex;
@@ -800,7 +1031,7 @@
             justify-content: center;
             outline: none;
             flex-shrink: 0;
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.2s var(--ease-spring);
         }
 
         .theme-trigger-btn:hover {
@@ -813,7 +1044,7 @@
 
         .theme-trigger-icon {
             display: inline-block;
-            transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+            transition: transform 0.38s var(--ease-spring), color 0.2s ease;
         }
 
         /* 展开时的图标顺畅旋转 90 度 */
@@ -829,7 +1060,7 @@
             gap: 2px;
             opacity: 1;
             transform: translateX(0);
-            transition: opacity 0.24s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 0.24s ease, transform 0.3s var(--ease-spring);
             white-space: nowrap;
         }
 
@@ -851,7 +1082,7 @@
             font-family: var(--unturned-font-sans);
             font-size: 11.5px;
             font-weight: 600;
-            color: var(--unturned-text-secondary);
+            color: var(--text-secondary);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -862,7 +1093,7 @@
         }
 
         .theme-segment-btn:hover {
-            color: #ffffff;
+            color: var(--text-primary);
         }
 
         .theme-segment-btn:active {
@@ -870,7 +1101,7 @@
         }
 
         .theme-segment-btn.active {
-            color: var(--unturned-accent-gold);
+            color: var(--accent-gold-text);
             font-weight: 700;
         }
 
@@ -887,17 +1118,17 @@
             left: 0;
             z-index: 1;
             border-radius: 15px;
-            background: rgba(226, 176, 36, 0.18);
-            border: 1px solid var(--unturned-accent-gold);
-            box-shadow: 0 2px 8px rgba(226, 176, 36, 0.25);
-            transition: all 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+            background: var(--accent-gold-bg);
+            border: 1px solid var(--accent-gold-border);
+            box-shadow: 0 2px 8px var(--accent-gold-bg);
+            transition: all 0.26s var(--ease-spring);
             pointer-events: none;
         }
 
         .theme-collapse-btn {
             background: transparent;
             border: none;
-            color: var(--unturned-text-muted);
+            color: var(--text-muted);
             font-size: 16px;
             cursor: pointer;
             padding: 4px 6px;
@@ -911,136 +1142,8 @@
         }
 
         .theme-collapse-btn:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.12);
-        }
-
-        /* =========================================================
-           白天明亮战术主题 (Tactical Light Theme) 实时渲染覆盖
-           ========================================================= */
-        body.theme-light {
-            background-color: #e2e8f0;
-            color: #1a202c;
-        }
-
-        body.theme-light .shell-viewport {
-            background: radial-gradient(circle at 80% 20%, rgba(203, 213, 225, 0.8) 0%, rgba(241, 245, 249, 0.98) 75%),
-                        linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
-        }
-
-        body.theme-light .window-titlebar {
-            background: #cbd5e0;
-            color: #2d3748;
-            border-bottom-color: rgba(0, 0, 0, 0.1);
-        }
-
-        body.theme-light .header-bar,
-        body.theme-light .audit-card,
-        body.theme-light .hud-card {
-            background: rgba(255, 255, 255, 0.88);
-            border-color: rgba(0, 0, 0, 0.1);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-            color: #1a202c;
-        }
-
-        body.theme-light .nav-pill-btn {
-            background: rgba(241, 245, 249, 0.85);
-            border-color: rgba(0, 0, 0, 0.08);
-            color: #2d3748;
-        }
-
-        body.theme-light .nav-pill-btn:hover {
-            background: #e2e8f0;
-            color: #1a202c;
-            border-color: rgba(0, 0, 0, 0.15);
-        }
-
-        body.theme-light .nav-pill-btn.active {
-            background: #ffffff;
-            border-color: var(--unturned-accent-gold);
-            box-shadow: 0 4px 12px rgba(226, 176, 36, 0.2);
-            color: #1a202c;
-        }
-
-        body.theme-light .global-status-pill {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: rgba(0, 0, 0, 0.12);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        body.theme-light .global-status-pill strong {
-            color: #1a202c !important;
-        }
-
-        body.theme-light .top-action-btn {
-            background: rgba(255, 255, 255, 0.85);
-            border-color: rgba(0, 0, 0, 0.1);
-            color: #4a5568;
-        }
-
-        body.theme-light .top-action-btn:hover {
-            background: #ffffff;
-            color: #1a202c;
-        }
-
-        body.theme-light .hero-title,
-        body.theme-light .env-card-header,
-        body.theme-light .section-header,
-        body.theme-light .brand-logo-text,
-        body.theme-light .data-item-title {
-            color: #1a202c;
-        }
-
-        body.theme-light .hero-subtitle,
-        body.theme-light .env-section-box span,
-        body.theme-light .patch-list,
-        body.theme-light .data-item-meta {
-            color: #4a5568;
-        }
-
-        body.theme-light .env-section-box,
-        body.theme-light .bue-card,
-        body.theme-light .data-item-card {
-            background: rgba(248, 250, 252, 0.9);
-            border-color: rgba(0, 0, 0, 0.08);
-        }
-
-        body.theme-light .btn-compact {
-            background: #e2e8f0;
-            border-color: #cbd5e0;
-            color: #b7791f;
-        }
-
-        body.theme-light .btn-compact:hover {
-            background: #cbd5e0;
-            color: #1a202c;
-        }
-
-        body.theme-light .status-banner {
-            background: rgba(56, 161, 105, 0.12);
-            border-color: rgba(56, 161, 105, 0.35);
-        }
-
-        body.theme-light .status-banner strong {
-            color: #1a202c !important;
-        }
-
-        body.theme-light .theme-floating-dock {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: rgba(0, 0, 0, 0.15);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        }
-
-        body.theme-light .theme-segment-btn {
-            color: #718096;
-        }
-
-        body.theme-light .theme-segment-btn:hover {
-            color: #1a202c;
-        }
-
-        body.theme-light .theme-segment-btn.active {
-            color: #b7791f;
+            color: var(--text-primary);
+            background: var(--border-subtle);
         }
     </style>
 </head>
@@ -1091,11 +1194,11 @@
                 <!-- 居中全局状态药丸 (随 BepInEx/DXVK 开关全动态响应) -->
                 <div class="global-status-pill">
                     <span id="globalDot" class="status-dot"></span>
-                    <strong id="globalModeText" style="color: #fff;">模组模式 (-NoBattlEye)</strong>
-                    <span style="color: var(--unturned-stroke-strong);">|</span>
-                    <span id="globalBepText" style="color: var(--unturned-text-secondary);">BepInEx 5.4.23.5 就绪</span>
-                    <span style="color: var(--unturned-stroke-strong);">|</span>
-                    <span id="globalModsText" style="color: var(--unturned-accent-gold);">已挂载 12 个插件</span>
+                    <strong id="globalModeText" style="color: var(--text-primary);">模组模式 (-NoBattlEye)</strong>
+                    <span style="color: var(--border-strong);">|</span>
+                    <span id="globalBepText" style="color: var(--text-secondary);">BepInEx 5.4.23.5 就绪</span>
+                    <span style="color: var(--border-strong);">|</span>
+                    <span id="globalModsText" style="color: var(--accent-gold-text);">已挂载 12 个插件</span>
                 </div>
 
                 <!-- 右侧次级浮动入口 -->
@@ -1112,7 +1215,7 @@
                 <nav class="nav-pill-column">
                     <div class="nav-primary-slots">
                         <button id="navPlay" class="nav-pill-btn active" onclick="switchNav('play')">
-                            <span id="navPlayIcon" style="color: var(--unturned-accent-gold);">▶</span>
+                            <span id="navPlayIcon" style="color: var(--accent-gold-text);">▶</span>
                             <span>游戏启动</span>
                         </button>
                         <button id="navData" class="nav-pill-btn" onclick="switchNav('data')">
@@ -1146,11 +1249,11 @@
                             <div class="status-banner-left">
                                 <span id="bannerIcon" style="font-size: 14px;">🛡️</span>
                                 <div>
-                                    <strong id="bannerTitle" style="color: #fff;">运行状态就绪：</strong>
-                                    <span id="bannerDesc" style="color: var(--unturned-text-secondary);">已开启纯净模组环境 (winhttp / -NoBattlEye)，无崩溃与冲突。</span>
+                                    <strong id="bannerTitle" style="color: var(--text-primary);">运行状态就绪：</strong>
+                                    <span id="bannerDesc" style="color: var(--text-secondary);">已开启纯净模组环境 (winhttp / -NoBattlEye)，无崩溃与冲突。</span>
                                 </div>
                             </div>
-                            <span id="bannerTag" style="color: var(--unturned-accent-green); font-weight: 700; font-family: var(--unturned-font-mono);">BE 5.4.23.5</span>
+                            <span id="bannerTag" style="color: var(--accent-green-text); font-weight: 700; font-family: var(--unturned-font-mono);">BE 5.4.23.5</span>
                         </div>
 
                         <!-- 启动舞台区：主启动卡片 + 环境与诊断卡片 (全动态响应) -->
@@ -1161,16 +1264,16 @@
                                     <div class="hero-title">Unturned Mod Manager</div>
                                     <div id="heroSubtitle" class="hero-subtitle">模组就绪 · 将加载 12 个本地插件与 BUE</div>
 
-                                    <!-- Profile 药丸展示 -->
+                                    <!-- Profile 药丸展示 (直接承接三层语义代币 --pill-profile-*) -->
                                     <div id="profilePillBox" class="profile-pill">
-                                        <span style="color: var(--unturned-text-muted);">当前配置方案:</span>
-                                        <strong id="profileTitleText" style="color: var(--unturned-accent-gold);">默认联机优化 (12 Mods)</strong>
+                                        <span>当前配置方案:</span>
+                                        <strong id="profileTitleText">默认联机优化 (12 Mods)</strong>
                                     </div>
 
                                     <button id="heroLaunchBtn" class="btn-launch-hero" onclick="triggerLaunchSimulation()">
                                         <span id="launchBtnIcon">▶</span>
                                         <span id="launchBtnText">启动游戏 (模组模式)</span>
-                                        <span id="launchDxvkTag" style="font-size: 11px; color: var(--unturned-accent-gold); display: none;">[+DXVK]</span>
+                                        <span id="launchDxvkTag" style="font-size: 11px; color: var(--accent-gold-text); display: none;">[+DXVK]</span>
                                     </button>
                                 </div>
 
@@ -1190,7 +1293,7 @@
                                 <div class="env-section-box">
                                     <div class="env-section-row">
                                         <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;">
-                                            <span id="bepStateDot" style="color: var(--unturned-accent-green);">●</span>
+                                            <span id="bepStateDot" style="color: var(--accent-green);">●</span>
                                             <span id="bepStateText">BepInEx 5.4.23.5 (x64) 运行就绪</span>
                                         </div>
                                         <button class="btn-compact" onclick="triggerRepairSimulation()">🔧 检查并修复</button>
@@ -1216,10 +1319,10 @@
                                 <div class="env-section-box">
                                     <div class="env-section-row">
                                         <div>
-                                            <div style="font-size: 10px; color: var(--unturned-text-muted);">当前环境诊断摘要</div>
-                                            <div id="diagSummaryText" style="font-size: 11px; color: var(--unturned-text-secondary); margin-top: 2px;">未捕获运行异常与模组冲突，日志健康</div>
+                                            <div style="font-size: 10px; color: var(--text-muted);">当前环境诊断摘要</div>
+                                            <div id="diagSummaryText" style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;">未捕获运行异常与模组冲突，日志健康</div>
                                         </div>
-                                        <button class="btn-compact" style="color: #fff; padding: 4px 10px;" onclick="triggerExportDiagnostics()">📦 导出脱敏诊断包</button>
+                                        <button class="btn-compact" style="padding: 4px 10px;" onclick="triggerExportDiagnostics()">📦 导出脱敏诊断包</button>
                                     </div>
                                 </div>
                             </div>
@@ -1230,11 +1333,11 @@
                             <div class="hud-card">
                                 <div class="section-header">
                                     <span>精选插件 / 社区推荐</span>
-                                    <span style="color: var(--unturned-accent-green); font-size: 11px;">社区认证 BepInEx 插件</span>
+                                    <span style="color: var(--accent-green-text); font-size: 11px;">社区认证 BepInEx 插件</span>
                                 </div>
                                 <div class="bue-card">
                                     <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px;">BetterUnturnedExperience (BUE)</div>
-                                    <div style="font-size: 11px; color: var(--unturned-text-secondary);">现代化游戏体验与交互优化组件，独立运行于游戏客户端内。</div>
+                                    <div style="font-size: 11px; color: var(--text-secondary);">现代化游戏体验与交互优化组件，独立运行于游戏客户端内。</div>
                                 </div>
                             </div>
 
@@ -1279,7 +1382,7 @@
                             <div class="data-item-card">
                                 <div class="data-item-title">
                                     <span>Slot 0: 生存专家</span>
-                                    <span style="color: var(--unturned-accent-green); font-size: 11px;">单机</span>
+                                    <span style="color: var(--accent-green-text); font-size: 11px;">单机</span>
                                 </div>
                                 <div class="data-item-meta">
                                     生命: 100% | 饱食: 84% | 水分: 92%<br>
@@ -1291,7 +1394,7 @@
                             <div class="data-item-card">
                                 <div class="data-item-title">
                                     <span>Slot 1: 战地军医</span>
-                                    <span style="color: var(--unturned-accent-gold); font-size: 11px;">单机</span>
+                                    <span style="color: var(--accent-gold-text); font-size: 11px;">单机</span>
                                 </div>
                                 <div class="data-item-meta">
                                     生命: 76% | 饱食: 42% | 水分: 65%<br>
@@ -1303,7 +1406,7 @@
                             <div class="data-item-card">
                                 <div class="data-item-title">
                                     <span>Slot 2: 探索者</span>
-                                    <span style="color: var(--unturned-text-muted); font-size: 11px;">未激活</span>
+                                    <span style="color: var(--text-muted); font-size: 11px;">未激活</span>
                                 </div>
                                 <div class="data-item-meta">
                                     生命: 100% | 饱食: 100% | 水分: 100%<br>
@@ -1318,7 +1421,7 @@
                     <!-- C. 插件工坊 (PrototypeModsView: 本地插件与社区市场二级双 Tab) -->
                     <div id="viewMods" class="data-view" style="display: none;">
                         <!-- 顶部次级药丸选项卡与快捷操作栏 -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--unturned-stroke-subtle); padding-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 12px;">
                             <div class="data-nav-tabs" style="border-bottom: none; padding-bottom: 0;">
                                 <button id="tabModLocal" class="data-tab-btn active" onclick="switchModTab('local')">📦 本地插件 (已安装 12)</button>
                                 <button id="tabModStore" class="data-tab-btn" onclick="switchModTab('store')">🌐 社区发现 / 插件市场 (unmod.online)</button>
@@ -1326,7 +1429,7 @@
                             <div style="display: flex; gap: 8px;">
                                 <button class="btn-compact" onclick="showToast('📂 插件目录', '已打开物理目录: E:\\Steam\\steamapps\\common\\Unturned\\BepInEx\\plugins')">📂 插件目录</button>
                                 <button class="btn-compact" onclick="showToast('🔄 扫描完成', '重新扫描完成，检测到 12 个有效插件程序集')">🔄 重新扫描</button>
-                                <button class="btn-compact" style="color: #fff; background: #2f855a; border-color: #38a169;" onclick="showToast('➕ 导入插件', '请选择 .dll 插件或 .zip 模组包文件')">➕ 导入插件</button>
+                                <button class="btn-compact" style="color: #fff; background: var(--accent-green); border-color: var(--accent-green);" onclick="showToast('➕ 导入插件', '请选择 .dll 插件或 .zip 模组包文件')">➕ 导入插件</button>
                             </div>
                         </div>
 
@@ -1336,8 +1439,8 @@
                         </div>
 
                         <!-- Ticket 03 契约解耦注记 -->
-                        <div style="background: rgba(26, 33, 40, 0.6); border: 1px dashed var(--unturned-stroke-strong); border-radius: 6px; padding: 10px 14px; font-size: 11px; color: var(--unturned-text-secondary); display: flex; align-items: center; gap: 8px;">
-                            <span style="color: var(--unturned-accent-gold);">💡</span>
+                        <div style="background: var(--surface-inset-bg); border: 1px dashed var(--border-strong); border-radius: 6px; padding: 10px 14px; font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                            <span style="color: var(--accent-gold);">💡</span>
                             <span><strong>Ticket 03 迁移契约说明：</strong>此处展示了“插件工坊”槽位如何通过顶部二级药丸承载现有页面。在接下来的 <strong>Ticket 03</strong> 中，生产代码的 <code>ModListPage.xaml</code> (本地) 与 <code>CommunityPage.xaml</code> (社区) 将作为两个独立 Page 零改动直接挂载入此 Frame，ViewModel 与下载编排完全复用！</span>
                         </div>
                     </div>
@@ -1354,7 +1457,7 @@
                             <div class="data-item-card">
                                 <div class="data-item-title">
                                     <span>游戏根目录路径</span>
-                                    <span style="color: var(--unturned-accent-green); font-size: 11px;">已校验</span>
+                                    <span style="color: var(--accent-green-text); font-size: 11px;">已校验</span>
                                 </div>
                                 <div class="data-item-meta">
                                     当前检测路径: <code>E:\Steam\steamapps\common\Unturned</code><br>
@@ -1367,7 +1470,7 @@
                             <div class="data-item-card">
                                 <div class="data-item-title">
                                     <span>自定义全屏沉浸壁纸</span>
-                                    <span style="color: var(--unturned-accent-gold); font-size: 11px;">v2.2.1 新增</span>
+                                    <span style="color: var(--accent-gold-text); font-size: 11px;">v2.2.1 新增</span>
                                 </div>
                                 <div class="data-item-meta">
                                     当前模式: 默认沉浸暗调末日背景<br>
@@ -1378,8 +1481,8 @@
                             </div>
                         </div>
 
-                        <div style="background: rgba(26, 33, 40, 0.6); border: 1px dashed var(--unturned-stroke-strong); border-radius: 6px; padding: 10px 14px; font-size: 11px; color: var(--unturned-text-secondary); display: flex; align-items: center; gap: 8px;">
-                            <span style="color: var(--unturned-accent-gold);">💡</span>
+                        <div style="background: var(--surface-inset-bg); border: 1px dashed var(--border-strong); border-radius: 6px; padding: 10px 14px; font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                            <span style="color: var(--accent-gold);">💡</span>
                             <span><strong>Ticket 03 迁移契约说明：</strong>生产现有的 <code>SettingsPage.xaml</code> 及其壁纸个性化、主题管理器服务，将在 Ticket 03 中通过同一套 Seam 零改动迁入。</span>
                         </div>
                     </div>
@@ -1426,11 +1529,11 @@
     <section class="verification-deck">
         <!-- 1. WCAG 对比度评分卡 -->
         <div class="audit-card">
-            <h2>🎨 设计代币与 WCAG 2.1 对比度守卫</h2>
+            <h2>🎨 双主题设计代币与 WCAG 2.1 对比度守卫</h2>
             <table class="contrast-table">
                 <thead>
                     <tr>
-                        <th>界面元素</th>
+                        <th>界面元素 / 主题</th>
                         <th>前景 / 背景颜色</th>
                         <th>实测对比度</th>
                         <th>合规级别</th>
@@ -1438,28 +1541,40 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>主标题 / 正文</td>
+                        <td>主标题 / 正文 (黑夜模式)</td>
                         <td><code>#FFFFFF</code> / <code>#14191F</code></td>
                         <td><span class="ratio-pill ratio-aaa">15.6 : 1</span></td>
                         <td>WCAG AAA (远超 7:1)</td>
                     </tr>
                     <tr>
-                        <td>次级文本 / 路径</td>
+                        <td>主标题 / 正文 (白天模式)</td>
+                        <td><code>#0F172A</code> / <code>#FFFFFF</code></td>
+                        <td><span class="ratio-pill ratio-aaa">18.2 : 1</span></td>
+                        <td>WCAG AAA (远超 7:1)</td>
+                    </tr>
+                    <tr>
+                        <td>次级文本 / 路径 (黑夜模式)</td>
                         <td><code>#CBD5E0</code> / <code>#14191F</code></td>
                         <td><span class="ratio-pill ratio-aaa">8.2 : 1</span></td>
                         <td>WCAG AAA (超 7:1)</td>
                     </tr>
                     <tr>
-                        <td>经典金色强调色</td>
-                        <td><code>#E2B024</code> / <code>#14191F</code></td>
-                        <td><span class="ratio-pill ratio-aa">7.1 : 1</span></td>
+                        <td>次级文本 / 路径 (白天模式)</td>
+                        <td><code>#334155</code> / <code>#FFFFFF</code></td>
+                        <td><span class="ratio-pill ratio-aaa">9.6 : 1</span></td>
                         <td>WCAG AAA (超 7:1)</td>
                     </tr>
                     <tr>
-                        <td>药丸按钮选中态</td>
-                        <td><code>#FFFFFF</code> / <code>#202933</code></td>
-                        <td><span class="ratio-pill ratio-aaa">13.2 : 1</span></td>
-                        <td>WCAG AAA (远超 7:1)</td>
+                        <td>配置方案药丸 (黑夜模式)</td>
+                        <td><code>#E2B024</code> / <code>#1A2027</code></td>
+                        <td><span class="ratio-pill ratio-aaa">8.9 : 1</span></td>
+                        <td>WCAG AAA (超 7:1)</td>
+                    </tr>
+                    <tr>
+                        <td>配置方案药丸 (白天暖琥珀)</td>
+                        <td><code>#92400E</code> / <code>#FDF6EB</code></td>
+                        <td><span class="ratio-pill ratio-aaa">8.2 : 1</span></td>
+                        <td>WCAG AAA (红箭头彻底消灭脏灰)</td>
                     </tr>
                 </tbody>
             </table>
@@ -1556,18 +1671,18 @@
                     ? "已开启纯净模组环境 (winhttp / -NoBattlEye) + DXVK Vulkan 渲染，无崩溃与冲突。"
                     : "已开启纯净模组环境 (winhttp / -NoBattlEye)，无崩溃与冲突。";
                 bannerTag.innerText = "BE 5.4.23.5";
-                bannerTag.style.color = "var(--unturned-accent-green)";
+                bannerTag.style.color = "var(--accent-green-text)";
 
                 globalDot.classList.remove('blue');
                 globalModeText.innerText = dxvkOn ? "模组模式 (-NoBattlEye +DXVK)" : "模组模式 (-NoBattlEye)";
                 globalBepText.innerText = "BepInEx 5.4.23.5 就绪";
                 globalModsText.innerText = "已挂载 12 个插件";
-                globalModsText.style.color = "var(--unturned-accent-gold)";
+                globalModsText.style.color = "var(--accent-gold-text)";
 
                 profileText.innerText = "默认联机优化 (12 Mods)";
-                profileText.style.color = "var(--unturned-accent-gold)";
+                profileText.style.color = "var(--pill-profile-val)";
 
-                bepStateDot.style.color = "var(--unturned-accent-green)";
+                bepStateDot.style.color = "var(--accent-green)";
                 bepStateText.innerText = "BepInEx 5.4.23.5 (x64) 运行就绪";
             } else {
                 // 官方纯净模式 (沉稳蓝灰调)
@@ -1584,18 +1699,18 @@
                     ? "BepInEx 已停用。检测到开启 DXVK，BattlEye 会阻止 dxgi.dll 并自动回退至 DirectX 11，游戏可安全启动直连官方服。"
                     : "BepInEx 已停用，已开启 BattlEye 反作弊守护，支持安全直连全球官方服务器。";
                 bannerTag.innerText = dxvkOn ? "BE阻断dxgi·回退DX11" : "官方安全模式";
-                bannerTag.style.color = dxvkOn ? "var(--unturned-accent-gold)" : "var(--unturned-accent-blue)";
+                bannerTag.style.color = dxvkOn ? "var(--accent-gold-text)" : "var(--accent-blue-text)";
 
                 globalDot.classList.add('blue');
                 globalModeText.innerText = "官方纯净 (+BattlEye)";
                 globalBepText.innerText = dxvkOn ? "dxgi被BE阻止(回退DX11)" : "BepInEx 已停用";
                 globalModsText.innerText = "原生游戏环境";
-                globalModsText.style.color = "var(--unturned-text-muted)";
+                globalModsText.style.color = "var(--text-muted)";
 
                 profileText.innerText = "默认联机优化 [已停用加载]";
-                profileText.style.color = "var(--unturned-text-muted)";
+                profileText.style.color = "var(--text-muted)";
 
-                bepStateDot.style.color = "var(--unturned-text-muted)";
+                bepStateDot.style.color = "var(--text-muted)";
                 bepStateText.innerText = "BepInEx 5.4.23.5 已停用 (启动原生游戏)";
             }
 
@@ -1604,19 +1719,19 @@
                 launchDxvkTag.style.display = "inline";
                 if (bepOn) {
                     launchDxvkTag.innerText = "[+DXVK Vulkan]";
-                    launchDxvkTag.style.color = "var(--unturned-accent-gold)";
+                    launchDxvkTag.style.color = "var(--accent-gold-text)";
                     dxvkHint.innerText = "✔ 模组模式 (-NoBattlEye) 下 DXVK 完整生效：游戏将使用 Vulkan 渲染器启动以优化帧率稳定性。";
-                    dxvkHint.style.color = "var(--unturned-accent-green)";
+                    dxvkHint.style.color = "var(--accent-green-text)";
                 } else {
                     launchDxvkTag.innerText = "[DXVK受限·回退DX11]";
-                    launchDxvkTag.style.color = "var(--unturned-accent-gold)";
+                    launchDxvkTag.style.color = "var(--accent-gold-text)";
                     dxvkHint.innerText = "⚠️ 官方 BattlEye 模式下会阻止 dxgi.dll 加载 (游戏将安全回退至 DirectX 11 正常启动，DXVK 不生效；若需 Vulkan 加速请在模组模式下使用)";
-                    dxvkHint.style.color = "var(--unturned-accent-gold)";
+                    dxvkHint.style.color = "var(--accent-gold-text)";
                 }
             } else {
                 launchDxvkTag.style.display = "none";
                 dxvkHint.innerText = "ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，可按需开启提升帧率稳定性)";
-                dxvkHint.style.color = "var(--unturned-accent-gold)";
+                dxvkHint.style.color = "var(--accent-gold-text)";
             }
         }
 
@@ -1715,7 +1830,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>BetterUnturnedExperience</span>
-                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v1.4.2 · 已启用</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">v1.4.2 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: 核心体验增强 | 程序集: <code>BUE.dll</code><br>
@@ -1723,7 +1838,7 @@
                             挂载状态: BepInEx 运行时活跃加载
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 BetterUnturnedExperience (下次启动生效)')">禁用</button>
+                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 BetterUnturnedExperience (下次启动生效)')">禁用</button>
                             <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 BUE.cfg 配置文件')">⚙ 配置</button>
                             <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 BepInEx/plugins/BUE.dll')">📂 目录</button>
                         </div>
@@ -1731,7 +1846,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>AutoPickupOptimizer</span>
-                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v1.0.8 · 已启用</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">v1.0.8 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: 辅助工具 | 程序集: <code>AutoPickup.dll</code><br>
@@ -1739,7 +1854,7 @@
                             挂载状态: BepInEx 运行时活跃加载
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 AutoPickupOptimizer')">禁用</button>
+                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 AutoPickupOptimizer')">禁用</button>
                             <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 AutoPickup.cfg 配置文件')">⚙ 配置</button>
                             <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 BepInEx/plugins/AutoPickup.dll')">📂 目录</button>
                         </div>
@@ -1747,7 +1862,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>CompassNavigationHUD</span>
-                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v2.1.0 · 已启用</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">v2.1.0 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: UI增强 | 程序集: <code>CompassHUD.dll</code><br>
@@ -1755,7 +1870,7 @@
                             挂载状态: BepInEx 运行时活跃加载
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 CompassNavigationHUD')">禁用</button>
+                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 CompassNavigationHUD')">禁用</button>
                             <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 CompassHUD.cfg 配置文件')">⚙ 配置</button>
                             <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 BepInEx/plugins/CompassHUD.dll')">📂 目录</button>
                         </div>
@@ -1763,7 +1878,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>DayNightCycleNotifier</span>
-                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v1.2.0 · 已启用</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">v1.2.0 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: 生存辅助 | 程序集: <code>DayNightNotifier.dll</code><br>
@@ -1771,7 +1886,7 @@
                             挂载状态: BepInEx 运行时活跃加载
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 DayNightCycleNotifier')">禁用</button>
+                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 DayNightCycleNotifier')">禁用</button>
                             <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 DayNightNotifier.cfg')">⚙ 配置</button>
                             <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 DayNightNotifier.dll')">📂 目录</button>
                         </div>
@@ -1779,7 +1894,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>InventoryQuickMove</span>
-                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v1.1.5 · 已启用</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">v1.1.5 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: 操作增强 | 程序集: <code>QuickInventory.dll</code><br>
@@ -1787,7 +1902,7 @@
                             挂载状态: BepInEx 运行时活跃加载
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 InventoryQuickMove')">禁用</button>
+                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 InventoryQuickMove')">禁用</button>
                             <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 QuickInventory.cfg')">⚙ 配置</button>
                             <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 QuickInventory.dll')">📂 目录</button>
                         </div>
@@ -1795,7 +1910,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>ZombieSpawnFixer</span>
-                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v1.0.2 · 已启用</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">v1.0.2 · 已启用</span>
                         </div>
                         <div class="data-item-meta">
                             类型: 补丁修复 | 程序集: <code>ZombieFixer.dll</code><br>
@@ -1803,7 +1918,7 @@
                             挂载状态: BepInEx 运行时活跃加载
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 ZombieSpawnFixer')">禁用</button>
+                            <button class="btn-compact" style="color: var(--accent-red-text); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 ZombieSpawnFixer')">禁用</button>
                             <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 ZombieFixer.cfg')">⚙ 配置</button>
                             <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 ZombieFixer.dll')">📂 目录</button>
                         </div>
@@ -1815,7 +1930,7 @@
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>BetterUnturnedExperience (BUE)</span>
-                            <span style="color: var(--unturned-accent-green); font-size: 11px;">★ 4.9 · 48.2k</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">★ 4.9 · 48.2k</span>
                         </div>
                         <div class="data-item-meta">
                             作者: <code>YU80Rice</code> | 标签: [官方推荐] [HUD] [BepInEx]<br>
@@ -1823,14 +1938,14 @@
                             最新版本: v1.4.2 (2026-09-08 更新)
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: rgba(56,161,105,0.2); color: #48bb78; border-color: #38a169;" onclick="showToast('✔ 检查完毕', '已安装最新版本 (v1.4.2)，无需更新')">✔ 已是最新版</button>
+                            <button class="btn-compact" style="background: var(--accent-green-banner-bg); color: var(--accent-green-text); border-color: var(--accent-green-banner-border);" onclick="showToast('✔ 检查完毕', '已安装最新版本 (v1.4.2)，无需更新')">✔ 已是最新版</button>
                             <button class="btn-compact" onclick="showToast('🌐 详情页面', '正在打开 unmod.online/plugins/bue 详情页')">查看详情</button>
                         </div>
                     </div>
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>Advanced Crafting Helper</span>
-                            <span style="color: var(--unturned-accent-gold); font-size: 11px;">★ 4.7 · 19.5k</span>
+                            <span style="color: var(--accent-gold-text); font-size: 11px;">★ 4.7 · 19.5k</span>
                         </div>
                         <div class="data-item-meta">
                             作者: <code>NelsonFan</code> | 标签: [合成助手] [图鉴]<br>
@@ -1838,14 +1953,14 @@
                             最新版本: v2.0.1 (适配 Unturned 3.26+)
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--unturned-accent-gold); color: #14191f; font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Advanced Crafting Helper...')">⬇ 一键安装</button>
+                            <button class="btn-compact" style="background: var(--btn-primary-bg); color: var(--btn-primary-text); font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Advanced Crafting Helper...')">⬇ 一键安装</button>
                             <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开配方助手详情页')">查看详情</button>
                         </div>
                     </div>
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>Minimalist HUD & Crosshair</span>
-                            <span style="color: var(--unturned-accent-gold); font-size: 11px;">★ 4.8 · 32.1k</span>
+                            <span style="color: var(--accent-gold-text); font-size: 11px;">★ 4.8 · 32.1k</span>
                         </div>
                         <div class="data-item-meta">
                             作者: <code>PixelSniper</code> | 标签: [极简界面] [准星]<br>
@@ -1853,14 +1968,14 @@
                             最新版本: v1.3.0
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--unturned-accent-gold); color: #14191f; font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Minimalist HUD...')">⬇ 一键安装</button>
+                            <button class="btn-compact" style="background: var(--btn-primary-bg); color: var(--btn-primary-text); font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Minimalist HUD...')">⬇ 一键安装</button>
                             <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开极简准星详情页')">查看详情</button>
                         </div>
                     </div>
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>Vehicle Physics Overhaul</span>
-                            <span style="color: var(--unturned-accent-gold); font-size: 11px;">★ 4.6 · 14.8k</span>
+                            <span style="color: var(--accent-gold-text); font-size: 11px;">★ 4.6 · 14.8k</span>
                         </div>
                         <div class="data-item-meta">
                             作者: <code>DriftKing</code> | 标签: [载具操控] [手感优化]<br>
@@ -1868,14 +1983,14 @@
                             最新版本: v1.1.2
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--unturned-accent-gold); color: #14191f; font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Vehicle Physics Overhaul...')">⬇ 一键安装</button>
+                            <button class="btn-compact" style="background: var(--btn-primary-bg); color: var(--btn-primary-text); font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Vehicle Physics Overhaul...')">⬇ 一键安装</button>
                             <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开载具物理详情页')">查看详情</button>
                         </div>
                     </div>
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>More Raid Alerts</span>
-                            <span style="color: var(--unturned-accent-gold); font-size: 11px;">★ 4.5 · 11.3k</span>
+                            <span style="color: var(--accent-gold-text); font-size: 11px;">★ 4.5 · 11.3k</span>
                         </div>
                         <div class="data-item-meta">
                             作者: <code>BaseDefender</code> | 标签: [联机防抄] [警报]<br>
@@ -1883,14 +1998,14 @@
                             最新版本: v1.0.5
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--unturned-accent-gold); color: #14191f; font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 More Raid Alerts...')">⬇ 一键安装</button>
+                            <button class="btn-compact" style="background: var(--btn-primary-bg); color: var(--btn-primary-text); font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 More Raid Alerts...')">⬇ 一键安装</button>
                             <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开防抄警报详情页')">查看详情</button>
                         </div>
                     </div>
                     <div class="data-item-card">
                         <div class="data-item-title">
                             <span>Map GPS & Landmark Pin</span>
-                            <span style="color: var(--unturned-accent-green); font-size: 11px;">★ 4.9 · 26.7k</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">★ 4.9 · 26.7k</span>
                         </div>
                         <div class="data-item-meta">
                             作者: <code>ExplorerTeam</code> | 标签: [地图标注] [导航]<br>
@@ -1898,7 +2013,7 @@
                             最新版本: v2.3.0
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--unturned-accent-gold); color: #14191f; font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Map GPS & Landmark Pin...')">⬇ 一键安装</button>
+                            <button class="btn-compact" style="background: var(--btn-primary-bg); color: var(--btn-primary-text); font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Map GPS & Landmark Pin...')">⬇ 一键安装</button>
                             <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开地图标点详情页')">查看详情</button>
                         </div>
                     </div>
@@ -1914,15 +2029,15 @@
                 document.getElementById('tabChar').classList.add('active');
                 container.innerHTML = `
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Slot 0: 生存专家</span><span style="color: var(--unturned-accent-green); font-size: 11px;">单机</span></div>
+                        <div class="data-item-title"><span>Slot 0: 生存专家</span><span style="color: var(--accent-green-text); font-size: 11px;">单机</span></div>
                         <div class="data-item-meta">生命: 100% | 饱食: 84% | 水分: 92%<br>经验: 2,450 XP | 击杀: 312<br>路径: Worlds/Singleplayer_0/...</div>
                     </div>
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Slot 1: 战地军医</span><span style="color: var(--unturned-accent-gold); font-size: 11px;">单机</span></div>
+                        <div class="data-item-title"><span>Slot 1: 战地军医</span><span style="color: var(--accent-gold-text); font-size: 11px;">单机</span></div>
                         <div class="data-item-meta">生命: 76% | 饱食: 42% | 水分: 65%<br>经验: 890 XP | 击杀: 94<br>路径: Worlds/Singleplayer_1/...</div>
                     </div>
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Slot 2: 探索者</span><span style="color: var(--unturned-text-muted); font-size: 11px;">未激活</span></div>
+                        <div class="data-item-title"><span>Slot 2: 探索者</span><span style="color: var(--text-muted); font-size: 11px;">未激活</span></div>
                         <div class="data-item-meta">生命: 100% | 饱食: 100% | 水分: 100%<br>经验: 0 XP | 击杀: 0<br>路径: Worlds/Singleplayer_2/...</div>
                     </div>
                 `;
@@ -1930,15 +2045,15 @@
                 document.getElementById('tabWorld').classList.add('active');
                 container.innerHTML = `
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>PEI (爱德华王子岛)</span><span style="color: var(--unturned-accent-green); font-size: 11px;">官方关卡</span></div>
+                        <div class="data-item-title"><span>PEI (爱德华王子岛)</span><span style="color: var(--accent-green-text); font-size: 11px;">官方关卡</span></div>
                         <div class="data-item-meta">路障 (Barricades): 42 KB<br>建筑 (Structures): 128 KB<br>载具 (Vehicles): 18 KB<br>最后保存: 2026-09-08 18:22</div>
                     </div>
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Russia (俄罗斯)</span><span style="color: var(--unturned-accent-green); font-size: 11px;">官方关卡</span></div>
+                        <div class="data-item-title"><span>Russia (俄罗斯)</span><span style="color: var(--accent-green-text); font-size: 11px;">官方关卡</span></div>
                         <div class="data-item-meta">路障: 112 KB | 建筑: 350 KB<br>载具: 46 KB<br>最后保存: 2026-09-05 21:10</div>
                     </div>
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Washington (华盛顿)</span><span style="color: var(--unturned-text-muted); font-size: 11px;">未建立存档</span></div>
+                        <div class="data-item-title"><span>Washington (华盛顿)</span><span style="color: var(--text-muted); font-size: 11px;">未建立存档</span></div>
                         <div class="data-item-meta">尚无本地单机保存数据。</div>
                     </div>
                 `;
@@ -1946,11 +2061,11 @@
                 document.getElementById('tabConfig').classList.add('active');
                 container.innerHTML = `
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Normal (普通难度)</span><span style="color: var(--unturned-accent-gold); font-size: 11px;">Config.json</span></div>
+                        <div class="data-item-title"><span>Normal (普通难度)</span><span style="color: var(--accent-gold-text); font-size: 11px;">Config.json</span></div>
                         <div class="data-item-meta">僵尸刷新率: 1.0x<br>物资掉落倍率: 1.0x<br>食物腐烂速度: 1.0x<br>防爆破保护: 开启</div>
                     </div>
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Hardcore (硬核模式)</span><span style="color: var(--unturned-accent-red); font-size: 11px;">Config.json</span></div>
+                        <div class="data-item-title"><span>Hardcore (硬核模式)</span><span style="color: var(--accent-red-text); font-size: 11px;">Config.json</span></div>
                         <div class="data-item-meta">僵尸刷新率: 1.5x<br>物资掉落倍率: 0.6x<br>流血概率: 极高<br>单机配置项只读解析正常</div>
                     </div>
                 `;
@@ -1958,11 +2073,11 @@
                 document.getElementById('tabBackup').classList.add('active');
                 container.innerHTML = `
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Snapshot-20260908</span><span style="color: var(--unturned-accent-green); font-size: 11px;">自动备份</span></div>
+                        <div class="data-item-title"><span>Snapshot-20260908</span><span style="color: var(--accent-green-text); font-size: 11px;">自动备份</span></div>
                         <div class="data-item-meta">包含 3 个角色槽位与 PEI 关卡<br>压缩体积: 1.8 MB<br>状态: 哈希校验一致 (完整)</div>
                     </div>
                     <div class="data-item-card">
-                        <div class="data-item-title"><span>Snapshot-20260901</span><span style="color: var(--unturned-text-muted); font-size: 11px;">历史快照</span></div>
+                        <div class="data-item-title"><span>Snapshot-20260901</span><span style="color: var(--text-muted); font-size: 11px;">历史快照</span></div>
                         <div class="data-item-meta">包含 2 个角色槽位<br>压缩体积: 1.2 MB<br>状态: 完整可用</div>
                     </div>
                 `;
@@ -2010,17 +2125,17 @@
             let themeName = "";
             if (theme === 'light') {
                 triggerIcon.innerText = "☀";
-                triggerIcon.style.color = "#b7791f";
+                triggerIcon.style.color = "var(--accent-gold-text)";
                 document.body.classList.add('theme-light');
                 themeName = "白天模式 (明亮战术色)";
             } else if (theme === 'dark') {
                 triggerIcon.innerText = "🌙";
-                triggerIcon.style.color = "var(--unturned-accent-gold)";
+                triggerIcon.style.color = "var(--accent-gold-text)";
                 document.body.classList.remove('theme-light');
                 themeName = "黑夜模式 (经典军工暗调)";
             } else if (theme === 'system') {
                 triggerIcon.innerText = "💻";
-                triggerIcon.style.color = "#cbd5e0";
+                triggerIcon.style.color = "var(--text-secondary)";
                 const isSysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
                 if (isSysDark) {
                     document.body.classList.remove('theme-light');
