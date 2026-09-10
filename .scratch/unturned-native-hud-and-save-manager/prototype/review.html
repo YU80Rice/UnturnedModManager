@@ -1739,9 +1739,9 @@
                         box-shadow 0.2s var(--ease-spring),
                         background-color var(--duration-base) var(--ease-spring);
             overflow: visible;
-            height: 48px;
-            width: 328px;
-            padding: 4px 8px;
+            height: 50px;
+            width: 320px;
+            padding: 4px 10px 4px 6px;
             user-select: none;
         }
 
@@ -1752,19 +1752,19 @@
 
         /* 折叠态 (Collapsed Micro-badge) */
         .theme-floating-dock.collapsed {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             padding: 0;
-            border-radius: 21px;
+            border-radius: 22px;
             cursor: pointer;
             overflow: hidden;
         }
 
         /* 状态变形锚点控制纽 (折叠态为当前直立图标，展开态原地变为收拢键 ‹) */
         .theme-trigger-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 15px;
+            width: 32px;
+            height: 32px;
+            border-radius: 16px;
             background: var(--surface-inset-bg);
             border: 1px solid var(--border-subtle);
             color: var(--text-secondary);
@@ -1776,7 +1776,7 @@
             justify-content: center;
             outline: none;
             flex-shrink: 0;
-            margin-right: 4px;
+            margin-right: 6px;
             line-height: 1;
             transition: width 0.28s var(--ease-spring),
                         height 0.28s var(--ease-spring),
@@ -1787,13 +1787,13 @@
         }
 
         .theme-floating-dock.collapsed .theme-trigger-btn {
-            width: 42px;
-            height: 42px;
-            border-radius: 21px;
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
             background: transparent;
             border: none;
             color: var(--text-primary);
-            font-size: 17px;
+            font-size: 18px;
             margin-right: 0;
         }
 
@@ -1818,10 +1818,8 @@
             position: relative;
             display: flex;
             align-items: center;
-            justify-content: space-between;
             flex: 1;
             height: 100%;
-            padding: 0 8px;
             opacity: 1;
             transform: scale(1);
             transition: opacity 0.22s ease 0.04s, transform 0.26s var(--ease-spring) 0.04s;
@@ -1841,8 +1839,7 @@
             position: absolute;
             left: 28px;
             right: 28px;
-            top: 50%;
-            transform: translateY(-50%);
+            top: 18px;
             height: 3px;
             background: rgba(255, 255, 255, 0.15);
             border-radius: 2px;
@@ -1867,81 +1864,88 @@
             transition: width 0.3s cubic-bezier(0.34, 1.45, 0.64, 1);
         }
 
-        /* 线上串联的 3 个磁吸刻度节点 (The 3 Knots / Nodes) */
-        .axis-node {
+        /* 挡位层容器 */
+        .rail-gears-layer {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            padding: 0 4px;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* 单个挡位 */
+        .rail-gear {
             position: relative;
-            z-index: 3;
+            pointer-events: auto;
+            cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            width: 60px;
-            cursor: pointer;
-            gap: 1px;
-            transition: transform 0.2s ease, opacity 0.2s ease;
+            width: 52px;
             user-select: none;
+            transition: transform 0.18s ease;
         }
-        .axis-node:hover {
+        .rail-gear:hover {
             transform: translateY(-1px);
         }
-        .axis-node:active {
-            transform: scale(0.94);
+        .rail-gear:active {
+            transform: scale(0.95);
         }
 
-        /* 节点在线上的机械穿孔卡扣微标记 (Tick Notch) */
-        .axis-tick {
+        /* 挡位刻度卡扣微标记 (Tick Notch on Wire) */
+        .gear-tick {
+            position: absolute;
+            top: 16px;
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background: rgba(148, 163, 184, 0.5);
+            background: rgba(148, 163, 184, 0.4);
             border: 1px solid var(--border-subtle);
             transition: all 0.22s ease;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
             pointer-events: none;
         }
-        .axis-node.active .axis-tick {
+        .rail-gear.active .gear-tick {
             background: #ffffff;
             border-color: var(--theme-accent, #10b981);
             box-shadow: 0 0 6px var(--theme-accent, #10b981);
             transform: scale(1.2);
         }
 
-        /* 节点图标与文字 */
-        .axis-node .node-icon {
-            font-size: 13px;
-            line-height: 1;
-            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
-        }
-        .axis-node .node-label {
+        /* 挡位下方说明文字 (绝不与天体冲突) */
+        .gear-label {
+            position: absolute;
+            bottom: 3px;
             font-family: var(--unturned-font-sans);
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
             color: var(--text-secondary);
-            transition: color 0.2s ease;
-            line-height: 1.1;
+            transition: color 0.2s ease, font-weight 0.2s ease;
+            white-space: nowrap;
+            line-height: 1;
+            pointer-events: none;
         }
-        .axis-node.active .node-label {
+        .rail-gear.active .gear-label {
             color: var(--text-primary);
             font-weight: 700;
         }
-        .axis-node.active .node-icon {
-            transform: scale(1.2);
-            filter: drop-shadow(0 2px 5px var(--theme-accent-glow, rgba(16, 185, 129, 0.5)));
-        }
 
-        /* 穿在轴线上的流体磁吸串珠/滑块 (Magnetic Sliding Puck / Bead) */
-        .sliding-bead {
+        /* 核心移动天体 (The Celestial Puck Carrier) */
+        .celestial-puck {
             position: absolute;
-            top: 50%;
+            top: 18px;
             left: 28px;
             transform: translate(-50%, -50%);
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: linear-gradient(145deg, #ffffff, #dbeafe);
+            background: linear-gradient(145deg, #ffffff, #e2e8f0);
             border: 2px solid #ffffff;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), 0 0 14px var(--theme-accent-glow, rgba(16, 185, 129, 0.4));
-            z-index: 4;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 16px var(--theme-accent-glow, rgba(16, 185, 129, 0.4));
+            z-index: 5;
             cursor: grab;
             display: flex;
             align-items: center;
@@ -1951,31 +1955,42 @@
                         width 0.16s ease,
                         height 0.16s ease,
                         border-radius 0.16s ease,
-                        box-shadow 0.2s ease;
+                        box-shadow 0.22s ease,
+                        background 0.22s ease;
         }
 
-        /* Emil Kowalski Squish & Stretch (沿拖拽运动轴向弹性拉伸) */
-        .sliding-bead.dragging {
+        body.theme-light .celestial-puck {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15), 0 0 14px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Emil Kowalski Squish & Stretch (拖拽时沿轴拉长、微压变扁) */
+        .celestial-puck.dragging {
             cursor: grabbing;
-            width: 36px;
-            height: 22px;
-            border-radius: 11px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 20px var(--theme-accent, #10b981);
-            transition: width 0.16s ease, height 0.16s ease, border-radius 0.16s ease, box-shadow 0.2s ease;
+            width: 40px;
+            height: 26px;
+            border-radius: 13px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), 0 0 24px var(--theme-accent, #10b981);
         }
 
-        /* 串珠内部的中央穿线孔 (Core Wire Hole) */
-        .bead-core-hole {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--theme-accent, #10b981);
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 5px var(--theme-accent, #10b981);
-            transition: background 0.2s ease, transform 0.2s ease;
+        /* 天体内部的核心动态 Emoji */
+        .puck-emoji {
+            font-size: 16px;
+            line-height: 1;
+            display: inline-block;
+            user-select: none;
             pointer-events: none;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .sliding-bead.dragging .bead-core-hole {
-            transform: scale(1.2);
+
+        .puck-emoji.popping {
+            animation: puckPop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes puckPop {
+            0% { transform: scale(0.5) rotate(-15deg); opacity: 0.5; }
+            60% { transform: scale(1.25) rotate(6deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
 
         /* ==========================================================================
@@ -3677,9 +3692,9 @@
                 </main>
             </div>
 
-            <!-- 解法 B 升级版：天体轴线串珠滑动条 (Celestial Magnetic Rail Slider · 一根线串三珠 · 自由拖拽与磁吸落锁) -->
+            <!-- 解法 B 升级版：天体轴线串珠滑动条 (Celestial Magnetic Rail Slider · Emoji 内嵌于滑动天体 · 挡位零遮挡) -->
             <div id="themeFloatingDock" class="theme-floating-dock collapsed" role="radiogroup" aria-label="启动器外观偏好切换">
-                <!-- 变形锚点控制纽 (折叠态显示当前直立图标 ☀/💻/🌙，展开态原地变为收拢键 ‹) -->
+                <!-- 变形锚点控制纽 (折叠态显示当前直立天体 ☀️/💻/🌙，展开态原地变为收拢键 ‹) -->
                 <button id="themeTriggerBtn" class="theme-trigger-btn" onclick="handleDockTriggerClick()" title="启动器外观偏好 · 点击展开">
                     <span id="themeTriggerIcon" class="theme-trigger-icon">🌙</span>
                 </button>
@@ -3691,28 +3706,27 @@
                         <div id="wireGlow" class="axis-wire-glow"></div>
                     </div>
 
-                    <!-- 2. 串在轴线上的流体磁吸滑块 (按住可沿轴线自由拖拽，松手磁吸落锁) -->
-                    <div id="slidingBead" class="sliding-bead" title="按住拖拽，或直接点击目标节点">
-                        <div class="bead-core-hole"></div>
+                    <!-- 2. 轴线上串联的 3 个挡位 (刻度在轴线上，文字在轴线下方，绝不遮挡) -->
+                    <div class="rail-gears-layer">
+                        <div id="gearLight" class="rail-gear" onclick="jumpToThemeNode(0)" data-theme="light" data-index="0" role="radio" aria-checked="false" title="切换至白天模式">
+                            <div class="gear-tick"></div>
+                            <span class="gear-label">白天</span>
+                        </div>
+
+                        <div id="gearSystem" class="rail-gear" onclick="jumpToThemeNode(1)" data-theme="system" data-index="1" role="radio" aria-checked="false" title="跟随操作系统">
+                            <div class="gear-tick"></div>
+                            <span class="gear-label">跟随</span>
+                        </div>
+
+                        <div id="gearDark" class="rail-gear active" onclick="jumpToThemeNode(2)" data-theme="dark" data-index="2" role="radio" aria-checked="true" title="切换至黑夜模式">
+                            <div class="gear-tick"></div>
+                            <span class="gear-label">黑夜</span>
+                        </div>
                     </div>
 
-                    <!-- 3. 轴线上串联的 3 个磁吸刻度节点 -->
-                    <div id="nodeLight" class="axis-node" onclick="jumpToThemeNode(0)" data-theme="light" data-index="0" role="radio" aria-checked="false">
-                        <span class="node-icon">☀️</span>
-                        <div class="axis-tick"></div>
-                        <span class="node-label">白天</span>
-                    </div>
-
-                    <div id="nodeSystem" class="axis-node" onclick="jumpToThemeNode(1)" data-theme="system" data-index="1" role="radio" aria-checked="false">
-                        <span class="node-icon">💻</span>
-                        <div class="axis-tick"></div>
-                        <span class="node-label">跟随</span>
-                    </div>
-
-                    <div id="nodeDark" class="axis-node active" onclick="jumpToThemeNode(2)" data-theme="dark" data-index="2" role="radio" aria-checked="true">
-                        <span class="node-icon">🌙</span>
-                        <div class="axis-tick"></div>
-                        <span class="node-label">黑夜</span>
+                    <!-- 3. 核心滑动天体：Emoji 直接位于天体中心，随拖拽挡位动态演变 -->
+                    <div id="slidingBead" class="celestial-puck" title="按住天体沿轴线自由拖拽，或直接点击挡位">
+                        <span id="puckEmoji" class="puck-emoji">🌙</span>
                     </div>
                 </div>
             </div>
@@ -5968,11 +5982,13 @@
         }
 
         // =================================================================
-        // 天体轴线串珠滑动条 (Celestial Magnetic Rail Slider)
-        // 一根线串三珠 · 鼠标点击滑跃 + 自由沿轴拖拽 + 弹性拉伸 (Squish & Stretch) + 磁吸落锁
+        // 天体轴线串珠滑动条 (Celestial Magnetic Rail Slider 2.0)
+        // Emoji 直接内嵌于移动天体内部 · 随拖拽挡位动态演变 · 挡位零遮挡
         // =================================================================
         const THEMES = ['light', 'system', 'dark'];
+        const THEME_EMOJIS = ['☀️', '💻', '🌙'];
         let activeAppTheme = 'dark';
+        let activePreviewIndex = 2;
         let themeDockTimer = null;
         let isBeadDragging = false;
         let dragStartX = 0;
@@ -5984,10 +6000,36 @@
         }
 
         function getNodeCenterX(index) {
-            const nodes = [document.getElementById('nodeLight'), document.getElementById('nodeSystem'), document.getElementById('nodeDark')];
-            const node = nodes[index];
-            if (!node) return 0;
-            return node.offsetLeft + (node.offsetWidth / 2);
+            const gears = [document.getElementById('gearLight'), document.getElementById('gearSystem'), document.getElementById('gearDark')];
+            const gear = gears[index];
+            if (!gear) return 0;
+            return gear.offsetLeft + (gear.offsetWidth / 2);
+        }
+
+        function updatePuckEmoji(index) {
+            const puckEmoji = document.getElementById('puckEmoji');
+            const puck = document.getElementById('slidingBead');
+            if (!puckEmoji || !puck) return;
+
+            const targetEmoji = THEME_EMOJIS[index] || '🌙';
+            if (puckEmoji.innerText !== targetEmoji) {
+                puckEmoji.innerText = targetEmoji;
+                puckEmoji.classList.remove('popping');
+                void puckEmoji.offsetWidth; // 触发 reflow 重启弹跳动画
+                puckEmoji.classList.add('popping');
+            }
+
+            // 根据当前天体赋予不同色调的宇宙星芒 (Aura)
+            if (index === 0) {
+                // 白天太阳：暖金日冕光环
+                puck.style.boxShadow = "0 4px 14px rgba(245, 158, 11, 0.45), 0 0 16px rgba(245, 158, 11, 0.55)";
+            } else if (index === 1) {
+                // 跟随系统：军工翡翠战术光环
+                puck.style.boxShadow = "0 4px 14px rgba(16, 185, 129, 0.45), 0 0 16px rgba(16, 185, 129, 0.55)";
+            } else {
+                // 黑夜月球：极夜月光冰蓝光环
+                puck.style.boxShadow = "0 4px 14px rgba(56, 189, 248, 0.45), 0 0 16px rgba(56, 189, 248, 0.55)";
+            }
         }
 
         function updateBeadPosition(index, animate = true) {
@@ -5999,7 +6041,7 @@
             if (targetX <= 0) return;
 
             if (animate) {
-                bead.style.transition = "left 0.3s cubic-bezier(0.34, 1.45, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.45, 0.64, 1), width 0.16s ease, height 0.16s ease, border-radius 0.16s ease, box-shadow 0.2s ease";
+                bead.style.transition = "left 0.3s cubic-bezier(0.34, 1.45, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.45, 0.64, 1), width 0.16s ease, height 0.16s ease, border-radius 0.16s ease, box-shadow 0.22s ease";
             } else {
                 bead.style.transition = "none";
             }
@@ -6013,11 +6055,14 @@
                 glow.style.width = Math.max(0, Math.min(100, pct)) + '%';
             }
 
-            const nodes = [document.getElementById('nodeLight'), document.getElementById('nodeSystem'), document.getElementById('nodeDark')];
-            nodes.forEach((node, i) => {
-                if (node) {
-                    node.classList.toggle('active', i === index);
-                    node.setAttribute('aria-checked', i === index ? 'true' : 'false');
+            updatePuckEmoji(index);
+            activePreviewIndex = index;
+
+            const gears = [document.getElementById('gearLight'), document.getElementById('gearSystem'), document.getElementById('gearDark')];
+            gears.forEach((gear, i) => {
+                if (gear) {
+                    gear.classList.toggle('active', i === index);
+                    gear.setAttribute('aria-checked', i === index ? 'true' : 'false');
                 }
             });
         }
@@ -6064,16 +6109,9 @@
 
         function syncTriggerIcon() {
             const triggerIcon = document.getElementById('themeTriggerIcon');
-            if (activeAppTheme === 'light') {
-                triggerIcon.innerText = "☀️";
-                triggerIcon.style.color = "var(--text-primary)";
-            } else if (activeAppTheme === 'dark') {
-                triggerIcon.innerText = "🌙";
-                triggerIcon.style.color = "var(--text-primary)";
-            } else if (activeAppTheme === 'system') {
-                triggerIcon.innerText = "💻";
-                triggerIcon.style.color = "var(--text-primary)";
-            }
+            const idx = themeToIndex(activeAppTheme);
+            triggerIcon.innerText = THEME_EMOJIS[idx] || "🌙";
+            triggerIcon.style.color = "var(--text-primary)";
         }
 
         function setAppTheme(theme) {
@@ -6119,7 +6157,7 @@
         }
 
         // ============================================================
-        // 串珠鼠标 / 触控自由沿轴拖拽 + 磁吸落锁绑定
+        // 串珠鼠标 / 触控自由沿轴拖拽 + 动态 Emoji 变幻 + 磁吸落锁绑定
         // ============================================================
         function initBeadDragging() {
             const bead = document.getElementById('slidingBead');
@@ -6151,6 +6189,30 @@
                     const clamped = Math.max(minX, Math.min(maxX, newLeft));
                     const pct = (clamped - minX) / (maxX - minX) * 100;
                     glow.style.width = `${pct}%`;
+                }
+
+                // 拖拽过程实时检测最近挡位，动态让天体内部的 Emoji 与下方文字产生共振
+                const currentX = newLeft;
+                let closestIndex = 0;
+                let minDistance = Infinity;
+                [0, 1, 2].forEach(i => {
+                    const dist = Math.abs(currentX - getNodeCenterX(i));
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        closestIndex = i;
+                    }
+                });
+
+                if (closestIndex !== activePreviewIndex) {
+                    activePreviewIndex = closestIndex;
+                    updatePuckEmoji(closestIndex);
+                    const gears = [document.getElementById('gearLight'), document.getElementById('gearSystem'), document.getElementById('gearDark')];
+                    gears.forEach((gear, i) => {
+                        if (gear) {
+                            gear.classList.toggle('active', i === closestIndex);
+                            gear.setAttribute('aria-checked', i === closestIndex ? 'true' : 'false');
+                        }
+                    });
                 }
             });
 
