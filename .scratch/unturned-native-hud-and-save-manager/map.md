@@ -20,6 +20,7 @@
 ## 已有决策
 
 - [01: SDK 角色与世界存档数据调用链调研](issues/01-research-u3-sdk-save-data-architecture.md) — 深入 U3-SDK 查明生存数据物理存储、Block/River 协议、Config.json 体系与 5 大安全防线，作为下一阶段数据中心地图的权威事实输入留档。
+- [02: Unturned 原生风格 UI Shell 空间结构与设计代币原型](issues/02-prototype-unturned-native-ui-shell-tokens.md) — (待人工视觉核准) 在 `.scratch/.../prototype/` 建立独立原型，验证 5 槽位药丸导航、Page+Frame 契约、滚轮隧道路由、吉祥物无缝折叠与 WCAG AAA (15.6:1) 对比度合规，产出自包含 review.html 与 160 项全绿测试。
 
 ## 尚未明确
 

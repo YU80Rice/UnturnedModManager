@@ -1,0 +1,56 @@
+<Page x:Class="UnturnedModManager.Prototypes.PrototypeDataPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="PrototypeDataPage"
+      Background="Transparent">
+
+    <Grid Margin="0,0,16,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部次级药丸选项卡 (Sub-domain Navigation Tabs) -->
+        <Border Grid.Row="0" Margin="0,0,0,16" Background="#40000000" CornerRadius="8" Padding="6">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="TabCharacters" Content="👥 角色槽位 (Slots 0~4)" Margin="0,0,6,0" Padding="14,6" Background="#C8202933" Foreground="#FFE2B024" FontWeight="Bold" BorderBrush="#FFE2B024" BorderThickness="1" CornerRadius="6" Click="Tab_Click" />
+                <Button x:Name="TabWorlds" Content="🗺️ 单机世界 (Level)" Margin="0,0,6,0" Padding="14,6" Background="#781A2128" Foreground="#FFCBD5E0" BorderBrush="#2A3441" BorderThickness="1" CornerRadius="6" Click="Tab_Click" />
+                <Button x:Name="TabServerConfig" Content="⚙️ 服务器/配置 (Config)" Margin="0,0,6,0" Padding="14,6" Background="#781A2128" Foreground="#FFCBD5E0" BorderBrush="#2A3441" BorderThickness="1" CornerRadius="6" Click="Tab_Click" />
+                <Button x:Name="TabBackups" Content="📦 备份与恢复 (Backups)" Padding="14,6" Background="#781A2128" Foreground="#FFCBD5E0" BorderBrush="#2A3441" BorderThickness="1" CornerRadius="6" Click="Tab_Click" />
+            </StackPanel>
+        </Border>
+
+        <!-- 选中的次级内容展示区 (只读概览卡片) -->
+        <Border Grid.Row="1" Style="{DynamicResource UnturnedHudCardStyle}">
+            <StackPanel>
+                <TextBlock x:Name="TabTitleText" Text="角色槽位只读总览 (Character Slots)" FontSize="18" FontWeight="Bold" Foreground="#FFFFFFFF" Margin="0,0,0,8" />
+                <TextBlock x:Name="TabDescText" Text="读取自本地 Worlds/Singleplayer_* 物理目录。第一阶段仅支持只读浏览、对比与快照导出。" FontSize="12" Foreground="#FFCBD5E0" Margin="0,0,0,16" />
+
+                <!-- 模拟角色卡片 -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Margin="0,0,8,0" Background="#30000000" CornerRadius="6" Padding="14" BorderBrush="#FF38A169" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Slot 0 · 存活中" FontSize="14" FontWeight="Bold" Foreground="#FF38A169" />
+                            <TextBlock Text="地图: PEI Faithful | 生命: 100% | 饥渴: 正常" FontSize="11" Foreground="#FFCBD5E0" Margin="0,4,0,0" />
+                            <TextBlock Text="存档大小: 18 KB (Life.dat v3, Inventory.dat v5)" FontSize="10" Foreground="#FF718096" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1" Background="#30000000" CornerRadius="6" Padding="14" BorderBrush="#2A3441" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Slot 1 · 未激活" FontSize="14" FontWeight="Bold" Foreground="#FF718096" />
+                            <TextBlock Text="尚无本地生存数据" FontSize="11" Foreground="#FF718096" Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <TextBlock Text="🛡️ 安全锁定提示：游戏正在运行时，数据工作区将自动锁定为只读状态，防止多端脏写。" FontSize="11" Foreground="#FFE2B024" Margin="0,16,0,0" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>

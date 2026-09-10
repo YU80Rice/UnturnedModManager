@@ -1,0 +1,219 @@
+<UserControl x:Class="UnturnedModManager.Prototypes.UnturnedNativeShellPrototype"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="760" d:DesignWidth="1200"
+             Focusable="True"
+             PreviewMouseWheel="Shell_PreviewMouseWheel">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="tokens/UnturnedNativeTokens.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource UnturnedBackdropBrush}">
+        <!-- Layer 0 & 1: 模拟 BackdropHost 底座与全屏氛围遮罩 (全屏沉浸) -->
+        <Border Background="#12171C" />
+        <Border Background="#60000000" />
+
+        <!-- 主布局：顶部状态栏 (Row 0) + 核心主舞台 (Row 1) -->
+        <Grid Margin="20,16,20,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- ========================================================= -->
+            <!-- 1. 顶部状态与品牌层 (Top Brand & Status Bar)                -->
+            <!-- ========================================================= -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 品牌标题区 -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="UNTURNED"
+                                   FontFamily="{StaticResource UnturnedTitleFontFamily}"
+                                   FontSize="20"
+                                   FontWeight="Black"
+                                   Foreground="#FFFFFFFF"
+                                   LetterSpacing="1" />
+                        <TextBlock Text=" MOD MANAGER"
+                                   FontFamily="{StaticResource UnturnedTitleFontFamily}"
+                                   FontSize="20"
+                                   FontWeight="Light"
+                                   Foreground="{StaticResource UnturnedAccentGoldBrush}" />
+                    </StackPanel>
+                    <TextBlock Text="游戏作者: Nelson Sexton // 启动器版本: v2.2.1 // 视觉拟真原型"
+                               FontSize="10"
+                               Foreground="#FF718096"
+                               Margin="2,2,0,0" />
+                </StackPanel>
+
+                <!-- 居中全域状态药丸 (Global Status Pill) -->
+                <Border Grid.Column="1"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        CornerRadius="12"
+                        Padding="16,6"
+                        Background="#8014191F"
+                        BorderBrush="{StaticResource UnturnedStrokeSubtleBrush}"
+                        BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="8" Height="8" Fill="#FF38A169" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock Text="模组模式 (-NoBattlEye)" FontWeight="Bold" Foreground="#FFFFFFFF" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock Text="  |  " Foreground="#FF4A5568" VerticalAlignment="Center" />
+                        <TextBlock Text="BepInEx 5.4.23.5 就绪" Foreground="#FFCBD5E0" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock Text="  |  " Foreground="#FF4A5568" VerticalAlignment="Center" />
+                        <TextBlock Text="已挂载 12 个插件" Foreground="{StaticResource UnturnedAccentGoldBrush}" FontSize="11" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <!-- 右侧次级浮动入口 (Secondary Floating Entries) -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- 任务中心浮动状态药丸 -->
+                    <Button x:Name="SecondaryTaskBtn"
+                            Height="32"
+                            Padding="12,0"
+                            Margin="0,0,8,0"
+                            Background="#701A2128"
+                            BorderBrush="{StaticResource UnturnedStrokeSubtleBrush}"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Cursor="Hand"
+                            Click="SecondaryTaskBtn_Click"
+                            ToolTip="任务中心">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚡" FontSize="12" Foreground="#FFE2B024" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="任务中心" FontSize="11" Foreground="#FFCBD5E0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 账户头像次级入口 -->
+                    <Button x:Name="SecondaryAccountBtn"
+                            Height="32"
+                            Padding="10,0"
+                            Margin="0,0,8,0"
+                            Background="#701A2128"
+                            BorderBrush="{StaticResource UnturnedStrokeSubtleBrush}"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Cursor="Hand"
+                            Click="SecondaryAccountBtn_Click"
+                            ToolTip="社区账户">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="👤" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock Text="YU80Rice" FontSize="11" FontWeight="SemiBold" Foreground="#FFFFFFFF" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- 关于次级入口 -->
+                    <Button x:Name="SecondaryAboutBtn"
+                            Height="32"
+                            Padding="10,0"
+                            Background="#701A2128"
+                            BorderBrush="{StaticResource UnturnedStrokeSubtleBrush}"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Cursor="Hand"
+                            Click="SecondaryAboutBtn_Click"
+                            ToolTip="关于 UMM">
+                        <TextBlock Text="ℹ️ 关于" FontSize="11" Foreground="#FFCBD5E0" VerticalAlignment="Center" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- ========================================================= -->
+            <!-- 2. 核心舞台区：左侧 5 槽位导航 + 右侧内容 Frame            -->
+            <!-- ========================================================= -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 左侧：经典 Unturned 原版五槽位药丸导航栏 -->
+                <Grid Grid.Column="0" Margin="0,0,16,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- 上部 4 大核心业务槽位 -->
+                    <StackPanel Grid.Row="0">
+                        <Button x:Name="NavSlotPlay"
+                                Style="{StaticResource UnturnedPillButtonStyle}"
+                                Tag="Active"
+                                Click="NavSlot_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="▶" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center" Foreground="{StaticResource UnturnedAccentGoldBrush}" />
+                                <TextBlock Text="开始游戏" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="NavSlotData"
+                                Style="{StaticResource UnturnedPillButtonStyle}"
+                                Click="NavSlot_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="👥" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                <TextBlock Text="角色设定" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="NavSlotMods"
+                                Style="{StaticResource UnturnedPillButtonStyle}"
+                                Click="NavSlot_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🧩" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                <TextBlock Text="创意工坊" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button x:Name="NavSlotSettings"
+                                Style="{StaticResource UnturnedPillButtonStyle}"
+                                Click="NavSlot_Click">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚙" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                <TextBlock Text="游戏设置" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- 底部固定第 5 槽位：退出程序 -->
+                    <Button Grid.Row="2"
+                            x:Name="NavSlotExit"
+                            Style="{StaticResource UnturnedPillButtonStyle}"
+                            Background="#601A2026"
+                            BorderBrush="#FF742A2A"
+                            Click="NavSlotExit_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="◀" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center" Foreground="#FFE53E3E" />
+                            <TextBlock Text="退出游戏" VerticalAlignment="Center" Foreground="#FFFCA5A5" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- 右侧：挂载 Page 的专用无边框 Frame (验证 Page+Frame 可插拔契约) -->
+                <Border Grid.Column="1"
+                        CornerRadius="8"
+                        Background="Transparent"
+                        SnapsToDevicePixels="True">
+                    <Frame x:Name="MainContentFrame"
+                           NavigationUIVisibility="Hidden"
+                           Background="Transparent"
+                           JournalOwnership="OwnsJournal" />
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>
