@@ -157,7 +157,7 @@
                                 Click="NavSlot_Click">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="▶" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center" Foreground="{StaticResource UnturnedAccentGoldBrush}" />
-                                <TextBlock Text="开始游戏" VerticalAlignment="Center" />
+                                <TextBlock Text="游戏启动" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
 
@@ -166,7 +166,7 @@
                                 Click="NavSlot_Click">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="👥" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center" />
-                                <TextBlock Text="角色设定" VerticalAlignment="Center" />
+                                <TextBlock Text="角色与存档" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
 
@@ -175,7 +175,7 @@
                                 Click="NavSlot_Click">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🧩" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center" />
-                                <TextBlock Text="创意工坊" VerticalAlignment="Center" />
+                                <TextBlock Text="插件工坊" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
 
@@ -184,7 +184,7 @@
                                 Click="NavSlot_Click">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="⚙" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center" />
-                                <TextBlock Text="游戏设置" VerticalAlignment="Center" />
+                                <TextBlock Text="启动器设置" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </StackPanel>
@@ -198,7 +198,7 @@
                             Click="NavSlotExit_Click">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="◀" FontSize="15" Margin="0,0,12,0" VerticalAlignment="Center" Foreground="#FFE53E3E" />
-                            <TextBlock Text="退出游戏" VerticalAlignment="Center" Foreground="#FFFCA5A5" />
+                            <TextBlock Text="退出 UMM" VerticalAlignment="Center" Foreground="#FFFCA5A5" />
                         </StackPanel>
                     </Button>
                 </Grid>

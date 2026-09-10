@@ -21,34 +21,63 @@ Blocked by:
 
 ---
 
-## 交付物与实施验证 (Implementation & Verification)
+## PM 视觉验收与一轮原型修订说明 (Revision 1)
+
+### 1. PM 视觉审查结论
+- **视觉语言：通过**。暗色 HUD、金色高亮选中态、左侧大药丸结构、角色数据只读分区与层级质感符合目标。
+- **功能映射：需补齐核心启动前操作闭环**。此前首页仅有只读状态展示，遗漏了玩家启动前的关键操作能力（BepInEx 安装/修复/开关、DXVK 开关/显卡提示、导出脱敏诊断包）。
+- **口径纠偏**：
+  - 测试结果表述为：“测试 160/160 通过；未发现编译错误；运行环境产生 NETSDK1057 preview SDK 提示”。
+  - 明确 Page+Frame 热插拔、滚轮、键盘焦点与 DPI 在当前测试中属于静态/原型结构证据，不提前宣称真实 WPF 运行时验收。
+
+### 2. 修订落地内容
+1. **五槽位规范命名对齐**：
+   - `开始游戏` → `游戏启动`
+   - `角色设定` → `角色与存档`
+   - `创意工坊` → `插件工坊`（聚合本地与 unmod.online 社区插件）
+   - `游戏设置` → `启动器设置`
+   - `退出游戏` → `退出 UMM`（明确不误关正在运行的游戏）
+2. **首页“环境与诊断”卡片落地**：
+   - 在 `PrototypePlayPage.xaml` 右侧新增 `EnvDiagnosticsCard`；
+   - **BepInEx 模块**：版本状态指示 + 启用/停用复选开关 + `[🔧 检查并修复]` 紧凑按钮；
+   - **DXVK 模块**：启用/停用复选开关 + `NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3)` 适配提示；
+   - **诊断模块**：运行异常与冲突摘要 + `[📦 导出脱敏诊断包]` 入口；
+   - 形成完整的启动前闭环：`检查环境 → 调整开关 → 查看兼容提示 → 启动游戏 → 出错后导出诊断`。
+3. **插件推荐文案调整**：
+   - 改为“精选插件 / 社区推荐”，BUE 标定为“社区认证 BepInEx 插件”，与 Steam Workshop 解绑。
+4. **评审页与测试用例同步**：
+   - `review.html` 补齐交互式开关联动与操作反馈；
+   - `UnturnedNativeShellPrototypeTests.cs` 同步更新断言并全部通过。
+
+---
+
+## 交付物与实施验证清单 (Artifacts & Verification)
 
 ### 1. 隔离独立原型文件资产
 - **设计代币字典**：[tokens/UnturnedNativeTokens.xaml](prototype/tokens/UnturnedNativeTokens.xaml)
   - 提取 Unturned 军工暗调质感色调（`UnturnedBackdropBrush`、`UnturnedHudPanelBrush`、`UnturnedHudCardBrush`、`UnturnedStrokeSubtleBrush`、`UnturnedAccentGoldBrush`、`UnturnedAccentGreenBrush`）；
   - 定义大药丸按钮圆角（8px）、内边距（18,10）、卡片边框、高亮指示条（4px 金黄矩形）与键盘焦点环样式。
 - **独立 UI Shell 控件**：[UnturnedNativeShellPrototype.xaml](prototype/UnturnedNativeShellPrototype.xaml) 与 [UnturnedNativeShellPrototype.xaml.cs](prototype/UnturnedNativeShellPrototype.xaml.cs)
-  - 顶部品牌层 + 居中全局状态药丸（模组模式/BE版本/插件计数）+ 右上角次级浮动入口（任务/账户/关于）；
-  - 左侧经典 5 槽位药丸导航（`NavSlotPlay`, `NavSlotData`, `NavSlotMods`, `NavSlotSettings`, `NavSlotExit`）；
-  - 右侧透明无边框 `Frame` 挂载宿主，支持页面热插拔；
-  - 挂载 `Shell_PreviewMouseWheel` 隧道路由，根治嵌套容器滚轮被吞问题。
-- **首页挂载原型**：[pages/PrototypePlayPage.xaml](prototype/pages/PrototypePlayPage.xaml) 与 [pages/PrototypePlayPage.xaml.cs](prototype/pages/PrototypePlayPage.xaml.cs)
-  - 三层空间架构：顶部状态横幅、3:2 英雄启动卡片与当前方案卡片、底部精选模组与 Patch Notes；
-  - 配备吉祥物挂件（`MascotContainer`）与交互式开关（`MascotToggleBtn`），验证吉祥物隐藏后网格自动无缝闭合。
+  - 顶部品牌层 + 居中全局状态药丸（只读摘要）+ 右上角次级浮动入口（任务/账户/关于）；
+  - 左侧 5 槽位规范药丸导航（`游戏启动`、`角色与存档`、`插件工坊`、`启动器设置`、`退出 UMM`）；
+  - 右侧透明无边框 `Frame` 容器挂载宿主，支持页面热插拔；
+  - 挂载 `Shell_PreviewMouseWheel` 隧道路由，防止嵌套容器滚轮被吞。
+- **首页挂载原型 (含环境诊断闭环)**：[pages/PrototypePlayPage.xaml](prototype/pages/PrototypePlayPage.xaml) 与 [pages/PrototypePlayPage.xaml.cs](prototype/pages/PrototypePlayPage.xaml.cs)
+  - 状态横幅 + 英雄启动卡片 + 环境与诊断卡片（安装修复/开关/DXVK/诊断包）+ 吉祥物平滑折叠 + 精选推荐与更新日志。
 - **数据域挂载原型**：[pages/PrototypeDataPage.xaml](prototype/pages/PrototypeDataPage.xaml) 与 [pages/PrototypeDataPage.xaml.cs](prototype/pages/PrototypeDataPage.xaml.cs)
   - 4 大独立只读子域药丸 Tab（角色槽位、单机世界、服务器配置、快照与备份）；
   - 严格保持只读契约，无任何写入/修改/删除等受控编辑控件。
 - **自包含交互式 HTML 视觉审查报告**：[review.html](prototype/review.html)
-  - 支持 1:1 视觉还原、五槽位点击切换模拟、吉祥物显隐动态切换、数据域 Tab 联动与 WCAG 对比度评分卡；可在任何浏览器离线打开审查。
+  - 支持 1:1 视觉还原、五槽位点击切换模拟、环境诊断动态开关与修复模拟、数据域 Tab 联动与 WCAG 对比度评分卡。
 
 ### 2. 自动化测试与 WCAG 守卫
-- 编写测试套件 [UnturnedNativeShellPrototypeTests.cs](../../UnturnedModManager.Tests/UnturnedNativeShellPrototypeTests.cs)，共新增 5 大针对性断言：
-  1. `DesignTokens_XmlStructure_ContainsAllRequiredKeys`：验证代币完整性；
-  2. `DesignTokens_ColorContrast_StrictlySatisfiesWcagAaAndAaa`：验证主文字白底高对比度达到 **15.6:1 (AAA)**、次级文字达到 **8.2:1 (AAA)**、金色强调色达到 **7.1:1 (AAA)**；
-  3. `ShellPrototype_Structure_HasFiveSlots_FrameMounting_AndTunnelRouting`：验证 5 槽位与隧道路由；
-  4. `PlayPage_Structure_ThreeLayerLayout_AndMascotToggle`：验证三层首页与吉祥物无缝折叠；
+- 执行测试套件 [UnturnedNativeShellPrototypeTests.cs](../../UnturnedModManager.Tests/UnturnedNativeShellPrototypeTests.cs)：
+  1. `DesignTokens_XmlStructure_ContainsAllRequiredKeys`：代币完整性验证；
+  2. `DesignTokens_ColorContrast_StrictlySatisfiesWcagAaAndAaa`：主文字高对比度达到 **15.6:1 (AAA)**，次级文字达到 **8.2:1 (AAA)**，金色强调色达到 **7.1:1 (AAA)**；
+  3. `ShellPrototype_Structure_HasFiveSlots_FrameMounting_AndTunnelRouting`：验证规范命名五槽位与隧道路由；
+  4. `PlayPage_Structure_LaunchClosedLoop_AndDiagnosticsCard`：验证环境与诊断闭环操作、开关、修复与推荐；
   5. `DataPage_Structure_StrictlyReadOnly_AndFourDataDomains`：验证 4 大只读域与只读安全防线。
-- 执行 `dotnet test`：**160/160 项测试全部通过（155 原有基线 + 5 项原型测试，0 失败，0 警告）**。
+- 执行 `dotnet test`：**测试 160/160 通过；未发现编译错误；运行环境产生 NETSDK1057 preview SDK 提示**。
 
 ### 3. 生产隔离守卫审计
 - 生产代码（`MainWindow.xaml`、生产导航类、7 大现有页面与业务服务、发布配置）保持 100% 干净，未作任何侵入性修改。

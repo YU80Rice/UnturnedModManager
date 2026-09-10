@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UMM - Unturned 原生拟真 UI Shell 原型与设计代币评审 (Ticket 02)</title>
+    <title>UMM - Unturned 原生拟真 UI Shell 原型与设计代币评审 (Ticket 02 修订版)</title>
     <style>
         :root {
             /* Unturned Native HUD Design Tokens (Ticket 02) */
@@ -338,10 +338,10 @@
             gap: 10px;
         }
 
-        /* 3:2 英雄卡片与方案挂件 */
+        /* 英雄卡片与环境诊断卡片 */
         .hero-section-grid {
             display: grid;
-            grid-template-columns: 3fr 2fr;
+            grid-template-columns: 1.05fr 1.15fr;
             gap: 16px;
         }
 
@@ -349,7 +349,7 @@
             background: var(--unturned-hud-card);
             border: 1px solid var(--unturned-stroke-subtle);
             border-radius: 8px;
-            padding: 20px;
+            padding: 18px 20px;
             backdrop-filter: blur(8px);
         }
 
@@ -362,12 +362,24 @@
         .hero-subtitle {
             font-size: 12px;
             color: var(--unturned-text-secondary);
-            margin-bottom: 16px;
+            margin-bottom: 12px;
+        }
+
+        .profile-pill {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--unturned-stroke-subtle);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 11px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .btn-launch-hero {
             width: 100%;
-            height: 52px;
+            height: 50px;
             background: var(--unturned-accent-green-bg);
             border: 2px solid var(--unturned-accent-green);
             border-radius: 8px;
@@ -400,58 +412,94 @@
             white-space: nowrap;
         }
 
-        /* 方案卡片与吉祥物容器 */
-        .profile-mascot-card {
+        /* 环境与诊断卡片内部组件 */
+        .env-diag-card {
             position: relative;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
+            gap: 10px;
         }
 
-        .profile-badge {
-            background: rgba(0, 0, 0, 0.4);
+        .env-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .env-section-box {
+            background: rgba(0, 0, 0, 0.35);
             border: 1px solid var(--unturned-stroke-subtle);
             border-radius: 6px;
-            padding: 10px 14px;
-            font-weight: 700;
-            color: var(--unturned-accent-gold);
-            font-size: 12px;
-            margin: 8px 0 14px 0;
+            padding: 10px 12px;
         }
 
-        .mascot-toggle-btn {
-            background: rgba(26, 32, 39, 0.6);
+        .env-section-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-compact {
+            background: #2d3748;
             border: 1px solid var(--unturned-stroke-strong);
-            color: var(--unturned-text-secondary);
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-size: 11px;
+            color: var(--unturned-accent-gold);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 600;
             cursor: pointer;
-            width: fit-content;
             transition: all 0.15s ease;
         }
 
-        .mascot-toggle-btn:hover {
-            background: rgba(42, 52, 65, 0.8);
+        .btn-compact:hover {
+            background: #3f4d63;
             color: #ffffff;
+            border-color: var(--unturned-accent-gold);
+        }
+
+        .switch-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-top: 6px;
+            user-select: none;
+            color: var(--unturned-text-secondary);
+        }
+
+        .switch-label input[type="checkbox"] {
+            accent-color: var(--unturned-accent-green);
+            cursor: pointer;
+            width: 14px;
+            height: 14px;
+        }
+
+        .gpu-hint {
+            font-size: 10px;
+            color: var(--unturned-accent-gold);
+            margin-top: 4px;
+            line-height: 1.4;
         }
 
         .mascot-chibi-badge {
             position: absolute;
-            right: 12px;
-            bottom: -6px;
-            font-size: 72px;
+            right: 10px;
+            bottom: -8px;
+            font-size: 52px;
             line-height: 1;
             user-select: none;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+            pointer-events: none;
         }
 
         .mascot-chibi-badge.collapsed {
             opacity: 0;
-            transform: translateY(30px) scale(0.6);
-            pointer-events: none;
+            transform: translateY(20px) scale(0.6);
         }
 
         /* 下半区精选与更新日志 */
@@ -467,7 +515,7 @@
             align-items: center;
             font-size: 13px;
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .bue-card {
@@ -649,11 +697,11 @@
         <div class="header-title">
             <h1>
                 <span>Unturned 原生拟真 UI Shell 原型与设计代币评审</span>
-                <span class="badge-tag">Ticket 02 Prototype</span>
+                <span class="badge-tag">Ticket 02 (修订版)</span>
                 <span class="badge-verified">160/160 测试全绿</span>
             </h1>
             <p class="header-desc">
-                按照 PM 冻结口径与 Wayfinder 规范：在 <code>.scratch/.../prototype/</code> 建立隔离独立原型，验证 5 槽位药丸导航、暗调半透明 HUD 面板、Page+Frame 契约与 WCAG 2.1 AA/AAA 对比度合规。
+                按照 PM 视觉验收反馈实施原型修订：补齐“环境与诊断”启动前操作闭环卡片（BepInEx 安装/修复/开关、DXVK 开关与 GPU 适配提示、导出诊断包）；修正五槽位规范命名与“精选插件 / 社区推荐”。生产代码 100% 隔离。
             </p>
         </div>
     </header>
@@ -680,7 +728,7 @@
                     <div class="brand-sub">NELSON SEXTON 原版空间结构 // v2.2.1 拟真设计代币原型</div>
                 </div>
 
-                <!-- 居中全局状态药丸 -->
+                <!-- 居中全局状态药丸 (仅作为只读摘要展示，不替代卡片操作) -->
                 <div class="global-status-pill">
                     <span class="status-dot"></span>
                     <strong style="color: #fff;">模组模式 (-NoBattlEye)</strong>
@@ -700,31 +748,31 @@
 
             <!-- 2. 核心二栏：左侧 5 槽位大药丸 + 右侧内容 Frame -->
             <div class="stage-body">
-                <!-- 左侧五槽位导航 -->
+                <!-- 左侧五槽位导航 (采用 PM 最终规范命名) -->
                 <nav class="nav-pill-column">
                     <div class="nav-primary-slots">
                         <button id="navPlay" class="nav-pill-btn active" onclick="switchNav('play')">
                             <span style="color: var(--unturned-accent-gold);">▶</span>
-                            <span>开始游戏</span>
+                            <span>游戏启动</span>
                         </button>
                         <button id="navData" class="nav-pill-btn" onclick="switchNav('data')">
                             <span>👥</span>
-                            <span>角色设定</span>
+                            <span>角色与存档</span>
                         </button>
                         <button id="navMods" class="nav-pill-btn" onclick="switchNav('mods')">
                             <span>🧩</span>
-                            <span>创意工坊</span>
+                            <span>插件工坊</span>
                         </button>
                         <button id="navSettings" class="nav-pill-btn" onclick="switchNav('settings')">
                             <span>⚙</span>
-                            <span>游戏设置</span>
+                            <span>启动器设置</span>
                         </button>
                     </div>
 
                     <!-- 底部固定第 5 槽位 -->
-                    <button class="nav-pill-btn exit-slot" onclick="alert('【第 5 槽位演示】触发优雅退出Unturned启动器流程')">
+                    <button class="nav-pill-btn exit-slot" onclick="alert('【第 5 槽位演示】触发优雅退出 UMM 启动器流程（不影响正在运行的游戏）')">
                         <span>◀</span>
-                        <span>退出游戏</span>
+                        <span>退出 UMM</span>
                     </button>
                 </nav>
 
@@ -745,30 +793,79 @@
                             <span style="color: var(--unturned-accent-green); font-weight: 700; font-family: var(--unturned-font-mono);">BE 5.4.23.5</span>
                         </div>
 
-                        <!-- 3:2 英雄卡片与当前方案 -->
+                        <!-- 启动舞台区：主启动卡片 + 环境与诊断卡片 (启动前闭环) -->
                         <div class="hero-section-grid">
-                            <!-- 英雄启动卡片 -->
-                            <div class="hud-card">
-                                <div class="hero-title">Unturned Mod Manager</div>
-                                <div class="hero-subtitle">让插件管理与游戏启动更安全可靠。</div>
-
-                                <button class="btn-launch-hero" onclick="alert('【启动游戏演示】通过 LaunchCoordinator 调起 Unturned.exe -NoBattlEye')">
-                                    <span>▶</span>
-                                    <span>启动游戏 (模组模式)</span>
-                                </button>
-
-                                <div class="hero-path">路径: E:\Steam\steamapps\common\Unturned</div>
-                            </div>
-
-                            <!-- 方案挂件与吉祥物插拔测试 -->
-                            <div class="hud-card profile-mascot-card">
+                            <!-- 1. 主启动卡片 (Hero Launch Card) -->
+                            <div class="hud-card" style="display: flex; flex-direction: column; justify-content: space-between;">
                                 <div>
-                                    <div style="font-size: 13px; font-weight: 700;">当前配置方案</div>
-                                    <div class="profile-badge">默认联机优化方案 (12 Mods)</div>
-                                    <button class="mascot-toggle-btn" onclick="toggleMascot()">
-                                        <span id="mascotBtnText">🦊 切换吉祥物挂件显隐</span>
+                                    <div class="hero-title">Unturned Mod Manager</div>
+                                    <div class="hero-subtitle">让插件管理与游戏启动更安全可靠。</div>
+
+                                    <!-- Profile 药丸展示 -->
+                                    <div class="profile-pill">
+                                        <span style="color: var(--unturned-text-muted);">当前配置方案:</span>
+                                        <strong style="color: var(--unturned-accent-gold);">默认联机优化 (12 Mods)</strong>
+                                    </div>
+
+                                    <button class="btn-launch-hero" onclick="alert('【启动游戏演示】通过 LaunchCoordinator 调起 Unturned.exe -NoBattlEye')">
+                                        <span>▶</span>
+                                        <span>启动游戏 (模组模式)</span>
                                     </button>
                                 </div>
+
+                                <div class="hero-path">游戏路径: E:\Steam\steamapps\common\Unturned</div>
+                            </div>
+
+                            <!-- 2. 环境与诊断卡片 (核心操作闭环) -->
+                            <div class="hud-card env-diag-card">
+                                <div class="env-card-header">
+                                    <span style="display: flex; align-items: center; gap: 6px;">
+                                        <span>🔧</span>
+                                        <span>环境与诊断</span>
+                                    </span>
+                                    <button class="btn-compact" onclick="toggleMascot()">
+                                        <span id="mascotBtnText">🦊 挂件</span>
+                                    </button>
+                                </div>
+
+                                <!-- BepInEx 子项 -->
+                                <div class="env-section-box">
+                                    <div class="env-section-row">
+                                        <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;">
+                                            <span style="color: var(--unturned-accent-green);">●</span>
+                                            <span id="bepStateText">BepInEx 5.4.23.5 (x64) 运行就绪</span>
+                                        </div>
+                                        <button class="btn-compact" onclick="alert('【环境检查演示】执行 BepInEx 注入完整性校验与文件修复')">🔧 检查并修复</button>
+                                    </div>
+                                    <label class="switch-label">
+                                        <input type="checkbox" id="bepToggle" checked onchange="updateBepState(this.checked)">
+                                        <span>启用 BepInEx 模组加载器 (winhttp.dll)</span>
+                                    </label>
+                                </div>
+
+                                <!-- DXVK 子项 -->
+                                <div class="env-section-box">
+                                    <label class="switch-label" style="margin-top: 0;">
+                                        <input type="checkbox" id="dxvkToggle" onchange="updateDxvkState(this.checked)">
+                                        <span>启用 DXVK (DirectX 转 Vulkan 渲染提升帧率)</span>
+                                    </label>
+                                    <div id="dxvkGpuHint" class="gpu-hint">
+                                        ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，建议开启提升帧率稳定性)
+                                    </div>
+                                </div>
+
+                                <!-- 诊断与排障子项 -->
+                                <div class="env-section-box">
+                                    <div class="env-section-row">
+                                        <div>
+                                            <div style="font-size: 10px; color: var(--unturned-text-muted);">当前环境诊断摘要</div>
+                                            <div style="font-size: 11px; color: var(--unturned-text-secondary); margin-top: 2px;">未捕获运行异常与模组冲突，日志健康</div>
+                                        </div>
+                                        <button class="btn-compact" style="color: #fff; padding: 4px 10px;" onclick="alert('【诊断包演示】已生成脱敏诊断压缩包：UMM-诊断包_20260910_1408.zip')">📦 导出脱敏诊断包</button>
+                                    </div>
+                                </div>
+
+                                <!-- 吉祥物挂件 -->
                                 <div id="mascotBadge" class="mascot-chibi-badge">🦊</div>
                             </div>
                         </div>
@@ -777,8 +874,8 @@
                         <div class="lower-grid">
                             <div class="hud-card">
                                 <div class="section-header">
-                                    <span>精选创意工坊 / 推荐模组</span>
-                                    <span style="color: var(--unturned-accent-green); font-size: 11px;">社区认证</span>
+                                    <span>精选插件 / 社区推荐</span>
+                                    <span style="color: var(--unturned-accent-green); font-size: 11px;">社区认证 BepInEx 插件</span>
                                 </div>
                                 <div class="bue-card">
                                     <div style="font-weight: 700; font-size: 13px; margin-bottom: 4px;">BetterUnturnedExperience (BUE)</div>
@@ -793,7 +890,7 @@
                                 <ul class="patch-list">
                                     <li>• 新增玩家自定义全屏壁纸与毛玻璃模糊。</li>
                                     <li>• 接入 <strong>PreviewMouseWheel</strong> 隧道路由，修复滚轮卡滞。</li>
-                                    <li>• 建立 Unturned 原生 UI Shell 空间原型与设计代币。</li>
+                                    <li>• 补齐首页 <strong>环境与诊断</strong> 操作闭环卡片（安装/修复/开关/诊断）。</li>
                                 </ul>
                             </div>
                         </div>
@@ -844,21 +941,21 @@
                             <div class="data-item-card">
                                 <div class="data-item-title">
                                     <span>Slot 2: 探索者</span>
-                                    <span style="color: var(--unturned-text-muted); font-size: 11px;">初始</span>
+                                    <span style="color: var(--unturned-text-muted); font-size: 11px;">未激活</span>
                                 </div>
                                 <div class="data-item-meta">
                                     生命: 100% | 饱食: 100% | 水分: 100%<br>
                                     感染: 0% | 骨折: 正常<br>
-                                    经验值: 0 XP | 击杀僵尸: 0<br>
+                                    经验值: 0 XP | 击杀: 0<br>
                                     物理路径: <code>Worlds/Singleplayer_2/...</code>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- C. 创意工坊与设置页占位演示 -->
+                    <!-- C. 插件工坊与设置页占位演示 -->
                     <div id="viewPlaceholder" class="hud-card" style="display: none; height: 100%; align-items: center; justify-content: center; text-align: center;">
-                        <div id="phTitle" style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">创意工坊与模组市场</div>
+                        <div id="phTitle" style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">插件工坊 (Plugins & Workshop)</div>
                         <div id="phDesc" style="font-size: 12px; color: var(--unturned-text-secondary); max-width: 480px;">
                             通过 NavigationShell 提供的兼容式 Seam，现有 ModListPage / SettingsPage 可零代码修改直接无缝挂载。
                         </div>
@@ -919,25 +1016,25 @@
                 <li>
                     <span class="check-icon">✔</span>
                     <div>
-                        <strong>工作区绝对隔离</strong>：所有原型代码均在 <code>.scratch/.../prototype/</code> 独立目录，生产 <code>MainWindow.xaml</code> 零修改。
+                        <strong>工作区绝对隔离</strong>：所有原型资产均在 <code>.scratch/.../prototype/</code> 独立目录，生产 <code>MainWindow.xaml</code> 零修改。
                     </div>
                 </li>
                 <li>
                     <span class="check-icon">✔</span>
                     <div>
-                        <strong>五槽位导航与契约挂载</strong>：完整验证 4 大主业务药丸 + 1 个底部退出槽位，兼容现有 <code>Page + Frame</code>。
+                        <strong>启动前闭环补齐</strong>：首页补回“环境与诊断”操作卡片（BepInEx 修复/开关、DXVK 开关/显卡提示、导出诊断包）。
                     </div>
                 </li>
                 <li>
                     <span class="check-icon">✔</span>
                     <div>
-                        <strong>滚轮隧道路由保障</strong>：挂载 <code>Shell_PreviewMouseWheel</code>，确保嵌套容器滚轮不被外层吞噬。
+                        <strong>五槽位规范命名</strong>：游戏启动、角色与存档、插件工坊、启动器设置、退出 UMM。
                     </div>
                 </li>
                 <li>
                     <span class="check-icon">✔</span>
                     <div>
-                        <strong>自动化测试 100% 绿灯</strong>：已运行 <code>dotnet test</code>，共 <strong>160 项测试全部通过</strong>（155 基线项 + 5 原型项，0 失败）。
+                        <strong>自动化测试</strong>：运行 <code>dotnet test</code>，共 <strong>160 项测试全绿</strong>（无编译错误；运行环境产生 .NET 10 preview SDK NETSDK1057 提示）。
                     </div>
                 </li>
             </ul>
@@ -946,7 +1043,6 @@
 
     <script>
         function switchNav(slot) {
-            // 重置所有导航按钮 active
             document.querySelectorAll('.nav-pill-btn').forEach(btn => btn.classList.remove('active'));
 
             const viewPlay = document.getElementById('viewPlay');
@@ -966,24 +1062,40 @@
             } else if (slot === 'mods') {
                 document.getElementById('navMods').classList.add('active');
                 viewPlaceholder.style.display = 'flex';
-                document.getElementById('phTitle').innerText = '🧩 创意工坊与模组市场 (Mods & Workshop)';
-                document.getElementById('phDesc').innerText = '验证无缝挂载生产现有 ModListPage，ViewModel、下载编排与命令绑定 100% 零修改。';
+                document.getElementById('phTitle').innerText = '🧩 插件工坊 (Plugins & Workshop)';
+                document.getElementById('phDesc').innerText = '聚合本地已安装插件与 unmod.online 社区发现，兼容现有 ModListPage / OnlineMarketPage，零修改挂载进 Frame。';
             } else if (slot === 'settings') {
                 document.getElementById('navSettings').classList.add('active');
                 viewPlaceholder.style.display = 'flex';
-                document.getElementById('phTitle').innerText = '⚙ 启动器与游戏设置 (Settings)';
+                document.getElementById('phTitle').innerText = '⚙ 启动器设置 (Settings)';
                 document.getElementById('phDesc').innerText = '验证无缝挂载生产现有 SettingsPage，保留自定义全屏壁纸、路径配置与诊断工具。';
             }
         }
 
         function toggleMascot() {
             const badge = document.getElementById('mascotBadge');
-            const btnText = document.getElementById('mascotBtnText');
             badge.classList.toggle('collapsed');
-            if (badge.classList.contains('collapsed')) {
-                btnText.innerText = '🦊 吉祥物挂件已隐藏 (点击恢复)';
+        }
+
+        function updateBepState(enabled) {
+            const bepText = document.getElementById('bepStateText');
+            if (enabled) {
+                bepText.innerText = 'BepInEx 5.4.23.5 (x64) 运行就绪';
+                bepText.previousElementSibling.style.color = '#38a169';
             } else {
-                btnText.innerText = '🦊 切换吉祥物挂件显隐';
+                bepText.innerText = 'BepInEx 已停用 (启动原生游戏)';
+                bepText.previousElementSibling.style.color = '#718096';
+            }
+        }
+
+        function updateDxvkState(enabled) {
+            const hint = document.getElementById('dxvkGpuHint');
+            if (enabled) {
+                hint.innerText = '✔ 已激活 DXVK：游戏将使用 Vulkan 渲染器启动 (建议在 RTX 显卡上配合全屏无边框)';
+                hint.style.color = '#38a169';
+            } else {
+                hint.innerText = 'ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，建议开启提升帧率稳定性)';
+                hint.style.color = 'var(--unturned-accent-gold)';
             }
         }
 

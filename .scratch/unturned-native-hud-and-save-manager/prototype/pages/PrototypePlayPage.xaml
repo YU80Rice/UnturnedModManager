@@ -33,19 +33,19 @@
                 </Grid>
             </Border>
 
-            <!-- 2. 主启动舞台与当前方案卡片 (Main Launch Stage) -->
+            <!-- 2. 主启动舞台与环境诊断区 (Main Launch Stage & Environment Diagnostics) -->
             <Grid Margin="0,0,0,16">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*" />
-                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="1.1*" />
+                    <ColumnDefinition Width="1.2*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- 左侧：大号英雄启动卡片 (Hero Launch Card) -->
+                <!-- 左侧：英雄启动卡片 (Hero Launch Card) -->
                 <Border x:Name="LaunchHeroCard"
                         Grid.Column="0"
                         Margin="0,0,12,0"
                         Style="{DynamicResource UnturnedHudCardStyle}">
-                    <StackPanel>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Unturned Mod Manager"
                                    FontSize="20"
                                    FontWeight="Bold"
@@ -54,7 +54,20 @@
                         <TextBlock Text="让插件管理与游戏启动更安全可靠。"
                                    FontSize="12"
                                    Foreground="#FFCBD5E0"
-                                   Margin="0,0,0,16" />
+                                   Margin="0,0,0,12" />
+
+                        <!-- 当前激活 Profile 药丸 -->
+                        <Border Background="#40000000"
+                                BorderBrush="{DynamicResource UnturnedStrokeSubtleBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="10,6"
+                                Margin="0,0,0,14">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="当前配置方案: " FontSize="11" Foreground="#FFCBD5E0" VerticalAlignment="Center" />
+                                <TextBlock Text="默认联机优化 (12 Mods)" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource UnturnedAccentGoldBrush}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
 
                         <!-- 大号原生风格启动按钮 (Hero Play Button) -->
                         <Button Height="52"
@@ -69,7 +82,7 @@
                             </StackPanel>
                         </Button>
 
-                        <TextBlock Text="路径: E:\Steam\steamapps\common\Unturned"
+                        <TextBlock Text="游戏路径: E:\Steam\steamapps\common\Unturned"
                                    FontSize="11"
                                    Foreground="#FF718096"
                                    Margin="0,10,0,0"
@@ -77,78 +90,189 @@
                     </StackPanel>
                 </Border>
 
-                <!-- 右侧：方案状态与吉祥物适配器挂件 (Profile & Mascot Widget) -->
-                <Border Grid.Column="1"
+                <!-- 右侧：环境与诊断卡片 (Environment & Diagnostics Card) -->
+                <Border x:Name="EnvDiagnosticsCard"
+                        Grid.Column="1"
                         Style="{DynamicResource UnturnedHudCardStyle}">
                     <Grid>
-                        <!-- 正常方案内容 -->
                         <StackPanel VerticalAlignment="Top">
-                            <TextBlock Text="当前配置方案"
-                                       FontSize="13"
-                                       FontWeight="SemiBold"
-                                       Foreground="#FFFFFFFF"
-                                       Margin="0,0,0,8" />
-                            <Border Background="#40000000" CornerRadius="6" Padding="10,8" Margin="0,0,0,10">
-                                <TextBlock Text="默认联机优化方案 (12 Mods)"
-                                           FontSize="12"
-                                           FontWeight="Bold"
-                                           Foreground="#FFE2B024" />
-                            </Border>
+                            <!-- 卡片标题与吉祥物开关 -->
+                            <Grid Margin="0,0,0,12">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="🔧" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="环境与诊断"
+                                               FontSize="14"
+                                               FontWeight="Bold"
+                                               Foreground="#FFFFFFFF"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Button x:Name="MascotToggleBtn"
+                                        HorizontalAlignment="Right"
+                                        Background="#301A2026"
+                                        BorderBrush="#FF4A5568"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="8,4"
+                                        Content="🦊 挂件"
+                                        Foreground="#FFCBD5E0"
+                                        FontSize="11"
+                                        Cursor="Hand"
+                                        Click="MascotToggleBtn_Click" />
+                            </Grid>
 
-                            <!-- 吉祥物开关演示按钮 (用于验证吉祥物关闭后的布局完整性) -->
-                            <Button x:Name="MascotToggleBtn"
-                                    Height="32"
-                                    Background="#401A2026"
-                                    BorderBrush="#FF4A5568"
+                            <!-- BepInEx 模块：状态 + 开关 + 检查修复 -->
+                            <Border Background="#30000000"
+                                    BorderBrush="{DynamicResource UnturnedStrokeSubtleBrush}"
                                     BorderThickness="1"
                                     CornerRadius="6"
-                                    Content="🦊 切换吉祥物挂件显隐"
-                                    Foreground="#FFCBD5E0"
-                                    FontSize="11"
-                                    Click="MascotToggleBtn_Click" />
+                                    Padding="10,8"
+                                    Margin="0,0,0,8">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Ellipse Width="6" Height="6" Fill="#FF38A169" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                            <TextBlock Text="BepInEx 5.4.23.5 (x64) 运行就绪"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#FFFFFFFF"
+                                                       FontSize="11" />
+                                        </StackPanel>
+                                        <Button x:Name="RepairBepInExBtn"
+                                                HorizontalAlignment="Right"
+                                                Background="#502D3748"
+                                                BorderBrush="#FF4A5568"
+                                                BorderThickness="1"
+                                                CornerRadius="4"
+                                                Padding="8,3"
+                                                FontSize="10"
+                                                Foreground="{DynamicResource UnturnedAccentGoldBrush}"
+                                                Cursor="Hand"
+                                                Click="RepairBepInExBtn_Click">
+                                            <TextBlock Text="🔧 检查并修复" />
+                                        </Button>
+                                    </Grid>
+                                    <CheckBox Grid.Row="1"
+                                              x:Name="BepInExToggle"
+                                              IsChecked="True"
+                                              Margin="0,6,0,0"
+                                              Cursor="Hand"
+                                              Checked="BepInExToggle_Checked"
+                                              Unchecked="BepInExToggle_Unchecked">
+                                        <TextBlock Text="启用 BepInEx 模组加载器 (winhttp.dll)"
+                                                   Foreground="#FFCBD5E0"
+                                                   FontSize="11" />
+                                    </CheckBox>
+                                </Grid>
+                            </Border>
+
+                            <!-- DXVK 模块：开关 + 显卡 Vulkan 适配性提示 -->
+                            <Border Background="#30000000"
+                                    BorderBrush="{DynamicResource UnturnedStrokeSubtleBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10,8"
+                                    Margin="0,0,0,8">
+                                <StackPanel>
+                                    <CheckBox x:Name="DxvkToggle"
+                                              IsChecked="False"
+                                              Cursor="Hand"
+                                              Checked="DxvkToggle_Checked"
+                                              Unchecked="DxvkToggle_Unchecked">
+                                        <TextBlock Text="启用 DXVK (DirectX 转 Vulkan 渲染提升帧率)"
+                                                   Foreground="#FFCBD5E0"
+                                                   FontSize="11" />
+                                    </CheckBox>
+                                    <TextBlock x:Name="DxvkGpuHintText"
+                                               Text="ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，可按需开启提升帧率稳定性)"
+                                               FontSize="10"
+                                               Foreground="{DynamicResource UnturnedAccentGoldBrush}"
+                                               Margin="0,4,0,0"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 诊断与排障模块：异常摘要 + 导出脱敏诊断包 -->
+                            <Border Background="#30000000"
+                                    BorderBrush="{DynamicResource UnturnedStrokeSubtleBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Padding="10,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <TextBlock Text="当前环境诊断摘要" FontSize="10" Foreground="#FF718096" />
+                                        <TextBlock x:Name="DiagnosticSummaryText"
+                                                   Text="未捕获运行异常与模组冲突，日志健康"
+                                                   FontSize="11"
+                                                   Foreground="#FFCBD5E0"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            x:Name="ExportDiagnosticsBtn"
+                                            Background="#502D3748"
+                                            BorderBrush="#FF4A5568"
+                                            BorderThickness="1"
+                                            CornerRadius="4"
+                                            Padding="10,4"
+                                            FontSize="10"
+                                            Foreground="#FFFFFFFF"
+                                            Cursor="Hand"
+                                            Click="ExportDiagnosticsBtn_Click">
+                                        <TextBlock Text="📦 导出脱敏诊断包" />
+                                    </Button>
+                                </Grid>
+                            </Border>
+
                         </StackPanel>
 
-                        <!-- 可插拔吉祥物悬浮挂件 (MascotPresentationAdapter) -->
+                        <!-- 可插拔吉祥物悬浮挂件 (位于右侧卡片边缘，支持平滑显隐与自动折叠) -->
                         <Border x:Name="MascotContainer"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Bottom"
-                                Margin="0,50,0,-10"
-                                Width="110"
-                                Height="110"
+                                Margin="0,0,4,-12"
+                                Width="64"
+                                Height="64"
+                                IsHitTestVisible="False"
                                 Visibility="Visible">
-                            <TextBlock Text="🦊" FontSize="70" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.9" />
+                            <TextBlock Text="🦊" FontSize="44" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.85" />
                         </Border>
                     </Grid>
                 </Border>
             </Grid>
 
-            <!-- 3. 下半区：精选模组与版本要点 (Featured Mods & Patch Notes) -->
+            <!-- 3. 下半区：精选插件与版本要点 (Featured Plugins & Patch Notes) -->
             <Grid x:Name="FeaturedGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- 精选模组推荐 (Featured Mod Card) -->
+                <!-- 精选插件 / 社区推荐 (Featured Plugins Card) -->
                 <Border Grid.Column="0"
                         Margin="0,0,12,0"
                         Style="{DynamicResource UnturnedHudCardStyle}">
                     <StackPanel>
                         <Grid Margin="0,0,0,10">
-                            <TextBlock Text="精选创意工坊 / 推荐插件"
+                            <TextBlock Text="精选插件 / 社区推荐"
                                        FontSize="13"
                                        FontWeight="SemiBold"
                                        Foreground="#FFFFFFFF" />
-                            <TextBlock Text="社区认证"
+                            <TextBlock Text="社区认证 BepInEx 插件"
                                        HorizontalAlignment="Right"
                                        FontSize="10"
                                        Foreground="#FF38A169"
                                        FontWeight="Bold" />
                         </Grid>
-                        <Border Height="80" CornerRadius="6" Background="#30000000" Padding="12" Margin="0,0,0,10">
+                        <Border Height="72" CornerRadius="6" Background="#30000000" Padding="12">
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="BetterUnturnedExperience (BUE)" FontSize="14" FontWeight="Bold" Foreground="#FFFFFFFF" />
-                                <TextBlock Text="现代化游戏体验与交互优化组件" FontSize="11" Foreground="#FFCBD5E0" Margin="0,4,0,0" />
+                                <TextBlock Text="BetterUnturnedExperience (BUE)" FontSize="13" FontWeight="Bold" Foreground="#FFFFFFFF" />
+                                <TextBlock Text="现代化游戏体验与交互优化组件，独立运行于游戏客户端内。" FontSize="11" Foreground="#FFCBD5E0" Margin="0,4,0,0" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -162,10 +286,10 @@
                                    FontSize="13"
                                    FontWeight="SemiBold"
                                    Foreground="#FFFFFFFF"
-                                   Margin="0,0,0,10" />
+                                   Margin="0,0,0,8" />
                         <TextBlock Text="• 新增玩家自定义全屏壁纸与毛玻璃模糊。" FontSize="11" Foreground="#FFCBD5E0" Margin="0,0,0,4" />
                         <TextBlock Text="• 接入 PreviewMouseWheel 隧道路由，修复滚轮卡滞。" FontSize="11" Foreground="#FFCBD5E0" Margin="0,0,0,4" />
-                        <TextBlock Text="• 建立 Unturned 原生 UI Shell 空间原型与设计代币。" FontSize="11" Foreground="#FFE2B024" />
+                        <TextBlock Text="• 建立 Unturned 原生 UI Shell 空间原型与环境诊断闭环。" FontSize="11" Foreground="{DynamicResource UnturnedAccentGoldBrush}" />
                     </StackPanel>
                 </Border>
             </Grid>

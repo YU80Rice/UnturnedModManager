@@ -14,11 +14,11 @@ namespace UnturnedModManager.Tests;
 
 /// <summary>
 /// Ticket 02: Unturned 原生风格 UI Shell 空间结构与设计代币原型验证测试
-/// 针对 PM 硬门槛：
+/// 针对 PM 硬门槛与视觉修订结论：
 /// 1. 验证 .scratch/.../prototype/tokens/UnturnedNativeTokens.xaml 资源与代币完整性
 /// 2. 验证 WCAG 2.1 AA/AAA 对比度要求 (白字/金字/浅灰字 在暗色面板上的高对比度)
-/// 3. 验证 UnturnedNativeShellPrototype.xaml 空间结构：5 大药丸槽位 + Page/Frame 契约 + 隧道路由 + 次级入口
-/// 4. 验证 PrototypePlayPage.xaml 三层主布局与吉祥物无缝闭合
+/// 3. 验证 UnturnedNativeShellPrototype.xaml 空间结构：5 大药丸槽位 (游戏启动/角色与存档/插件工坊/启动器设置/退出 UMM) + Page/Frame 契约 + 隧道路由 + 次级入口
+/// 4. 验证 PrototypePlayPage.xaml 启动前操作闭环 (环境与诊断卡片: BepInEx开关与修复、DXVK与GPU提示、导出诊断包) + 吉祥物挂件折叠 + 精选插件/社区推荐
 /// 5. 验证 PrototypeDataPage.xaml 四大只读域 Tab 契约 (严禁写入控件)
 /// </summary>
 public sealed class UnturnedNativeShellPrototypeTests
@@ -42,33 +42,6 @@ public sealed class UnturnedNativeShellPrototypeTests
         }
 
         throw new DirectoryNotFoundException("Could not find .scratch/.../prototype directory.");
-    }
-
-    private static void RunOnStaThread(Action action)
-    {
-        Exception? exception = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                if (Application.Current == null)
-                {
-                    _ = new Application();
-                }
-                action();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-        if (exception != null)
-        {
-            throw new Exception("STA test execution failed", exception);
-        }
     }
 
     [Fact]
@@ -169,12 +142,21 @@ public sealed class UnturnedNativeShellPrototypeTests
 
         var content = File.ReadAllText(shellPath);
 
-        // 验证经典 Unturned 原版五大药丸槽位
+        // 验证 PM 裁定修正后的 Unturned 原版五大药丸槽位命名与控件
         Assert.Contains("x:Name=\"NavSlotPlay\"", content);
+        Assert.Contains("游戏启动", content);
+
         Assert.Contains("x:Name=\"NavSlotData\"", content);
+        Assert.Contains("角色与存档", content);
+
         Assert.Contains("x:Name=\"NavSlotMods\"", content);
+        Assert.Contains("插件工坊", content);
+
         Assert.Contains("x:Name=\"NavSlotSettings\"", content);
+        Assert.Contains("启动器设置", content);
+
         Assert.Contains("x:Name=\"NavSlotExit\"", content);
+        Assert.Contains("退出 UMM", content);
 
         // 验证 Frame 挂载契约：无边框、无系统导航栏、支持日志所有权
         Assert.Contains("x:Name=\"MainContentFrame\"", content);
@@ -190,7 +172,7 @@ public sealed class UnturnedNativeShellPrototypeTests
     }
 
     [Fact]
-    public void PlayPage_Structure_ThreeLayerLayout_AndMascotToggle()
+    public void PlayPage_Structure_LaunchClosedLoop_AndDiagnosticsCard()
     {
         var prototypeDir = GetPrototypeRootDirectory();
         var playPath = Path.Combine(prototypeDir, "pages", "PrototypePlayPage.xaml");
@@ -198,15 +180,30 @@ public sealed class UnturnedNativeShellPrototypeTests
 
         var content = File.ReadAllText(playPath);
 
-        // 验证首页核心组件：快速启动英雄卡片、状态横幅、吉祥物容器、更新日志网格
+        // 1. 验证主启动英雄卡片与当前方案
         Assert.Contains("x:Name=\"LaunchHeroCard\"", content);
         Assert.Contains("x:Name=\"StatusBanner\"", content);
+        Assert.Contains("当前配置方案", content);
+
+        // 2. 验证环境与诊断操作卡片 (解决 PM 强调的核心操作闭环)
+        Assert.Contains("x:Name=\"EnvDiagnosticsCard\"", content);
+        Assert.Contains("环境与诊断", content);
+        Assert.Contains("x:Name=\"BepInExToggle\"", content);
+        Assert.Contains("x:Name=\"RepairBepInExBtn\"", content);
+        Assert.Contains("x:Name=\"DxvkToggle\"", content);
+        Assert.Contains("x:Name=\"DxvkGpuHintText\"", content);
+        Assert.Contains("x:Name=\"ExportDiagnosticsBtn\"", content);
+
+        // 3. 验证吉祥物挂件折叠与开关
         Assert.Contains("x:Name=\"MascotContainer\"", content);
         Assert.Contains("x:Name=\"MascotToggleBtn\"", content);
-        Assert.Contains("x:Name=\"FeaturedGrid\"", content);
-
-        // 验证吉祥物容器为右侧悬浮挂件，且配置了无缝折叠过渡
         Assert.Contains("MascotToggleBtn_Click", content);
+
+        // 4. 验证精选插件与版本要点 (非 Workshop 命名)
+        Assert.Contains("x:Name=\"FeaturedGrid\"", content);
+        Assert.Contains("精选插件 / 社区推荐", content);
+        Assert.Contains("社区认证 BepInEx 插件", content);
+        Assert.Contains("BetterUnturnedExperience (BUE)", content);
     }
 
     [Fact]

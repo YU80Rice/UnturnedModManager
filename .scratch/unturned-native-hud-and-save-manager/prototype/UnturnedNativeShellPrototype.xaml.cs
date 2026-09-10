@@ -60,18 +60,18 @@ public partial class UnturnedNativeShellPrototype : UserControl
         }
         else if (targetButton == NavSlotMods)
         {
-            // 模拟创意工坊与社区插件列表页挂载
+            // 模拟插件工坊与社区插件列表页挂载
             MainContentFrame.Navigate(CreatePlaceholderPage(
-                "🧩 创意工坊与模组市场 (Mods & Workshop)",
-                "兼容现有 ModListPage / OnlineMarketPage，零修改直接挂载进 Frame。"
+                "🧩 插件工坊 (Plugins & Workshop)",
+                "聚合本地已安装插件与 unmod.online 社区发现，兼容现有 ModListPage / OnlineMarketPage，零修改挂载进 Frame。"
             ));
         }
         else if (targetButton == NavSlotSettings)
         {
             // 模拟设置页挂载
             MainContentFrame.Navigate(CreatePlaceholderPage(
-                "⚙ 启动器与游戏设置 (Settings)",
-                "兼容现有 SettingsPage，包括路径扫描、参数配置、网络诊断与外观设置。"
+                "⚙ 启动器设置 (Settings)",
+                "兼容现有 SettingsPage，包括路径扫描、参数配置、网络诊断、全屏壁纸与外观设置。"
             ));
         }
     }
@@ -113,12 +113,12 @@ public partial class UnturnedNativeShellPrototype : UserControl
     }
 
     /// <summary>
-    /// 退出游戏槽位响应 (原型阶段提示)
+    /// 退出 UMM 槽位响应 (原型阶段提示)
     /// </summary>
     private void NavSlotExit_Click(object sender, RoutedEventArgs e)
     {
         MessageBox.Show(
-            "【原型验证】点击了第 5 槽位「退出游戏/关闭启动器」。在生产中将触发优雅关闭流程。",
+            "【原型验证】点击了第 5 槽位「退出 UMM」。在生产中将触发启动器优雅关闭流程（不影响正在运行的游戏）。",
             "Unturned Native Shell 原型",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
