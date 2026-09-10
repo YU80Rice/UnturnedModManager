@@ -50,7 +50,11 @@ public partial class UnturnedNativeShellPrototype : UserControl
         // 驱动 Frame 挂载对应的 Page
         if (targetButton == NavSlotPlay)
         {
-            _playPage ??= new PrototypePlayPage();
+            if (_playPage == null)
+            {
+                _playPage = new PrototypePlayPage();
+                _playPage.EnvironmentStateChanged += UpdateGlobalStatus;
+            }
             MainContentFrame.Navigate(_playPage);
         }
         else if (targetButton == NavSlotData)
@@ -157,5 +161,31 @@ public partial class UnturnedNativeShellPrototype : UserControl
 
         // 如果鼠标当前停留在 ScrollViewer 内部，优先允许子控件处理，不强制截获
         // 这一隧道路由机制确保全屏 HUD 与内嵌 Page 的滚动互不冲突
+    }
+
+    /// <summary>
+    /// 响应内嵌 Page 的环境状态变更，联动更新顶部全域状态药丸
+    /// </summary>
+    public void UpdateGlobalStatus(bool bepInExEnabled, bool dxvkEnabled)
+    {
+        if (bepInExEnabled)
+        {
+            GlobalStatusDot.Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x38, 0xA1, 0x69)); // Green
+            GlobalStatusModeText.Text = dxvkEnabled ? "模组模式 (-NoBattlEye +DXVK)" : "模组模式 (-NoBattlEye)";
+            GlobalStatusBepText.Text = "BepInEx 5.4.23.5 就绪";
+            GlobalStatusModsText.Text = "已挂载 12 个插件";
+            if (FindResource("UnturnedAccentGoldBrush") is System.Windows.Media.Brush goldBrush)
+            {
+                GlobalStatusModsText.Foreground = goldBrush;
+            }
+        }
+        else
+        {
+            GlobalStatusDot.Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x3B, 0x82, 0xF6)); // Blue
+            GlobalStatusModeText.Text = dxvkEnabled ? "官方原版 (+BattlEye +DXVK)" : "官方原版 (+BattlEye)";
+            GlobalStatusBepText.Text = "BepInEx 已停用";
+            GlobalStatusModsText.Text = "原生游戏环境";
+            GlobalStatusModsText.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x71, 0x80, 0x96));
+        }
     }
 }

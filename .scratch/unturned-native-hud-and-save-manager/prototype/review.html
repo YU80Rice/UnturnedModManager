@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UMM - Unturned 原生拟真 UI Shell 原型与设计代币评审 (Ticket 02 修订版)</title>
+    <title>UMM - Unturned 原生拟真 UI Shell 原型与设计代币评审 (Ticket 02 · 动态闭环版)</title>
     <style>
         :root {
             /* Unturned Native HUD Design Tokens (Ticket 02) */
@@ -18,6 +18,8 @@
             --unturned-accent-gold: #e2b024;
             --unturned-accent-green: #38a169;
             --unturned-accent-green-bg: rgba(35, 107, 61, 0.85);
+            --unturned-accent-blue: #3b82f6;
+            --unturned-accent-blue-bg: rgba(30, 58, 95, 0.85);
             --unturned-accent-red: #e53e3e;
             --unturned-pill-normal: rgba(26, 33, 40, 0.55);
             --unturned-pill-hover: rgba(40, 51, 62, 0.75);
@@ -104,6 +106,34 @@
             min-height: 760px;
         }
 
+        /* 顶部通知横条 (演示操作反馈) */
+        .toast-notification {
+            position: absolute;
+            top: 44px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(18, 25, 33, 0.95);
+            border: 1px solid var(--unturned-accent-gold);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 20px;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast-notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         /* 顶部装饰性窗口栏 */
         .window-titlebar {
             display: flex;
@@ -184,6 +214,7 @@
             border-radius: 20px;
             font-size: 11px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.25s ease;
         }
 
         .status-dot {
@@ -192,6 +223,12 @@
             border-radius: 50%;
             background: var(--unturned-accent-green);
             box-shadow: 0 0 8px var(--unturned-accent-green);
+            transition: all 0.25s ease;
+        }
+
+        .status-dot.blue {
+            background: var(--unturned-accent-blue);
+            box-shadow: 0 0 8px var(--unturned-accent-blue);
         }
 
         .top-actions {
@@ -330,6 +367,12 @@
             justify-content: space-between;
             align-items: center;
             font-size: 12px;
+            transition: all 0.25s ease;
+        }
+
+        .status-banner.blue-mode {
+            background: rgba(20, 34, 50, 0.85);
+            border-color: var(--unturned-accent-blue);
         }
 
         .status-banner-left {
@@ -363,6 +406,7 @@
             font-size: 12px;
             color: var(--unturned-text-secondary);
             margin-bottom: 12px;
+            transition: color 0.2s ease;
         }
 
         .profile-pill {
@@ -375,6 +419,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            transition: all 0.2s ease;
         }
 
         .btn-launch-hero {
@@ -392,15 +437,25 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: 0 4px 16px rgba(56, 161, 105, 0.3);
         }
 
         .btn-launch-hero:hover {
-            background: #2f855a;
-            border-color: #48bb78;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(56, 161, 105, 0.4);
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .btn-launch-hero.blue-mode {
+            background: var(--unturned-accent-blue-bg);
+            border-color: var(--unturned-accent-blue);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-launch-hero.launching {
+            background: #4a5568 !important;
+            border-color: var(--unturned-accent-gold) !important;
+            transform: scale(0.98);
         }
 
         .hero-path {
@@ -414,7 +469,6 @@
 
         /* 环境与诊断卡片内部组件 */
         .env-diag-card {
-            position: relative;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -434,6 +488,7 @@
             border: 1px solid var(--unturned-stroke-subtle);
             border-radius: 6px;
             padding: 10px 12px;
+            transition: all 0.2s ease;
         }
 
         .env-section-row {
@@ -447,8 +502,8 @@
             border: 1px solid var(--unturned-stroke-strong);
             color: var(--unturned-accent-gold);
             border-radius: 4px;
-            padding: 3px 8px;
-            font-size: 10px;
+            padding: 4px 10px;
+            font-size: 11px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -474,8 +529,8 @@
         .switch-label input[type="checkbox"] {
             accent-color: var(--unturned-accent-green);
             cursor: pointer;
-            width: 14px;
-            height: 14px;
+            width: 15px;
+            height: 15px;
         }
 
         .gpu-hint {
@@ -483,23 +538,30 @@
             color: var(--unturned-accent-gold);
             margin-top: 4px;
             line-height: 1.4;
+            transition: color 0.2s ease;
+        }
+
+        /* 更新公告卡片与吉祥物挂件 */
+        .patch-notes-card {
+            position: relative;
+            overflow: visible;
         }
 
         .mascot-chibi-badge {
             position: absolute;
-            right: 10px;
-            bottom: -8px;
-            font-size: 52px;
+            right: 8px;
+            bottom: -10px;
+            font-size: 48px;
             line-height: 1;
             user-select: none;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.8));
             pointer-events: none;
         }
 
         .mascot-chibi-badge.collapsed {
             opacity: 0;
-            transform: translateY(20px) scale(0.6);
+            transform: translateY(24px) scale(0.5);
         }
 
         /* 下半区精选与更新日志 */
@@ -697,17 +759,23 @@
         <div class="header-title">
             <h1>
                 <span>Unturned 原生拟真 UI Shell 原型与设计代币评审</span>
-                <span class="badge-tag">Ticket 02 (修订版)</span>
+                <span class="badge-tag">Ticket 02 (动态闭环版)</span>
                 <span class="badge-verified">160/160 测试全绿</span>
             </h1>
             <p class="header-desc">
-                按照 PM 视觉验收反馈实施原型修订：补齐“环境与诊断”启动前操作闭环卡片（BepInEx 安装/修复/开关、DXVK 开关与 GPU 适配提示、导出诊断包）；修正五槽位规范命名与“精选插件 / 社区推荐”。生产代码 100% 隔离。
+                已根据反馈完成动态闭环：取消 BepInEx 启用后启动按钮与状态横幅即刻动态响应为“官方纯净模式”；吉祥物挂件已移至更新公告栏右下角。
             </p>
         </div>
     </header>
 
     <!-- 核心仿真演示视窗 -->
     <section class="simulator-container">
+        <!-- 操作反馈 Toast 气泡 -->
+        <div id="toastNotification" class="toast-notification">
+            <span id="toastIcon">🚀</span>
+            <span id="toastMessage">已调起 Unturned 启动流程</span>
+        </div>
+
         <!-- 模拟桌面窗口控制条 -->
         <div class="window-titlebar">
             <span>Unturned Mod Manager v2.2.1 [Native UI Shell Prototype Sandbox]</span>
@@ -728,31 +796,31 @@
                     <div class="brand-sub">NELSON SEXTON 原版空间结构 // v2.2.1 拟真设计代币原型</div>
                 </div>
 
-                <!-- 居中全局状态药丸 (仅作为只读摘要展示，不替代卡片操作) -->
+                <!-- 居中全局状态药丸 (随 BepInEx/DXVK 开关全动态响应) -->
                 <div class="global-status-pill">
-                    <span class="status-dot"></span>
-                    <strong style="color: #fff;">模组模式 (-NoBattlEye)</strong>
+                    <span id="globalDot" class="status-dot"></span>
+                    <strong id="globalModeText" style="color: #fff;">模组模式 (-NoBattlEye)</strong>
                     <span style="color: var(--unturned-stroke-strong);">|</span>
-                    <span style="color: var(--unturned-text-secondary);">BepInEx 5.4.23.5 就绪</span>
+                    <span id="globalBepText" style="color: var(--unturned-text-secondary);">BepInEx 5.4.23.5 就绪</span>
                     <span style="color: var(--unturned-stroke-strong);">|</span>
-                    <span style="color: var(--unturned-accent-gold);">已挂载 12 个插件</span>
+                    <span id="globalModsText" style="color: var(--unturned-accent-gold);">已挂载 12 个插件</span>
                 </div>
 
                 <!-- 右侧次级浮动入口 -->
                 <div class="top-actions">
-                    <button class="top-action-btn" onclick="alert('【次级入口演示】打开任务中心浮层')">⚡ 任务中心</button>
-                    <button class="top-action-btn" onclick="alert('【次级入口演示】打开社区账户面板')">👤 YU80Rice</button>
-                    <button class="top-action-btn" onclick="alert('【次级入口演示】关于 Unturned Mod Manager v2.2.1')">ℹ️ 关于</button>
+                    <button class="top-action-btn" onclick="showToast('⚡ 任务中心', '当前无后台下载任务，所有插件处于就绪状态。')">⚡ 任务中心</button>
+                    <button class="top-action-btn" onclick="showToast('👤 社区账户', '已连接 unmod.online: YU80Rice (已登录)')">👤 YU80Rice</button>
+                    <button class="top-action-btn" onclick="showToast('ℹ️ 关于', 'Unturned Mod Manager v2.2.1 by YU80Rice & contributors')">ℹ️ 关于</button>
                 </div>
             </div>
 
             <!-- 2. 核心二栏：左侧 5 槽位大药丸 + 右侧内容 Frame -->
             <div class="stage-body">
-                <!-- 左侧五槽位导航 (采用 PM 最终规范命名) -->
+                <!-- 左侧五槽位导航 -->
                 <nav class="nav-pill-column">
                     <div class="nav-primary-slots">
                         <button id="navPlay" class="nav-pill-btn active" onclick="switchNav('play')">
-                            <span style="color: var(--unturned-accent-gold);">▶</span>
+                            <span id="navPlayIcon" style="color: var(--unturned-accent-gold);">▶</span>
                             <span>游戏启动</span>
                         </button>
                         <button id="navData" class="nav-pill-btn" onclick="switchNav('data')">
@@ -770,7 +838,7 @@
                     </div>
 
                     <!-- 底部固定第 5 槽位 -->
-                    <button class="nav-pill-btn exit-slot" onclick="alert('【第 5 槽位演示】触发优雅退出 UMM 启动器流程（不影响正在运行的游戏）')">
+                    <button class="nav-pill-btn exit-slot" onclick="showToast('◀ 退出启动器', '模拟优雅关闭 UMM 启动器（不会影响正在运行的 Unturned 游戏）')">
                         <span>◀</span>
                         <span>退出 UMM</span>
                     </button>
@@ -781,64 +849,62 @@
 
                     <!-- A. 首页 (PrototypePlayPage) 挂载展示 -->
                     <div id="viewPlay" class="play-view">
-                        <!-- 关键状态横幅 -->
-                        <div class="status-banner">
+                        <!-- 关键状态横幅 (动态联动) -->
+                        <div id="statusBanner" class="status-banner">
                             <div class="status-banner-left">
-                                <span style="font-size: 14px;">🛡️</span>
+                                <span id="bannerIcon" style="font-size: 14px;">🛡️</span>
                                 <div>
-                                    <strong style="color: #fff;">运行状态就绪：</strong>
-                                    <span style="color: var(--unturned-text-secondary);">已开启纯净模组环境 (winhttp / -NoBattlEye)，无冲突告警。</span>
+                                    <strong id="bannerTitle" style="color: #fff;">运行状态就绪：</strong>
+                                    <span id="bannerDesc" style="color: var(--unturned-text-secondary);">已开启纯净模组环境 (winhttp / -NoBattlEye)，无崩溃与冲突。</span>
                                 </div>
                             </div>
-                            <span style="color: var(--unturned-accent-green); font-weight: 700; font-family: var(--unturned-font-mono);">BE 5.4.23.5</span>
+                            <span id="bannerTag" style="color: var(--unturned-accent-green); font-weight: 700; font-family: var(--unturned-font-mono);">BE 5.4.23.5</span>
                         </div>
 
-                        <!-- 启动舞台区：主启动卡片 + 环境与诊断卡片 (启动前闭环) -->
+                        <!-- 启动舞台区：主启动卡片 + 环境与诊断卡片 (全动态响应) -->
                         <div class="hero-section-grid">
                             <!-- 1. 主启动卡片 (Hero Launch Card) -->
                             <div class="hud-card" style="display: flex; flex-direction: column; justify-content: space-between;">
                                 <div>
                                     <div class="hero-title">Unturned Mod Manager</div>
-                                    <div class="hero-subtitle">让插件管理与游戏启动更安全可靠。</div>
+                                    <div id="heroSubtitle" class="hero-subtitle">模组就绪 · 将加载 12 个本地插件与 BUE</div>
 
                                     <!-- Profile 药丸展示 -->
-                                    <div class="profile-pill">
+                                    <div id="profilePillBox" class="profile-pill">
                                         <span style="color: var(--unturned-text-muted);">当前配置方案:</span>
-                                        <strong style="color: var(--unturned-accent-gold);">默认联机优化 (12 Mods)</strong>
+                                        <strong id="profileTitleText" style="color: var(--unturned-accent-gold);">默认联机优化 (12 Mods)</strong>
                                     </div>
 
-                                    <button class="btn-launch-hero" onclick="alert('【启动游戏演示】通过 LaunchCoordinator 调起 Unturned.exe -NoBattlEye')">
-                                        <span>▶</span>
-                                        <span>启动游戏 (模组模式)</span>
+                                    <button id="heroLaunchBtn" class="btn-launch-hero" onclick="triggerLaunchSimulation()">
+                                        <span id="launchBtnIcon">▶</span>
+                                        <span id="launchBtnText">启动游戏 (模组模式)</span>
+                                        <span id="launchDxvkTag" style="font-size: 11px; color: var(--unturned-accent-gold); display: none;">[+DXVK]</span>
                                     </button>
                                 </div>
 
                                 <div class="hero-path">游戏路径: E:\Steam\steamapps\common\Unturned</div>
                             </div>
 
-                            <!-- 2. 环境与诊断卡片 (核心操作闭环) -->
+                            <!-- 2. 环境与诊断卡片 (核心操作闭环，无多余元素) -->
                             <div class="hud-card env-diag-card">
                                 <div class="env-card-header">
                                     <span style="display: flex; align-items: center; gap: 6px;">
                                         <span>🔧</span>
                                         <span>环境与诊断</span>
                                     </span>
-                                    <button class="btn-compact" onclick="toggleMascot()">
-                                        <span id="mascotBtnText">🦊 挂件</span>
-                                    </button>
                                 </div>
 
                                 <!-- BepInEx 子项 -->
                                 <div class="env-section-box">
                                     <div class="env-section-row">
                                         <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600;">
-                                            <span style="color: var(--unturned-accent-green);">●</span>
+                                            <span id="bepStateDot" style="color: var(--unturned-accent-green);">●</span>
                                             <span id="bepStateText">BepInEx 5.4.23.5 (x64) 运行就绪</span>
                                         </div>
-                                        <button class="btn-compact" onclick="alert('【环境检查演示】执行 BepInEx 注入完整性校验与文件修复')">🔧 检查并修复</button>
+                                        <button class="btn-compact" onclick="triggerRepairSimulation()">🔧 检查并修复</button>
                                     </div>
                                     <label class="switch-label">
-                                        <input type="checkbox" id="bepToggle" checked onchange="updateBepState(this.checked)">
+                                        <input type="checkbox" id="bepToggle" checked onchange="handleStateLoop()">
                                         <span>启用 BepInEx 模组加载器 (winhttp.dll)</span>
                                     </label>
                                 </div>
@@ -846,11 +912,11 @@
                                 <!-- DXVK 子项 -->
                                 <div class="env-section-box">
                                     <label class="switch-label" style="margin-top: 0;">
-                                        <input type="checkbox" id="dxvkToggle" onchange="updateDxvkState(this.checked)">
+                                        <input type="checkbox" id="dxvkToggle" onchange="handleStateLoop()">
                                         <span>启用 DXVK (DirectX 转 Vulkan 渲染提升帧率)</span>
                                     </label>
                                     <div id="dxvkGpuHint" class="gpu-hint">
-                                        ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，建议开启提升帧率稳定性)
+                                        ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，可按需开启提升帧率稳定性)
                                     </div>
                                 </div>
 
@@ -859,18 +925,15 @@
                                     <div class="env-section-row">
                                         <div>
                                             <div style="font-size: 10px; color: var(--unturned-text-muted);">当前环境诊断摘要</div>
-                                            <div style="font-size: 11px; color: var(--unturned-text-secondary); margin-top: 2px;">未捕获运行异常与模组冲突，日志健康</div>
+                                            <div id="diagSummaryText" style="font-size: 11px; color: var(--unturned-text-secondary); margin-top: 2px;">未捕获运行异常与模组冲突，日志健康</div>
                                         </div>
-                                        <button class="btn-compact" style="color: #fff; padding: 4px 10px;" onclick="alert('【诊断包演示】已生成脱敏诊断压缩包：UMM-诊断包_20260910_1408.zip')">📦 导出脱敏诊断包</button>
+                                        <button class="btn-compact" style="color: #fff; padding: 4px 10px;" onclick="triggerExportDiagnostics()">📦 导出脱敏诊断包</button>
                                     </div>
                                 </div>
-
-                                <!-- 吉祥物挂件 -->
-                                <div id="mascotBadge" class="mascot-chibi-badge">🦊</div>
                             </div>
                         </div>
 
-                        <!-- 下半区：精选推荐与版本要点 -->
+                        <!-- 下半区：精选推荐与更新日志 -->
                         <div class="lower-grid">
                             <div class="hud-card">
                                 <div class="section-header">
@@ -883,15 +946,22 @@
                                 </div>
                             </div>
 
-                            <div class="hud-card">
+                            <!-- 更新公告卡片 (吉祥物挂件位于此栏右下角) -->
+                            <div class="hud-card patch-notes-card">
                                 <div class="section-header">
                                     <span>v2.2.1 Patch Notes</span>
+                                    <button class="btn-compact" style="padding: 2px 8px; font-size: 10px;" onclick="toggleMascot()">
+                                        <span id="mascotBtnText">🦊 挂件</span>
+                                    </button>
                                 </div>
                                 <ul class="patch-list">
                                     <li>• 新增玩家自定义全屏壁纸与毛玻璃模糊。</li>
                                     <li>• 接入 <strong>PreviewMouseWheel</strong> 隧道路由，修复滚轮卡滞。</li>
-                                    <li>• 补齐首页 <strong>环境与诊断</strong> 操作闭环卡片（安装/修复/开关/诊断）。</li>
+                                    <li>• 建立 Unturned 原生 UI Shell 空间原型与动态闭环。</li>
                                 </ul>
+
+                                <!-- 吉祥物挂件位于更新公告栏右下角 -->
+                                <div id="mascotBadge" class="mascot-chibi-badge">🦊</div>
                             </div>
                         </div>
                     </div>
@@ -1009,32 +1079,32 @@
             </table>
         </div>
 
-        <!-- 2. PM 约束核对与自动化测试证据 -->
+        <!-- 2. 动态状态机与 PM 约束核对 -->
         <div class="audit-card">
-            <h2>🛡️ 约束核对与自动化测试证据</h2>
+            <h2>🛡️ 动态状态机与 PM 约束核对</h2>
             <ul class="rules-list">
                 <li>
                     <span class="check-icon">✔</span>
                     <div>
-                        <strong>工作区绝对隔离</strong>：所有原型资产均在 <code>.scratch/.../prototype/</code> 独立目录，生产 <code>MainWindow.xaml</code> 零修改。
+                        <strong>启动状态全动态循环</strong>：开关 BepInEx/DXVK 时，主启动按钮、顶部状态横幅、居中药丸、Profile 显示完全联动！
                     </div>
                 </li>
                 <li>
                     <span class="check-icon">✔</span>
                     <div>
-                        <strong>启动前闭环补齐</strong>：首页补回“环境与诊断”操作卡片（BepInEx 修复/开关、DXVK 开关/显卡提示、导出诊断包）。
+                        <strong>吉祥物精准定位</strong>：吉祥物挂件已移至更新公告栏（Patch Notes）右下角，不再挤占环境诊断卡片。
                     </div>
                 </li>
                 <li>
                     <span class="check-icon">✔</span>
                     <div>
-                        <strong>五槽位规范命名</strong>：游戏启动、角色与存档、插件工坊、启动器设置、退出 UMM。
+                        <strong>工作区绝对隔离</strong>：所有原型代码均在 <code>.scratch/.../prototype/</code> 独立目录，生产 <code>MainWindow.xaml</code> 零修改。
                     </div>
                 </li>
                 <li>
                     <span class="check-icon">✔</span>
                     <div>
-                        <strong>自动化测试</strong>：运行 <code>dotnet test</code>，共 <strong>160 项测试全绿</strong>（无编译错误；运行环境产生 .NET 10 preview SDK NETSDK1057 提示）。
+                        <strong>自动化测试 160 项全绿</strong>：已通过 <code>dotnet test</code>，运行环境提示 .NET 10 preview SDK NETSDK1057。
                     </div>
                 </li>
             </ul>
@@ -1042,6 +1112,165 @@
     </section>
 
     <script>
+        let toastTimer = null;
+
+        function showToast(icon, msg) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastIcon').innerText = icon;
+            document.getElementById('toastMessage').innerText = msg;
+            toast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // =================================================================
+        // 核心动态循环状态机 (Reactive State Loop)
+        // =================================================================
+        function handleStateLoop() {
+            const bepOn = document.getElementById('bepToggle').checked;
+            const dxvkOn = document.getElementById('dxvkToggle').checked;
+
+            // 1. 英雄启动按钮联动
+            const heroBtn = document.getElementById('heroLaunchBtn');
+            const heroBtnText = document.getElementById('launchBtnText');
+            const heroSubtitle = document.getElementById('heroSubtitle');
+            const launchDxvkTag = document.getElementById('launchDxvkTag');
+
+            // 2. 状态横幅联动
+            const banner = document.getElementById('statusBanner');
+            const bannerIcon = document.getElementById('bannerIcon');
+            const bannerTitle = document.getElementById('bannerTitle');
+            const bannerDesc = document.getElementById('bannerDesc');
+            const bannerTag = document.getElementById('bannerTag');
+
+            // 3. 顶部全域状态药丸联动
+            const globalDot = document.getElementById('globalDot');
+            const globalModeText = document.getElementById('globalModeText');
+            const globalBepText = document.getElementById('globalBepText');
+            const globalModsText = document.getElementById('globalModsText');
+
+            // 4. 方案药丸与 Bep 状态指示
+            const profileText = document.getElementById('profileTitleText');
+            const bepStateDot = document.getElementById('bepStateDot');
+            const bepStateText = document.getElementById('bepStateText');
+            const dxvkHint = document.getElementById('dxvkGpuHint');
+
+            if (bepOn) {
+                // 模组模式 (绿色风格)
+                heroBtn.classList.remove('blue-mode');
+                heroBtnText.innerText = "启动游戏 (模组模式)";
+                heroSubtitle.innerText = "模组就绪 · 将加载 12 个本地插件与 BUE";
+
+                banner.classList.remove('blue-mode');
+                bannerIcon.innerText = "🛡️";
+                bannerTitle.innerText = "运行状态就绪：";
+                bannerDesc.innerText = dxvkOn
+                    ? "已开启纯净模组环境 (winhttp / -NoBattlEye) + DXVK Vulkan 渲染，无崩溃与冲突。"
+                    : "已开启纯净模组环境 (winhttp / -NoBattlEye)，无崩溃与冲突。";
+                bannerTag.innerText = "BE 5.4.23.5";
+                bannerTag.style.color = "var(--unturned-accent-green)";
+
+                globalDot.classList.remove('blue');
+                globalModeText.innerText = dxvkOn ? "模组模式 (-NoBattlEye +DXVK)" : "模组模式 (-NoBattlEye)";
+                globalBepText.innerText = "BepInEx 5.4.23.5 就绪";
+                globalModsText.innerText = "已挂载 12 个插件";
+                globalModsText.style.color = "var(--unturned-accent-gold)";
+
+                profileText.innerText = "默认联机优化 (12 Mods)";
+                profileText.style.color = "var(--unturned-accent-gold)";
+
+                bepStateDot.style.color = "var(--unturned-accent-green)";
+                bepStateText.innerText = "BepInEx 5.4.23.5 (x64) 运行就绪";
+            } else {
+                // 官方纯净模式 (沉稳蓝灰调)
+                heroBtn.classList.add('blue-mode');
+                heroBtnText.innerText = "启动游戏 (官方纯净模式)";
+                heroSubtitle.innerText = "纯净原版 · 直连官方 BattlEye 服务器";
+
+                banner.classList.add('blue-mode');
+                bannerIcon.innerText = "🌐";
+                bannerTitle.innerText = "官方纯净模式：";
+                bannerDesc.innerText = dxvkOn
+                    ? "BepInEx 已停用，已开启 BattlEye 反作弊守护 + DXVK Vulkan 渲染，支持加入全球官方服。"
+                    : "BepInEx 已停用，已开启 BattlEye 反作弊守护，支持安全直连全球官方服务器。";
+                bannerTag.innerText = "官方安全模式";
+                bannerTag.style.color = "var(--unturned-accent-blue)";
+
+                globalDot.classList.add('blue');
+                globalModeText.innerText = dxvkOn ? "官方纯净 (+BattlEye +DXVK)" : "官方纯净 (+BattlEye)";
+                globalBepText.innerText = "BepInEx 已停用";
+                globalModsText.innerText = "原生游戏环境";
+                globalModsText.style.color = "var(--unturned-text-muted)";
+
+                profileText.innerText = "默认联机优化 [已停用加载]";
+                profileText.style.color = "var(--unturned-text-muted)";
+
+                bepStateDot.style.color = "var(--unturned-text-muted)";
+                bepStateText.innerText = "BepInEx 5.4.23.5 已停用 (启动原生游戏)";
+            }
+
+            // DXVK 渲染器联动
+            if (dxvkOn) {
+                launchDxvkTag.style.display = "inline";
+                dxvkHint.innerText = "✔ 已激活 DXVK：游戏将使用 Vulkan 渲染器启动 (建议在 RTX 显卡上配合全屏无边框)";
+                dxvkHint.style.color = "var(--unturned-accent-green)";
+            } else {
+                launchDxvkTag.style.display = "none";
+                dxvkHint.innerText = "ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，可按需开启提升帧率稳定性)";
+                dxvkHint.style.color = "var(--unturned-accent-gold)";
+            }
+        }
+
+        function triggerLaunchSimulation() {
+            const bepOn = document.getElementById('bepToggle').checked;
+            const dxvkOn = document.getElementById('dxvkToggle').checked;
+            const heroBtn = document.getElementById('heroLaunchBtn');
+
+            heroBtn.classList.add('launching');
+            const origText = document.getElementById('launchBtnText').innerText;
+            document.getElementById('launchBtnText').innerText = "⏳ 正在调起 Unturned 进程...";
+
+            const modeArgs = bepOn ? "-NoBattlEye" : "+BattlEye (Official)";
+            const renderStr = dxvkOn ? " [Vulkan/DXVK]" : " [DirectX 11]";
+
+            showToast("🚀 游戏启动中", `通过 LaunchCoordinator 调起: Unturned.exe ${modeArgs}${renderStr}`);
+
+            setTimeout(() => {
+                heroBtn.classList.remove('launching');
+                document.getElementById('launchBtnText').innerText = origText;
+            }, 1200);
+        }
+
+        function triggerRepairSimulation() {
+            showToast("🔄 正在检查", "正在校验 BepInEx 核心注入完整性...");
+            setTimeout(() => {
+                showToast("✔ 校验完毕", "winhttp.dll 与 doorstop 引导配置哈希一致，未损坏！");
+                document.getElementById('diagSummaryText').innerText = "BepInEx 注入完整性校验一致，环境无损坏";
+                document.getElementById('diagSummaryText').style.color = "#48bb78";
+            }, 600);
+        }
+
+        function triggerExportDiagnostics() {
+            const now = new Date();
+            const ts = now.toISOString().slice(0,10).replace(/-/g,"") + "_" + now.toTimeString().slice(0,5).replace(/:/g,"");
+            showToast("📦 诊断包已生成", `已打包脱敏日志: UMM-诊断包_${ts}.zip`);
+        }
+
+        function toggleMascot() {
+            const badge = document.getElementById('mascotBadge');
+            const btnText = document.getElementById('mascotBtnText');
+            badge.classList.toggle('collapsed');
+            if (badge.classList.contains('collapsed')) {
+                btnText.innerText = "🦊 隐藏";
+                showToast("🦊 吉祥物", "吉祥物挂件已折叠隐藏");
+            } else {
+                btnText.innerText = "🦊 挂件";
+                showToast("🦊 吉祥物", "吉祥物挂件已在更新公告栏右下角展开");
+            }
+        }
+
         function switchNav(slot) {
             document.querySelectorAll('.nav-pill-btn').forEach(btn => btn.classList.remove('active'));
 
@@ -1069,33 +1298,6 @@
                 viewPlaceholder.style.display = 'flex';
                 document.getElementById('phTitle').innerText = '⚙ 启动器设置 (Settings)';
                 document.getElementById('phDesc').innerText = '验证无缝挂载生产现有 SettingsPage，保留自定义全屏壁纸、路径配置与诊断工具。';
-            }
-        }
-
-        function toggleMascot() {
-            const badge = document.getElementById('mascotBadge');
-            badge.classList.toggle('collapsed');
-        }
-
-        function updateBepState(enabled) {
-            const bepText = document.getElementById('bepStateText');
-            if (enabled) {
-                bepText.innerText = 'BepInEx 5.4.23.5 (x64) 运行就绪';
-                bepText.previousElementSibling.style.color = '#38a169';
-            } else {
-                bepText.innerText = 'BepInEx 已停用 (启动原生游戏)';
-                bepText.previousElementSibling.style.color = '#718096';
-            }
-        }
-
-        function updateDxvkState(enabled) {
-            const hint = document.getElementById('dxvkGpuHint');
-            if (enabled) {
-                hint.innerText = '✔ 已激活 DXVK：游戏将使用 Vulkan 渲染器启动 (建议在 RTX 显卡上配合全屏无边框)';
-                hint.style.color = '#38a169';
-            } else {
-                hint.innerText = 'ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，建议开启提升帧率稳定性)';
-                hint.style.color = 'var(--unturned-accent-gold)';
             }
         }
 

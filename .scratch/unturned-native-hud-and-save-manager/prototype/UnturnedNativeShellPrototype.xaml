@@ -60,7 +60,8 @@
                 </StackPanel>
 
                 <!-- 居中全域状态药丸 (Global Status Pill) -->
-                <Border Grid.Column="1"
+                <Border x:Name="GlobalStatusPillBorder"
+                        Grid.Column="1"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         CornerRadius="12"
@@ -69,12 +70,12 @@
                         BorderBrush="{StaticResource UnturnedStrokeSubtleBrush}"
                         BorderThickness="1">
                     <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="8" Height="8" Fill="#FF38A169" Margin="0,0,8,0" VerticalAlignment="Center" />
-                        <TextBlock Text="模组模式 (-NoBattlEye)" FontWeight="Bold" Foreground="#FFFFFFFF" FontSize="11" VerticalAlignment="Center" />
+                        <Ellipse x:Name="GlobalStatusDot" Width="8" Height="8" Fill="#FF38A169" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock x:Name="GlobalStatusModeText" Text="模组模式 (-NoBattlEye)" FontWeight="Bold" Foreground="#FFFFFFFF" FontSize="11" VerticalAlignment="Center" />
                         <TextBlock Text="  |  " Foreground="#FF4A5568" VerticalAlignment="Center" />
-                        <TextBlock Text="BepInEx 5.4.23.5 就绪" Foreground="#FFCBD5E0" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock x:Name="GlobalStatusBepText" Text="BepInEx 5.4.23.5 就绪" Foreground="#FFCBD5E0" FontSize="11" VerticalAlignment="Center" />
                         <TextBlock Text="  |  " Foreground="#FF4A5568" VerticalAlignment="Center" />
-                        <TextBlock Text="已挂载 12 个插件" Foreground="{StaticResource UnturnedAccentGoldBrush}" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock x:Name="GlobalStatusModsText" Text="已挂载 12 个插件" Foreground="{StaticResource UnturnedAccentGoldBrush}" FontSize="11" VerticalAlignment="Center" />
                     </StackPanel>
                 </Border>
 
