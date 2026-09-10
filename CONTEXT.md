@@ -53,3 +53,25 @@ _Avoid_: Background image setter, canvas wallpaper, window background brush
 **ScrollWheelRouter**:
 A tunneling-phase (`PreviewMouseWheel`) routing mechanism that intercepts mouse wheel interactions before child controls or hit-test surfaces swallow them, safely cascading the scroll delta up to the nearest scrollable viewport.
 _Avoid_: Wheel hook, scroll fix, mouse wheel handler
+
+**UnturnedNativeShell / NavigationShell**:
+A deep presentation shell replicating Unturned's in-game main menu spatial layout (5-slot chunky pill navigation, top status bar, dark translucent HUD float cards, immersive backdrop), strictly decoupling visual navigation from underlying business implementations via adapters (`LocalModsAdapter`, `CommunityModsAdapter`, `TaskCenterAdapter`).
+_Avoid_: Game UI clone, in-game overlay, custom chrome
+
+**HomeSnapshot**:
+A unified immutable projection consumed exclusively by the Home presentation layer, encapsulating `LaunchState`, `EnvironmentState`, `ProfileSummary`, `FeaturedContent`, `Announcement`, and `DiagnosticBanner` while isolating caching, background polling, and network fallback entirely behind its implementation.
+_Avoid_: Home viewmodel dump, aggregated state, global UI model
+
+### Vanilla Data & Runtime Boundaries
+
+**SaveDataWorkspace**:
+The offline Unturned save and level data management subsystem structured strictly according to `U3-SDK` source definitions, segregating components into `ProcessSafetyAdapter`, `SaveSnapshotReader`, `CharacterReadModel`, `WorldReadModel`, `SchemaValidator`, `AtomicSaveCoordinator`, `BackupCatalog`, and `RestoreCoordinator`.
+_Avoid_: Save editor, hack tool, profile modifier
+
+**EditSessionGuard**:
+A multi-stage concurrency and integrity guard seam that verifies game/server process absence (`Unturned.exe`, `Unturned_BE.exe`, U3DS) and exclusive file access at session open, edit entry, and save transaction, immediately downgrading to read-only upon any collision.
+_Avoid_: Process watcher, edit lock, background check
+
+**BUEBridge**:
+The strict architectural seam dictating that in-game runtime interventions are delivered via independent BepInEx / BetterUnturnedExperience (BUE) mods, while UMM retains responsibilities strictly for offline environment orchestration, configuration, diagnosis, and file tools.
+_Avoid_: In-game modloader bridge, runtime hook, memory injector
