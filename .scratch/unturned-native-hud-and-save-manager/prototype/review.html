@@ -25,6 +25,7 @@
             --surface-card-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
             --surface-inset-bg: rgba(0, 0, 0, 0.35);
             --surface-inset-border: rgba(255, 255, 255, 0.08);
+            --bg-header-sticky: rgba(15, 20, 24, 0.94);
 
             --border-subtle: rgba(255, 255, 255, 0.08);
             --border-strong: rgba(255, 255, 255, 0.22);
@@ -126,6 +127,7 @@
             --surface-card-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
             --surface-inset-bg: #f1f5f9;
             --surface-inset-border: #e2e8f0;
+            --bg-header-sticky: rgba(241, 245, 249, 0.94);
 
             --border-subtle: rgba(0, 0, 0, 0.08);
             --border-strong: rgba(0, 0, 0, 0.18);
@@ -268,7 +270,7 @@
             margin-top: 4px;
         }
 
-        /* 模拟器外框 */
+        /* 模拟器外框 (支持桌面窗口化标准高度与缩放自适应) */
         .simulator-container {
             position: relative;
             width: 100%;
@@ -281,8 +283,26 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            min-height: 760px;
-            transition: border-color var(--duration-base) var(--ease-spring);
+            height: 740px;
+            max-height: calc(100vh - 40px);
+            min-height: 540px;
+            transition: height var(--duration-base) var(--ease-spring), max-width var(--duration-base) var(--ease-spring), border-color var(--duration-base) var(--ease-spring);
+        }
+
+        /* 窗口模式快捷预设 (窗口化 vs 最大化) */
+        .simulator-container.win-mode-compact {
+            height: 600px;
+            max-width: 1040px;
+        }
+
+        .simulator-container.win-mode-standard {
+            height: 740px;
+            max-width: 1280px;
+        }
+
+        .simulator-container.win-mode-expanded {
+            height: 860px;
+            max-width: 1360px;
         }
 
         /* 顶部通知横条 (演示操作反馈 - 移至右上角浮动，不再遮挡中央状态药丸) */
@@ -327,6 +347,42 @@
             color: var(--text-muted);
             font-weight: 600;
             transition: background-color var(--duration-base) var(--ease-spring);
+            flex-shrink: 0;
+        }
+
+        .window-size-switcher {
+            display: inline-flex;
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
+            padding: 1px;
+            gap: 2px;
+            margin-left: 12px;
+        }
+
+        .win-size-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            padding: 2px 7px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-spring);
+            font-family: inherit;
+        }
+
+        .win-size-btn:hover {
+            color: var(--text-primary);
+            background: var(--surface-card-hover-bg);
+        }
+
+        .win-size-btn.active {
+            background: var(--surface-card-bg);
+            color: var(--theme-accent);
+            border-color: var(--theme-accent-border);
+            font-weight: 700;
         }
 
         .window-controls {
@@ -339,16 +395,29 @@
             height: 12px;
             border-radius: 50%;
             display: inline-block;
+            cursor: pointer;
+            transition: transform var(--duration-fast) var(--ease-spring), filter var(--duration-fast) ease;
         }
+
+        .win-btn:hover {
+            transform: scale(1.15);
+            filter: brightness(1.1);
+        }
+
+        .win-btn:active {
+            transform: scale(0.9);
+        }
+
         .win-close { background: #e53e3e; }
         .win-min { background: #d69e2e; }
         .win-max { background: #38a169; }
 
-        /* 主舞台背景透出与 HUD 容器 */
+        /* 主舞台背景透出与 HUD 容器 (支持独立滚动基座) */
         .shell-viewport {
             position: relative;
             flex: 1;
-            padding: 24px;
+            min-height: 0;
+            padding: 20px 24px 16px 24px;
             background: var(--surface-shell-bg);
             display: flex;
             flex-direction: column;
@@ -390,7 +459,8 @@
             grid-template-columns: auto 1fr auto;
             align-items: center;
             gap: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 14px;
+            flex-shrink: 0;
         }
 
         .brand-logo {
@@ -481,25 +551,30 @@
             transform: translateY(-1px);
         }
 
-        /* 核心二栏：左侧 5 槽位药丸导航 + 右侧挂载 Frame */
+        /* 核心二栏：左侧 5 槽位药丸导航 + 右侧挂载 Frame (独立平滑纵向滚动) */
         .stage-body {
             display: grid;
-            grid-template-columns: 220px 1fr;
+            grid-template-columns: 210px 1fr;
             gap: 20px;
             flex: 1;
+            min-height: 0;
+            overflow: hidden;
         }
 
-        /* 5 槽位导航条 */
+        /* 5 槽位导航条 (左侧视口固定，高度自适应且保证退出按键始终在底部) */
         .nav-pill-column {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            height: 100%;
+            min-height: 0;
+            flex-shrink: 0;
         }
 
         .nav-primary-slots {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         .nav-pill-btn {
@@ -507,10 +582,10 @@
             background: var(--nav-pill-bg);
             border: 1px solid var(--nav-pill-border);
             border-radius: 8px;
-            padding: 14px 18px;
+            padding: 12px 16px;
             color: var(--nav-pill-text);
             font-family: var(--unturned-font-mono);
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 700;
             cursor: pointer;
             text-align: left;
@@ -558,7 +633,7 @@
         .nav-pill-btn.exit-slot {
             border-color: rgba(229, 62, 62, 0.4);
             color: var(--accent-red-text);
-            margin-top: 24px;
+            margin-top: auto;
         }
 
         .nav-pill-btn.exit-slot:hover {
@@ -566,14 +641,53 @@
             border-color: var(--accent-red);
         }
 
-        /* 右侧主内容 Frame 区域 */
+        /* 右侧主内容 Frame 区域 (高品质独立平滑纵向滚动容器) */
         .frame-viewport {
             background: transparent;
             border-radius: 8px;
-            min-height: 520px;
+            flex: 1;
+            min-height: 0;
             display: flex;
             flex-direction: column;
             position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 6px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb, rgba(255, 255, 255, 0.18)) transparent;
+        }
+
+        .frame-viewport::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .frame-viewport::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .frame-viewport::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb, rgba(255, 255, 255, 0.18));
+            border-radius: 6px;
+            transition: background var(--duration-fast) ease;
+        }
+
+        .frame-viewport::-webkit-scrollbar-thumb:hover {
+            background: var(--theme-accent);
+        }
+
+        .frame-viewport::-webkit-scrollbar-thumb:active {
+            background: var(--theme-accent);
+            filter: brightness(0.9);
+        }
+
+        body.theme-light .frame-viewport::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb, rgba(0, 0, 0, 0.18));
+        }
+
+        body.theme-light .frame-viewport::-webkit-scrollbar-thumb:hover {
+            background: var(--theme-accent);
         }
 
         /* 首页 (Play Page) 原型模拟 */
@@ -1552,6 +1666,23 @@
             flex-direction: column;
             gap: 12px;
             position: relative;
+            padding-bottom: 60px;
+        }
+
+        /* 吸顶控制区 (搜索 + 工具栏 + 筛选胶囊吸附于视口顶部，模组在其下方穿透平滑滚动) */
+        .pcl-sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 25;
+            background: var(--bg-header-sticky, rgba(15, 20, 24, 0.94));
+            padding-top: 4px;
+            padding-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border-subtle);
         }
 
         /* 顶部搜索条 (PCL2 经典全宽输入框) */
@@ -2035,13 +2166,21 @@
             <span id="toastMessage">已调起 Unturned 启动流程</span>
         </div>
 
-        <!-- 模拟桌面窗口控制条 -->
+        <!-- 模拟桌面窗口控制条 (含快捷窗口化尺寸切换：测试小窗滚动效果) -->
         <div class="window-titlebar">
-            <span>Unturned Mod Manager v2.2.1 [Native UI Shell Prototype Sandbox]</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span>Unturned Mod Manager v2.2.1 [Native UI Shell Prototype Sandbox]</span>
+                <!-- 窗口化尺寸切换指示器 (即测即滚) -->
+                <div class="window-size-switcher">
+                    <button class="win-size-btn" onclick="setSimulatorWindowMode('compact')" title="600px 紧凑窗口化 (测试短屏小窗滚动)">◱ 紧凑小窗 (600px)</button>
+                    <button class="win-size-btn active" onclick="setSimulatorWindowMode('standard')" title="740px 标准窗口化 (默认桌面尺寸)">◰ 标准窗口 (740px)</button>
+                    <button class="win-size-btn" onclick="setSimulatorWindowMode('expanded')" title="860px 展开全高">⛶ 展开窗口 (860px)</button>
+                </div>
+            </div>
             <div class="window-controls">
-                <span class="win-btn win-min"></span>
-                <span class="win-btn win-max"></span>
-                <span class="win-btn win-close"></span>
+                <span class="win-btn win-min" title="最小化窗口" onclick="showToast('🗕 窗口控制', '最小化启动器窗口至任务栏')"></span>
+                <span class="win-btn win-max" title="切换窗口最大化 / 还原" onclick="toggleSimulatorWindowMax()"></span>
+                <span class="win-btn win-close" title="关闭窗口" onclick="showToast('✕ 窗口控制', '关闭启动器窗口')"></span>
             </div>
         </div>
 
@@ -3153,59 +3292,62 @@
                 // 挂载 PCL2 骨架：搜索条 + 工具栏 + 过滤药丸 + 列表容器 + 底部悬浮动作条
                 container.className = 'pcl-plugin-container';
                 container.innerHTML = `
-                    <!-- 1. 顶部搜索条 (PCL2 经典全宽输入框) -->
-                    <div class="pcl-search-bar">
-                        <span class="pcl-search-icon">🔍</span>
-                        <input type="text" id="pclSearchInput" class="pcl-search-input" placeholder="搜索 Mod 名称 / 描述 / 标签..." value="${modSearchKeyword}" oninput="handleModSearch(this.value)">
-                        <button id="pclSearchClear" class="pcl-search-clear" onclick="clearModSearch()" style="display: ${modSearchKeyword ? 'inline-block' : 'none'};" title="清空搜索">✕</button>
-                    </div>
+                    <!-- 吸顶控制区：搜索 + 工具栏 + 筛选胶囊（滚动时始终固定于视口顶部） -->
+                    <div class="pcl-sticky-header">
+                        <!-- 1. 顶部搜索条 (PCL2 经典全宽输入框) -->
+                        <div class="pcl-search-bar">
+                            <span class="pcl-search-icon">🔍</span>
+                            <input type="text" id="pclSearchInput" class="pcl-search-input" placeholder="搜索 Mod 名称 / 描述 / 标签..." value="${modSearchKeyword}" oninput="handleModSearch(this.value)">
+                            <button id="pclSearchClear" class="pcl-search-clear" onclick="clearModSearch()" style="display: ${modSearchKeyword ? 'inline-block' : 'none'};" title="清空搜索">✕</button>
+                        </div>
 
-                    <!-- 2. 次级操作工具栏 (PCL2 经典工具条) -->
-                    <div class="pcl-toolbar">
-                        <div class="pcl-toolbar-group">
-                            <button class="pcl-tool-btn" onclick="openPluginsFolder()">
-                                <span>📂</span>
-                                <span>打开文件夹</span>
+                        <!-- 2. 次级操作工具栏 (PCL2 经典工具条) -->
+                        <div class="pcl-toolbar">
+                            <div class="pcl-toolbar-group">
+                                <button class="pcl-tool-btn" onclick="openPluginsFolder()">
+                                    <span>📂</span>
+                                    <span>打开文件夹</span>
+                                </button>
+                                <button class="pcl-tool-btn" onclick="importPluginFromFile()">
+                                    <span>➕</span>
+                                    <span>从文件安装</span>
+                                </button>
+                                <button class="pcl-tool-btn" onclick="switchModTab('store')">
+                                    <span>🌐</span>
+                                    <span>下载新 Mod</span>
+                                </button>
+                                <button id="pclSelectAllBtn" class="pcl-tool-btn" onclick="toggleSelectAllMods()">
+                                    <span>☑️</span>
+                                    <span id="selectAllBtnText">全选</span>
+                                </button>
+                            </div>
+                            <div class="pcl-toolbar-group">
+                                <button class="pcl-tool-btn" onclick="rescanPlugins()">
+                                    <span>🔄</span>
+                                    <span>重新扫描</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3. 状态筛选胶囊条 (全部 / 已启用 / 已禁用 / 可更新) -->
+                        <div class="pcl-filter-bar">
+                            <button class="pcl-filter-pill ${modFilterMode === 'all' ? 'active' : ''}" data-filter="all" onclick="setModFilter('all')">
+                                <span>全部</span>
+                                <span id="pillCountAll" class="pcl-pill-count">(12)</span>
                             </button>
-                            <button class="pcl-tool-btn" onclick="importPluginFromFile()">
-                                <span>➕</span>
-                                <span>从文件安装</span>
+                            <button class="pcl-filter-pill ${modFilterMode === 'enabled' ? 'active' : ''}" data-filter="enabled" onclick="setModFilter('enabled')">
+                                <span>已启用</span>
+                                <span id="pillCountEnabled" class="pcl-pill-count">(10)</span>
                             </button>
-                            <button class="pcl-tool-btn" onclick="switchModTab('store')">
-                                <span>🌐</span>
-                                <span>下载新 Mod</span>
+                            <button class="pcl-filter-pill ${modFilterMode === 'disabled' ? 'active' : ''}" data-filter="disabled" onclick="setModFilter('disabled')">
+                                <span>已禁用</span>
+                                <span id="pillCountDisabled" class="pcl-pill-count">(2)</span>
                             </button>
-                            <button id="pclSelectAllBtn" class="pcl-tool-btn" onclick="toggleSelectAllMods()">
-                                <span>☑️</span>
-                                <span id="selectAllBtnText">全选</span>
+                            <button class="pcl-filter-pill ${modFilterMode === 'updatable' ? 'active' : ''}" data-filter="updatable" onclick="setModFilter('updatable')">
+                                <span>可更新</span>
+                                <span id="pillCountUpdatable" class="pcl-pill-count">(3)</span>
                             </button>
                         </div>
-                        <div class="pcl-toolbar-group">
-                            <button class="pcl-tool-btn" onclick="rescanPlugins()">
-                                <span>🔄</span>
-                                <span>重新扫描</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 3. 状态筛选胶囊条 (全部 / 已启用 / 已禁用 / 可更新) -->
-                    <div class="pcl-filter-bar">
-                        <button class="pcl-filter-pill ${modFilterMode === 'all' ? 'active' : ''}" data-filter="all" onclick="setModFilter('all')">
-                            <span>全部</span>
-                            <span id="pillCountAll" class="pcl-pill-count">(12)</span>
-                        </button>
-                        <button class="pcl-filter-pill ${modFilterMode === 'enabled' ? 'active' : ''}" data-filter="enabled" onclick="setModFilter('enabled')">
-                            <span>已启用</span>
-                            <span id="pillCountEnabled" class="pcl-pill-count">(10)</span>
-                        </button>
-                        <button class="pcl-filter-pill ${modFilterMode === 'disabled' ? 'active' : ''}" data-filter="disabled" onclick="setModFilter('disabled')">
-                            <span>已禁用</span>
-                            <span id="pillCountDisabled" class="pcl-pill-count">(2)</span>
-                        </button>
-                        <button class="pcl-filter-pill ${modFilterMode === 'updatable' ? 'active' : ''}" data-filter="updatable" onclick="setModFilter('updatable')">
-                            <span>可更新</span>
-                            <span id="pillCountUpdatable" class="pcl-pill-count">(3)</span>
-                        </button>
                     </div>
 
                     <!-- 4. 模组行流列表 (PCL2 经典列表视图) -->
@@ -4253,6 +4395,27 @@
                 }
             }
         });
+
+        // 窗口尺寸模式控制 (测试窗口化独立平滑滚动)
+        function setSimulatorWindowMode(mode) {
+            const sim = document.querySelector('.simulator-container');
+            if (!sim) return;
+            sim.classList.remove('win-mode-compact', 'win-mode-standard', 'win-mode-expanded');
+            sim.classList.add(`win-mode-${mode}`);
+            document.querySelectorAll('.win-size-btn').forEach(btn => {
+                const onclickAttr = btn.getAttribute('onclick') || '';
+                btn.classList.toggle('active', onclickAttr.includes(mode));
+            });
+            const label = mode === 'compact' ? '600px 紧凑小窗' : (mode === 'expanded' ? '860px 展开全高' : '740px 标准窗口');
+            showToast("🗔 窗口尺寸", `已切换到 ${label}，可测试内容纵向平滑滚动`);
+        }
+
+        function toggleSimulatorWindowMax() {
+            const sim = document.querySelector('.simulator-container');
+            if (!sim) return;
+            const isExpanded = sim.classList.contains('win-mode-expanded');
+            setSimulatorWindowMode(isExpanded ? 'standard' : 'expanded');
+        }
 
         // 页面初始化时挂载滑动底座与图标、状态机共振与设置页初始化
         window.addEventListener('DOMContentLoaded', () => {
