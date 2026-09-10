@@ -1023,11 +1023,72 @@
                         </div>
                     </div>
 
-                    <!-- C. 插件工坊与设置页占位演示 -->
-                    <div id="viewPlaceholder" class="hud-card" style="display: none; height: 100%; align-items: center; justify-content: center; text-align: center;">
-                        <div id="phTitle" style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">插件工坊 (Plugins & Workshop)</div>
-                        <div id="phDesc" style="font-size: 12px; color: var(--unturned-text-secondary); max-width: 480px;">
-                            通过 NavigationShell 提供的兼容式 Seam，现有 ModListPage / SettingsPage 可零代码修改直接无缝挂载。
+                    <!-- C. 插件工坊 (PrototypeModsView: 本地插件与社区市场二级双 Tab) -->
+                    <div id="viewMods" class="data-view" style="display: none;">
+                        <!-- 顶部次级药丸选项卡与快捷操作栏 -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--unturned-stroke-subtle); padding-bottom: 12px;">
+                            <div class="data-nav-tabs" style="border-bottom: none; padding-bottom: 0;">
+                                <button id="tabModLocal" class="data-tab-btn active" onclick="switchModTab('local')">📦 本地插件 (已安装 12)</button>
+                                <button id="tabModStore" class="data-tab-btn" onclick="switchModTab('store')">🌐 社区发现 / 插件市场 (unmod.online)</button>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn-compact" onclick="showToast('📂 插件目录', '已打开物理目录: E:\\Steam\\steamapps\\common\\Unturned\\BepInEx\\plugins')">📂 插件目录</button>
+                                <button class="btn-compact" onclick="showToast('🔄 扫描完成', '重新扫描完成，检测到 12 个有效插件程序集')">🔄 重新扫描</button>
+                                <button class="btn-compact" style="color: #fff; background: #2f855a; border-color: #38a169;" onclick="showToast('➕ 导入插件', '请选择 .dll 插件或 .zip 模组包文件')">➕ 导入插件</button>
+                            </div>
+                        </div>
+
+                        <!-- 插件工坊内容区 (动态切换本地/社区) -->
+                        <div id="modContent" class="data-card-grid">
+                            <!-- 由 switchModTab 渲染 -->
+                        </div>
+
+                        <!-- Ticket 03 契约解耦注记 -->
+                        <div style="background: rgba(26, 33, 40, 0.6); border: 1px dashed var(--unturned-stroke-strong); border-radius: 6px; padding: 10px 14px; font-size: 11px; color: var(--unturned-text-secondary); display: flex; align-items: center; gap: 8px;">
+                            <span style="color: var(--unturned-accent-gold);">💡</span>
+                            <span><strong>Ticket 03 迁移契约说明：</strong>此处展示了“插件工坊”槽位如何通过顶部二级药丸承载现有页面。在接下来的 <strong>Ticket 03</strong> 中，生产代码的 <code>ModListPage.xaml</code> (本地) 与 <code>CommunityPage.xaml</code> (社区) 将作为两个独立 Page 零改动直接挂载入此 Frame，ViewModel 与下载编排完全复用！</span>
+                        </div>
+                    </div>
+
+                    <!-- D. 启动器设置 (PrototypeSettingsView) -->
+                    <div id="viewSettings" class="data-view" style="display: none;">
+                        <div class="data-nav-tabs">
+                            <button class="data-tab-btn active">🛠️ 通用与路径</button>
+                            <button class="data-tab-btn" onclick="showToast('🎨 外观设置', '支持自定义壁纸、背景模糊度与主题色选择')">🎨 外观与壁纸</button>
+                            <button class="data-tab-btn" onclick="showToast('🌐 网络诊断', 'unmod.online API 连接测试与延迟检测')">🌐 网络与诊断</button>
+                        </div>
+
+                        <div class="data-card-grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="data-item-card">
+                                <div class="data-item-title">
+                                    <span>游戏根目录路径</span>
+                                    <span style="color: var(--unturned-accent-green); font-size: 11px;">已校验</span>
+                                </div>
+                                <div class="data-item-meta">
+                                    当前检测路径: <code>E:\Steam\steamapps\common\Unturned</code><br>
+                                    主执行程序: <code>Unturned.exe</code> (v3.26.3.11)<br>
+                                    Steam 状态: 已连接 Steam 客户端
+                                </div>
+                                <button class="btn-compact" style="margin-top: 10px;" onclick="showToast('🔍 路径浏览', '调起文件夹选择器重新定位游戏目录')">更改路径...</button>
+                            </div>
+
+                            <div class="data-item-card">
+                                <div class="data-item-title">
+                                    <span>自定义全屏沉浸壁纸</span>
+                                    <span style="color: var(--unturned-accent-gold); font-size: 11px;">v2.2.1 新增</span>
+                                </div>
+                                <div class="data-item-meta">
+                                    当前模式: 默认沉浸暗调末日背景<br>
+                                    背景毛玻璃模糊: 12 px | 暗色遮罩: 60%<br>
+                                    支持导入 PNG / JPG 4K 高清自定义壁纸
+                                </div>
+                                <button class="btn-compact" style="margin-top: 10px;" onclick="showToast('🖼️ 更换壁纸', '选择本地壁纸图片作为启动器全屏底座')">选择壁纸图片...</button>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(26, 33, 40, 0.6); border: 1px dashed var(--unturned-stroke-strong); border-radius: 6px; padding: 10px 14px; font-size: 11px; color: var(--unturned-text-secondary); display: flex; align-items: center; gap: 8px;">
+                            <span style="color: var(--unturned-accent-gold);">💡</span>
+                            <span><strong>Ticket 03 迁移契约说明：</strong>生产现有的 <code>SettingsPage.xaml</code> 及其壁纸个性化、主题管理器服务，将在 Ticket 03 中通过同一套 Seam 零改动迁入。</span>
                         </div>
                     </div>
 
@@ -1293,11 +1354,13 @@
 
             const viewPlay = document.getElementById('viewPlay');
             const viewData = document.getElementById('viewData');
-            const viewPlaceholder = document.getElementById('viewPlaceholder');
+            const viewMods = document.getElementById('viewMods');
+            const viewSettings = document.getElementById('viewSettings');
 
             viewPlay.style.display = 'none';
             viewData.style.display = 'none';
-            viewPlaceholder.style.display = 'none';
+            viewMods.style.display = 'none';
+            viewSettings.style.display = 'none';
 
             if (slot === 'play') {
                 document.getElementById('navPlay').classList.add('active');
@@ -1305,16 +1368,216 @@
             } else if (slot === 'data') {
                 document.getElementById('navData').classList.add('active');
                 viewData.style.display = 'flex';
+                switchDataTab('char');
             } else if (slot === 'mods') {
                 document.getElementById('navMods').classList.add('active');
-                viewPlaceholder.style.display = 'flex';
-                document.getElementById('phTitle').innerText = '🧩 插件工坊 (Plugins & Workshop)';
-                document.getElementById('phDesc').innerText = '聚合本地已安装插件与 unmod.online 社区发现，兼容现有 ModListPage / OnlineMarketPage，零修改挂载进 Frame。';
+                viewMods.style.display = 'flex';
+                switchModTab('local');
             } else if (slot === 'settings') {
                 document.getElementById('navSettings').classList.add('active');
-                viewPlaceholder.style.display = 'flex';
-                document.getElementById('phTitle').innerText = '⚙ 启动器设置 (Settings)';
-                document.getElementById('phDesc').innerText = '验证无缝挂载生产现有 SettingsPage，保留自定义全屏壁纸、路径配置与诊断工具。';
+                viewSettings.style.display = 'flex';
+            }
+        }
+
+        function switchModTab(tab) {
+            document.getElementById('tabModLocal').classList.remove('active');
+            document.getElementById('tabModStore').classList.remove('active');
+            const container = document.getElementById('modContent');
+
+            if (tab === 'local') {
+                document.getElementById('tabModLocal').classList.add('active');
+                container.innerHTML = `
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>BetterUnturnedExperience</span>
+                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v1.4.2 · 已启用</span>
+                        </div>
+                        <div class="data-item-meta">
+                            类型: 核心体验增强 | 程序集: <code>BUE.dll</code><br>
+                            功能: 原生罗盘 HUD、背包快捷整理、网络插值平滑<br>
+                            挂载状态: BepInEx 运行时活跃加载
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 BetterUnturnedExperience (下次启动生效)')">禁用</button>
+                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 BUE.cfg 配置文件')">⚙ 配置</button>
+                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 BepInEx/plugins/BUE.dll')">📂 目录</button>
+                        </div>
+                    </div>
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>AutoPickupOptimizer</span>
+                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v1.0.8 · 已启用</span>
+                        </div>
+                        <div class="data-item-meta">
+                            类型: 辅助工具 | 程序集: <code>AutoPickup.dll</code><br>
+                            功能: 拾取距离与背包自动分类优化，支持白名单<br>
+                            挂载状态: BepInEx 运行时活跃加载
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 AutoPickupOptimizer')">禁用</button>
+                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 AutoPickup.cfg 配置文件')">⚙ 配置</button>
+                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 BepInEx/plugins/AutoPickup.dll')">📂 目录</button>
+                        </div>
+                    </div>
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>CompassNavigationHUD</span>
+                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v2.1.0 · 已启用</span>
+                        </div>
+                        <div class="data-item-meta">
+                            类型: UI增强 | 程序集: <code>CompassHUD.dll</code><br>
+                            功能: 屏幕顶部 360° 仿战术射击罗盘与队友方位标<br>
+                            挂载状态: BepInEx 运行时活跃加载
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 CompassNavigationHUD')">禁用</button>
+                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 CompassHUD.cfg 配置文件')">⚙ 配置</button>
+                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 BepInEx/plugins/CompassHUD.dll')">📂 目录</button>
+                        </div>
+                    </div>
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>DayNightCycleNotifier</span>
+                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v1.2.0 · 已启用</span>
+                        </div>
+                        <div class="data-item-meta">
+                            类型: 生存辅助 | 程序集: <code>DayNightNotifier.dll</code><br>
+                            功能: 满月、空投与日夜交替前 60s 屏幕边缘通知<br>
+                            挂载状态: BepInEx 运行时活跃加载
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 DayNightCycleNotifier')">禁用</button>
+                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 DayNightNotifier.cfg')">⚙ 配置</button>
+                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 DayNightNotifier.dll')">📂 目录</button>
+                        </div>
+                    </div>
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>InventoryQuickMove</span>
+                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v1.1.5 · 已启用</span>
+                        </div>
+                        <div class="data-item-meta">
+                            类型: 操作增强 | 程序集: <code>QuickInventory.dll</code><br>
+                            功能: Shift/Ctrl 快捷存取收纳、一键分类箱子物品<br>
+                            挂载状态: BepInEx 运行时活跃加载
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 InventoryQuickMove')">禁用</button>
+                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 QuickInventory.cfg')">⚙ 配置</button>
+                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 QuickInventory.dll')">📂 目录</button>
+                        </div>
+                    </div>
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>ZombieSpawnFixer</span>
+                            <span style="color: var(--unturned-accent-green); font-size: 11px;">v1.0.2 · 已启用</span>
+                        </div>
+                        <div class="data-item-meta">
+                            类型: 补丁修复 | 程序集: <code>ZombieFixer.dll</code><br>
+                            功能: 修复自定义地图僵尸穿模穿墙掉落出地图漏洞<br>
+                            挂载状态: BepInEx 运行时活跃加载
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="color: var(--unturned-accent-red); border-color: rgba(229,62,62,0.4);" onclick="showToast('🧩 插件管理', '已禁用 ZombieSpawnFixer')">禁用</button>
+                            <button class="btn-compact" onclick="showToast('⚙ 插件配置', '已打开 ZombieFixer.cfg')">⚙ 配置</button>
+                            <button class="btn-compact" onclick="showToast('📂 打开目录', '定位到 ZombieFixer.dll')">📂 目录</button>
+                        </div>
+                    </div>
+                `;
+            } else if (tab === 'store') {
+                document.getElementById('tabModStore').classList.add('active');
+                container.innerHTML = `
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>BetterUnturnedExperience (BUE)</span>
+                            <span style="color: var(--unturned-accent-green); font-size: 11px;">★ 4.9 · 48.2k</span>
+                        </div>
+                        <div class="data-item-meta">
+                            作者: <code>YU80Rice</code> | 标签: [官方推荐] [HUD] [BepInEx]<br>
+                            现代化原汁原味体验增强套件，全方位优化 HUD 布局与联机手感。<br>
+                            最新版本: v1.4.2 (2026-09-08 更新)
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="background: rgba(56,161,105,0.2); color: #48bb78; border-color: #38a169;" onclick="showToast('✔ 检查完毕', '已安装最新版本 (v1.4.2)，无需更新')">✔ 已是最新版</button>
+                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '正在打开 unmod.online/plugins/bue 详情页')">查看详情</button>
+                        </div>
+                    </div>
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>Advanced Crafting Helper</span>
+                            <span style="color: var(--unturned-accent-gold); font-size: 11px;">★ 4.7 · 19.5k</span>
+                        </div>
+                        <div class="data-item-meta">
+                            作者: <code>NelsonFan</code> | 标签: [合成助手] [图鉴]<br>
+                            游戏内树状配方检索器，直观展示所需素材与掉落地图。<br>
+                            最新版本: v2.0.1 (适配 Unturned 3.26+)
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="background: var(--unturned-accent-gold); color: #14191f; font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Advanced Crafting Helper...')">⬇ 一键安装</button>
+                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开配方助手详情页')">查看详情</button>
+                        </div>
+                    </div>
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>Minimalist HUD & Crosshair</span>
+                            <span style="color: var(--unturned-accent-gold); font-size: 11px;">★ 4.8 · 32.1k</span>
+                        </div>
+                        <div class="data-item-meta">
+                            作者: <code>PixelSniper</code> | 标签: [极简界面] [准星]<br>
+                            精简原版厚重血条，替换为半透明动态圆环与自定义准星。<br>
+                            最新版本: v1.3.0
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="background: var(--unturned-accent-gold); color: #14191f; font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Minimalist HUD...')">⬇ 一键安装</button>
+                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开极简准星详情页')">查看详情</button>
+                        </div>
+                    </div>
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>Vehicle Physics Overhaul</span>
+                            <span style="color: var(--unturned-accent-gold); font-size: 11px;">★ 4.6 · 14.8k</span>
+                        </div>
+                        <div class="data-item-meta">
+                            作者: <code>DriftKing</code> | 标签: [载具操控] [手感优化]<br>
+                            优化原版越野车与直升机的阻尼与操控，显著减轻翻车失控。<br>
+                            最新版本: v1.1.2
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="background: var(--unturned-accent-gold); color: #14191f; font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Vehicle Physics Overhaul...')">⬇ 一键安装</button>
+                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开载具物理详情页')">查看详情</button>
+                        </div>
+                    </div>
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>More Raid Alerts</span>
+                            <span style="color: var(--unturned-accent-gold); font-size: 11px;">★ 4.5 · 11.3k</span>
+                        </div>
+                        <div class="data-item-meta">
+                            作者: <code>BaseDefender</code> | 标签: [联机防抄] [警报]<br>
+                            当领地柜或金属建筑遭受爆破时，在屏幕右侧弹出醒目提示。<br>
+                            最新版本: v1.0.5
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="background: var(--unturned-accent-gold); color: #14191f; font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 More Raid Alerts...')">⬇ 一键安装</button>
+                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开防抄警报详情页')">查看详情</button>
+                        </div>
+                    </div>
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>Map GPS & Landmark Pin</span>
+                            <span style="color: var(--unturned-accent-green); font-size: 11px;">★ 4.9 · 26.7k</span>
+                        </div>
+                        <div class="data-item-meta">
+                            作者: <code>ExplorerTeam</code> | 标签: [地图标注] [导航]<br>
+                            支持在游戏内地图右键添加自定义地标坐标，并小队共享指引。<br>
+                            最新版本: v2.3.0
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 10px;">
+                            <button class="btn-compact" style="background: var(--unturned-accent-gold); color: #14191f; font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Map GPS & Landmark Pin...')">⬇ 一键安装</button>
+                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开地图标点详情页')">查看详情</button>
+                        </div>
+                    </div>
+                `;
             }
         }
 
