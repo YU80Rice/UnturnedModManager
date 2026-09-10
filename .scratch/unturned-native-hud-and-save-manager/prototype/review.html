@@ -1160,10 +1160,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 6px 0 2px;
+            height: 58px;
             background: var(--surface-inset-bg);
             border: 1px solid var(--border-subtle);
             border-radius: 8px;
+            position: relative;
+            box-sizing: border-box;
         }
 
         /* 右侧主内容 Frame 区域 (高品质独立平滑纵向滚动容器) */
@@ -2341,7 +2343,7 @@
             width: 256px;
             min-width: 256px;
             max-width: 256px;
-            height: 100%;
+            height: 58px;
             opacity: 1;
             transform: translateZ(0);
             transition: opacity 0.2s ease 0.06s;
@@ -2358,7 +2360,7 @@
             position: absolute;
             left: 28px;
             width: 200px;
-            top: 18px;
+            top: 19px;
             height: 3px;
             background: rgba(255, 255, 255, 0.14);
             border-radius: 2px;
@@ -2419,7 +2421,7 @@
         /* 挡位刻度卡扣微标记 (Tick Notch on Wire) */
         .gear-tick {
             position: absolute;
-            top: 16px;
+            top: 17px;
             width: 7px;
             height: 7px;
             border-radius: 50%;
@@ -2439,7 +2441,7 @@
         /* 挡位下方说明文字 (绝不与天体冲突) */
         .gear-label {
             position: absolute;
-            bottom: 4px;
+            bottom: 6px;
             font-family: var(--unturned-font-sans);
             font-size: 11px;
             font-weight: 600;
@@ -2457,7 +2459,7 @@
         /* 核心移动天体 (The Celestial Puck Carrier) - GPU 硬件加速 */
         .celestial-puck {
             position: absolute;
-            top: 18px;
+            top: 19px;
             left: 228px; /* 默认黑夜定位在 228px，展开时绝不回弹 */
             transform: translate(-50%, -50%);
             width: 32px;
