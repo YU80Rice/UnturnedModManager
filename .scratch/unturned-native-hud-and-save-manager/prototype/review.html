@@ -1731,17 +1731,17 @@
             border: 1px solid var(--dock-border);
             border-radius: 26px;
             box-shadow: var(--dock-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            transition: width 0.32s var(--ease-spring),
-                        padding 0.32s var(--ease-spring),
-                        border-color 0.2s var(--ease-spring),
-                        box-shadow 0.2s var(--ease-spring),
-                        background-color var(--duration-base) var(--ease-spring);
-            overflow: visible;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            contain: paint; /* 关键：隔离重绘，拖拽天体绝不波及宿主界面任何元素 */
+            transition: width 0.28s var(--ease-spring),
+                        padding 0.28s var(--ease-spring),
+                        border-color 0.2s ease,
+                        box-shadow 0.2s ease;
+            overflow: hidden;
             height: 50px;
-            width: 320px;
-            padding: 4px 10px 4px 6px;
+            width: 312px;
+            padding: 4px 8px 4px 6px;
             user-select: none;
         }
 
@@ -1757,7 +1757,6 @@
             padding: 0;
             border-radius: 22px;
             cursor: pointer;
-            overflow: hidden;
         }
 
         /* 状态变形锚点控制纽 (折叠态为当前直立图标，展开态原地变为收拢键 ‹) */
@@ -1776,13 +1775,13 @@
             justify-content: center;
             outline: none;
             flex-shrink: 0;
-            margin-right: 6px;
+            margin-right: 10px;
             line-height: 1;
-            transition: width 0.28s var(--ease-spring),
-                        height 0.28s var(--ease-spring),
+            transition: width 0.25s var(--ease-spring),
+                        height 0.25s var(--ease-spring),
                         background 0.2s ease,
                         border-color 0.2s ease,
-                        transform 0.18s ease;
+                        transform 0.16s ease;
             z-index: 10;
         }
 
@@ -1800,7 +1799,7 @@
         .theme-trigger-btn:hover {
             background: var(--surface-card-hover-border);
             color: var(--text-primary);
-            transform: scale(1.06);
+            transform: scale(1.05);
         }
 
         .theme-trigger-btn:active {
@@ -1809,46 +1808,43 @@
 
         .theme-trigger-icon {
             display: inline-block;
-            transition: transform 0.2s var(--ease-spring), color 0.2s ease;
+            transition: transform 0.2s var(--ease-spring);
             line-height: 1;
         }
 
-        /* 展开态：天体串珠导轨容器 */
+        /* 展开态：天体固定宽度导轨容器 (256px 稳定坐标系) */
         .celestial-rail-track {
             position: relative;
-            display: flex;
-            align-items: center;
-            flex: 1;
+            width: 256px;
+            min-width: 256px;
+            max-width: 256px;
             height: 100%;
             opacity: 1;
-            transform: scale(1);
-            transition: opacity 0.22s ease 0.04s, transform 0.26s var(--ease-spring) 0.04s;
+            transform: translateZ(0);
+            transition: opacity 0.2s ease 0.06s;
         }
 
         .theme-floating-dock.collapsed .celestial-rail-track {
             opacity: 0;
             pointer-events: none;
-            transform: scale(0.85);
-            width: 0;
-            overflow: hidden;
-            display: none;
+            transition: opacity 0.12s ease;
         }
 
-        /* 中央贯穿导轨轴线 (The Axis Wire) */
+        /* 中央贯穿导轨轴线 (The Axis Wire: 从 28px 到 228px，宽 200px) */
         .axis-wire {
             position: absolute;
             left: 28px;
-            right: 28px;
+            width: 200px;
             top: 18px;
             height: 3px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.14);
             border-radius: 2px;
             box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
             z-index: 1;
             pointer-events: none;
         }
         body.theme-light .axis-wire {
-            background: rgba(0, 0, 0, 0.15);
+            background: rgba(0, 0, 0, 0.14);
         }
 
         /* 轴线上的高亮光纤能量流 (Active Glow Fill) */
@@ -1860,34 +1856,36 @@
             width: 100%;
             background: linear-gradient(90deg, #f59e0b, var(--theme-accent, #10b981), #38bdf8);
             border-radius: 2px;
-            box-shadow: 0 0 8px var(--theme-accent-glow, rgba(16, 185, 129, 0.4));
-            transition: width 0.3s cubic-bezier(0.34, 1.45, 0.64, 1);
+            box-shadow: 0 0 6px var(--theme-accent-glow, rgba(16, 185, 129, 0.4));
+            transition: width 0.28s cubic-bezier(0.34, 1.45, 0.64, 1);
         }
 
         /* 挡位层容器 */
         .rail-gears-layer {
             position: absolute;
             inset: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: stretch;
-            padding: 0 4px;
             z-index: 2;
             pointer-events: none;
         }
 
-        /* 单个挡位 */
+        /* 单个挡位：采用绝对固定坐标，彻底消除 flex-between 挤压位移 */
         .rail-gear {
-            position: relative;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 56px;
             pointer-events: auto;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 52px;
             user-select: none;
-            transition: transform 0.18s ease;
+            transition: transform 0.16s ease;
         }
+        .rail-gear[data-index="0"] { left: 0px; }
+        .rail-gear[data-index="1"] { left: 100px; }
+        .rail-gear[data-index="2"] { left: 200px; }
+
         .rail-gear:hover {
             transform: translateY(-1px);
         }
@@ -1904,7 +1902,7 @@
             border-radius: 50%;
             background: rgba(148, 163, 184, 0.4);
             border: 1px solid var(--border-subtle);
-            transition: all 0.22s ease;
+            transition: all 0.2s ease;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
             pointer-events: none;
         }
@@ -1918,12 +1916,12 @@
         /* 挡位下方说明文字 (绝不与天体冲突) */
         .gear-label {
             position: absolute;
-            bottom: 3px;
+            bottom: 4px;
             font-family: var(--unturned-font-sans);
             font-size: 11px;
             font-weight: 600;
             color: var(--text-secondary);
-            transition: color 0.2s ease, font-weight 0.2s ease;
+            transition: color 0.18s ease;
             white-space: nowrap;
             line-height: 1;
             pointer-events: none;
@@ -1933,35 +1931,35 @@
             font-weight: 700;
         }
 
-        /* 核心移动天体 (The Celestial Puck Carrier) */
+        /* 核心移动天体 (The Celestial Puck Carrier) - GPU 硬件加速 */
         .celestial-puck {
             position: absolute;
             top: 18px;
-            left: 28px;
+            left: 228px; /* 默认黑夜定位在 228px，展开时绝不回弹 */
             transform: translate(-50%, -50%);
             width: 32px;
             height: 32px;
             border-radius: 50%;
             background: linear-gradient(145deg, #ffffff, #e2e8f0);
             border: 2px solid #ffffff;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 16px var(--theme-accent-glow, rgba(16, 185, 129, 0.4));
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3), 0 0 10px var(--theme-accent-glow, rgba(16, 185, 129, 0.4));
             z-index: 5;
             cursor: grab;
             display: flex;
             align-items: center;
             justify-content: center;
             touch-action: none;
-            transition: left 0.3s cubic-bezier(0.34, 1.45, 0.64, 1),
-                        width 0.16s ease,
-                        height 0.16s ease,
-                        border-radius 0.16s ease,
-                        box-shadow 0.22s ease,
-                        background 0.22s ease;
+            will-change: left, transform;
+            transition: left 0.28s cubic-bezier(0.34, 1.45, 0.64, 1),
+                        width 0.15s ease,
+                        height 0.15s ease,
+                        border-radius 0.15s ease,
+                        box-shadow 0.18s ease;
         }
 
         body.theme-light .celestial-puck {
             background: linear-gradient(145deg, #ffffff, #f8fafc);
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15), 0 0 14px rgba(245, 158, 11, 0.4);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), 0 0 10px rgba(245, 158, 11, 0.4);
         }
 
         /* Emil Kowalski Squish & Stretch (拖拽时沿轴拉长、微压变扁) */
@@ -1970,7 +1968,8 @@
             width: 40px;
             height: 26px;
             border-radius: 13px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), 0 0 24px var(--theme-accent, #10b981);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 16px var(--theme-accent, #10b981);
+            transition: none; /* 拖拽时完全禁用 transition，实现 0 延迟手跟感 */
         }
 
         /* 天体内部的核心动态 Emoji */
@@ -1980,17 +1979,17 @@
             display: inline-block;
             user-select: none;
             pointer-events: none;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translateZ(0);
         }
 
         .puck-emoji.popping {
-            animation: puckPop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: puckPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @keyframes puckPop {
-            0% { transform: scale(0.5) rotate(-15deg); opacity: 0.5; }
-            60% { transform: scale(1.25) rotate(6deg); }
-            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+            0% { transform: scale(0.55) rotate(-12deg); }
+            60% { transform: scale(1.22) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); }
         }
 
         /* ==========================================================================
@@ -5982,28 +5981,24 @@
         }
 
         // =================================================================
-        // 天体轴线串珠滑动条 (Celestial Magnetic Rail Slider 2.0)
-        // Emoji 直接内嵌于移动天体内部 · 随拖拽挡位动态演变 · 挡位零遮挡
+        // 天体轴线滑动条 2.0 (Celestial Magnetic Rail Slider - 高性能无重排版)
+        // 固定 256px 坐标系 [28, 128, 228] · 0 次 DOM 读取 · contain: paint 满帧流畅
         // =================================================================
         const THEMES = ['light', 'system', 'dark'];
         const THEME_EMOJIS = ['☀️', '💻', '🌙'];
+        const GEAR_X = [28, 128, 228]; // 固定绝对坐标，与展开态容器完美对应
         let activeAppTheme = 'dark';
         let activePreviewIndex = 2;
         let themeDockTimer = null;
         let isBeadDragging = false;
         let dragStartX = 0;
-        let beadStartLeft = 0;
+        let beadStartLeft = 228;
+        let rafPending = false;
+        let pendingClientX = 0;
 
         function themeToIndex(theme) {
             const idx = THEMES.indexOf(theme);
             return idx >= 0 ? idx : 2;
-        }
-
-        function getNodeCenterX(index) {
-            const gears = [document.getElementById('gearLight'), document.getElementById('gearSystem'), document.getElementById('gearDark')];
-            const gear = gears[index];
-            if (!gear) return 0;
-            return gear.offsetLeft + (gear.offsetWidth / 2);
         }
 
         function updatePuckEmoji(index) {
@@ -6015,20 +6010,16 @@
             if (puckEmoji.innerText !== targetEmoji) {
                 puckEmoji.innerText = targetEmoji;
                 puckEmoji.classList.remove('popping');
-                void puckEmoji.offsetWidth; // 触发 reflow 重启弹跳动画
+                void puckEmoji.offsetWidth;
                 puckEmoji.classList.add('popping');
             }
 
-            // 根据当前天体赋予不同色调的宇宙星芒 (Aura)
             if (index === 0) {
-                // 白天太阳：暖金日冕光环
-                puck.style.boxShadow = "0 4px 14px rgba(245, 158, 11, 0.45), 0 0 16px rgba(245, 158, 11, 0.55)";
+                puck.style.boxShadow = "0 3px 10px rgba(245, 158, 11, 0.4), 0 0 12px rgba(245, 158, 11, 0.5)";
             } else if (index === 1) {
-                // 跟随系统：军工翡翠战术光环
-                puck.style.boxShadow = "0 4px 14px rgba(16, 185, 129, 0.45), 0 0 16px rgba(16, 185, 129, 0.55)";
+                puck.style.boxShadow = "0 3px 10px rgba(16, 185, 129, 0.4), 0 0 12px rgba(16, 185, 129, 0.5)";
             } else {
-                // 黑夜月球：极夜月光冰蓝光环
-                puck.style.boxShadow = "0 4px 14px rgba(56, 189, 248, 0.45), 0 0 16px rgba(56, 189, 248, 0.55)";
+                puck.style.boxShadow = "0 3px 10px rgba(56, 189, 248, 0.4), 0 0 12px rgba(56, 189, 248, 0.5)";
             }
         }
 
@@ -6037,21 +6028,20 @@
             const glow = document.getElementById('wireGlow');
             if (!bead) return;
 
-            const targetX = getNodeCenterX(index);
-            if (targetX <= 0) return;
+            const targetX = GEAR_X[index];
 
             if (animate) {
-                bead.style.transition = "left 0.3s cubic-bezier(0.34, 1.45, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.45, 0.64, 1), width 0.16s ease, height 0.16s ease, border-radius 0.16s ease, box-shadow 0.22s ease";
+                bead.style.transition = "left 0.28s cubic-bezier(0.34, 1.45, 0.64, 1), width 0.15s ease, height 0.15s ease, border-radius 0.15s ease, box-shadow 0.18s ease";
+                if (glow) glow.style.transition = "width 0.28s cubic-bezier(0.34, 1.45, 0.64, 1)";
             } else {
                 bead.style.transition = "none";
+                if (glow) glow.style.transition = "none";
             }
 
             bead.style.left = targetX + 'px';
 
-            const minX = getNodeCenterX(0);
-            const maxX = getNodeCenterX(2);
-            if (glow && maxX > minX) {
-                const pct = (targetX - minX) / (maxX - minX) * 100;
+            if (glow) {
+                const pct = (targetX - 28) / 2.0; // 28 -> 0%, 128 -> 50%, 228 -> 100%
                 glow.style.width = Math.max(0, Math.min(100, pct)) + '%';
             }
 
@@ -6085,14 +6075,13 @@
             const dock = document.getElementById('themeFloatingDock');
             const triggerIcon = document.getElementById('themeTriggerIcon');
             const triggerBtn = document.getElementById('themeTriggerBtn');
+            
+            // 展开前立即静默就位当前挡位坐标（无动画），确保初态 100% 正确，绝对不发生从左飞滑！
+            updateBeadPosition(themeToIndex(activeAppTheme), false);
+
             dock.classList.remove('collapsed');
             triggerIcon.innerText = "‹";
             triggerBtn.setAttribute('title', "收拢外观偏好栏");
-            
-            // 在导轨展开过渡动画期间多次同步滑块绝对位置，保证平滑落点
-            setTimeout(() => updateBeadPosition(themeToIndex(activeAppTheme), false), 40);
-            setTimeout(() => updateBeadPosition(themeToIndex(activeAppTheme), true), 120);
-            setTimeout(() => updateBeadPosition(themeToIndex(activeAppTheme), true), 320);
 
             if (themeDockTimer) clearTimeout(themeDockTimer);
             themeDockTimer = setTimeout(closeThemeDock, 8000);
@@ -6157,86 +6146,80 @@
         }
 
         // ============================================================
-        // 串珠鼠标 / 触控自由沿轴拖拽 + 动态 Emoji 变幻 + 磁吸落锁绑定
+        // 极致性能：0 DOM读取、rAF节流、纯内存算力的拖拽与磁吸落锁
         // ============================================================
         function initBeadDragging() {
             const bead = document.getElementById('slidingBead');
             const glow = document.getElementById('wireGlow');
+            const gears = [document.getElementById('gearLight'), document.getElementById('gearSystem'), document.getElementById('gearDark')];
             if (!bead) return;
+
+            function renderDragFrame() {
+                rafPending = false;
+                if (!isBeadDragging) return;
+
+                const deltaX = pendingClientX - dragStartX;
+                let newLeft = beadStartLeft + deltaX;
+
+                // 运动约束在轨道两端 (24px ~ 232px)
+                if (newLeft < 24) newLeft = 24;
+                if (newLeft > 232) newLeft = 232;
+
+                bead.style.left = `${newLeft}px`;
+
+                if (glow) {
+                    const clamped = newLeft < 28 ? 28 : (newLeft > 228 ? 228 : newLeft);
+                    glow.style.width = `${(clamped - 28) / 2.0}%`;
+                }
+
+                // 常数时间 O(1) 检测最近挡位，0 次 DOM 读取
+                const closestIndex = newLeft < 78 ? 0 : (newLeft > 178 ? 2 : 1);
+
+                if (closestIndex !== activePreviewIndex) {
+                    activePreviewIndex = closestIndex;
+                    updatePuckEmoji(closestIndex);
+                    for (let i = 0; i < 3; i++) {
+                        if (gears[i]) {
+                            gears[i].classList.toggle('active', i === closestIndex);
+                            gears[i].setAttribute('aria-checked', i === closestIndex ? 'true' : 'false');
+                        }
+                    }
+                }
+            }
 
             bead.addEventListener('pointerdown', (e) => {
                 isBeadDragging = true;
                 bead.classList.add('dragging');
                 dragStartX = e.clientX;
-                beadStartLeft = parseFloat(bead.style.left) || getNodeCenterX(themeToIndex(activeAppTheme));
+                beadStartLeft = GEAR_X[activePreviewIndex] || 228;
+                bead.style.transition = "none";
+                if (glow) glow.style.transition = "none";
                 bead.setPointerCapture(e.pointerId);
                 if (themeDockTimer) clearTimeout(themeDockTimer);
             });
 
             bead.addEventListener('pointermove', (e) => {
                 if (!isBeadDragging) return;
-                const deltaX = e.clientX - dragStartX;
-                const minX = getNodeCenterX(0);
-                const maxX = getNodeCenterX(2);
-                let newLeft = beadStartLeft + deltaX;
-
-                // 运动约束在轨道两端，带轻微触壁阻尼
-                newLeft = Math.max(minX - 6, Math.min(maxX + 6, newLeft));
-                bead.style.transition = "none";
-                bead.style.left = `${newLeft}px`;
-
-                if (glow && maxX > minX) {
-                    const clamped = Math.max(minX, Math.min(maxX, newLeft));
-                    const pct = (clamped - minX) / (maxX - minX) * 100;
-                    glow.style.width = `${pct}%`;
-                }
-
-                // 拖拽过程实时检测最近挡位，动态让天体内部的 Emoji 与下方文字产生共振
-                const currentX = newLeft;
-                let closestIndex = 0;
-                let minDistance = Infinity;
-                [0, 1, 2].forEach(i => {
-                    const dist = Math.abs(currentX - getNodeCenterX(i));
-                    if (dist < minDistance) {
-                        minDistance = dist;
-                        closestIndex = i;
-                    }
-                });
-
-                if (closestIndex !== activePreviewIndex) {
-                    activePreviewIndex = closestIndex;
-                    updatePuckEmoji(closestIndex);
-                    const gears = [document.getElementById('gearLight'), document.getElementById('gearSystem'), document.getElementById('gearDark')];
-                    gears.forEach((gear, i) => {
-                        if (gear) {
-                            gear.classList.toggle('active', i === closestIndex);
-                            gear.setAttribute('aria-checked', i === closestIndex ? 'true' : 'false');
-                        }
-                    });
+                pendingClientX = e.clientX;
+                if (!rafPending) {
+                    rafPending = true;
+                    requestAnimationFrame(renderDragFrame);
                 }
             });
 
             const onPointerEnd = (e) => {
                 if (!isBeadDragging) return;
                 isBeadDragging = false;
+                rafPending = false;
                 bead.classList.remove('dragging');
                 try {
                     bead.releasePointerCapture(e.pointerId);
                 } catch (_) {}
 
-                const currentX = parseFloat(bead.style.left) || getNodeCenterX(themeToIndex(activeAppTheme));
-                let closestIndex = 0;
-                let minDistance = Infinity;
+                const currentX = parseFloat(bead.style.left) || GEAR_X[activePreviewIndex];
+                const closestIndex = currentX < 78 ? 0 : (currentX > 178 ? 2 : 1);
 
-                [0, 1, 2].forEach(i => {
-                    const dist = Math.abs(currentX - getNodeCenterX(i));
-                    if (dist < minDistance) {
-                        minDistance = dist;
-                        closestIndex = i;
-                    }
-                });
-
-                // 磁吸落锁吸附并应用主题
+                // 磁吸吸附到位并持久化主题
                 setAppTheme(THEMES[closestIndex]);
             };
 
