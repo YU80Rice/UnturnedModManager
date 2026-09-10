@@ -983,7 +983,7 @@
         }
 
         /* =========================================================
-           解法 A：右下角呼吸展开胶囊开关 (emil-design-eng 物理动效)
+           解法 1：右下角自适应变形胶囊开关 (Emil Kowalski 纯粹形态变形 · 告别翻倒电脑)
            ========================================================= */
         .theme-floating-dock {
             position: absolute;
@@ -994,33 +994,39 @@
             align-items: center;
             background: var(--dock-bg);
             border: 1px solid var(--dock-border);
-            border-radius: 24px;
+            border-radius: 20px;
             box-shadow: var(--dock-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
-            transition: all 0.32s var(--ease-spring);
+            transition: width 0.32s var(--ease-spring),
+                        padding 0.32s var(--ease-spring),
+                        border-color 0.2s var(--ease-spring),
+                        box-shadow 0.2s var(--ease-spring),
+                        background-color var(--duration-base) var(--ease-spring);
             overflow: hidden;
             height: 40px;
-            padding: 2px 4px;
+            width: 252px;
+            padding: 3px 5px;
         }
 
         .theme-floating-dock:hover {
             border-color: var(--accent-gold-border);
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), 0 0 14px var(--accent-gold-bg);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 14px var(--accent-gold-bg);
         }
 
         /* 折叠态 (Collapsed Micro-badge) */
         .theme-floating-dock.collapsed {
             width: 40px;
             padding: 0;
-            border-radius: 50%;
+            border-radius: 20px;
             cursor: pointer;
         }
 
+        /* 折叠态触发纽 (Collapsed Trigger) */
         .theme-trigger-btn {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
+            border-radius: 20px;
             background: transparent;
             border: none;
             color: var(--accent-gold-text);
@@ -1031,7 +1037,7 @@
             justify-content: center;
             outline: none;
             flex-shrink: 0;
-            transition: transform 0.2s var(--ease-spring);
+            transition: opacity 0.18s ease, transform 0.2s var(--ease-spring), width 0.28s var(--ease-spring);
         }
 
         .theme-trigger-btn:hover {
@@ -1044,12 +1050,18 @@
 
         .theme-trigger-icon {
             display: inline-block;
-            transition: transform 0.38s var(--ease-spring), color 0.2s ease;
+            transition: transform 0.2s var(--ease-spring), color 0.2s ease;
         }
 
-        /* 展开时的图标顺畅旋转 90 度 */
-        .theme-floating-dock:not(.collapsed) .theme-trigger-icon {
-            transform: rotate(90deg) scale(0.9);
+        /* 展开时：折叠态按钮平滑淡出隐藏并收缩，完全由三段轨道接管，绝不出现倾斜/竖立电脑！ */
+        .theme-floating-dock:not(.collapsed) .theme-trigger-btn {
+            width: 0;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.7);
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
         }
 
         /* 展开后的三段滑动轨道 */
@@ -1059,16 +1071,18 @@
             align-items: center;
             gap: 2px;
             opacity: 1;
-            transform: translateX(0);
-            transition: opacity 0.24s ease, transform 0.3s var(--ease-spring);
+            transform: scale(1);
+            transition: opacity 0.22s ease 0.06s, transform 0.26s var(--ease-spring) 0.06s;
             white-space: nowrap;
+            width: 100%;
         }
 
         .theme-floating-dock.collapsed .theme-segmented-track {
             opacity: 0;
             pointer-events: none;
-            transform: translateX(24px);
+            transform: scale(0.85);
             position: absolute;
+            left: 40px;
         }
 
         /* 选项按钮 */
@@ -1078,7 +1092,7 @@
             background: transparent;
             border: none;
             border-radius: 16px;
-            padding: 5px 11px;
+            padding: 5px 10px;
             font-family: var(--unturned-font-sans);
             font-size: 11.5px;
             font-weight: 600;
@@ -1132,7 +1146,7 @@
             font-size: 16px;
             cursor: pointer;
             padding: 4px 6px;
-            margin-left: 2px;
+            margin-left: 1px;
             line-height: 1;
             display: flex;
             align-items: center;
@@ -1144,6 +1158,7 @@
         .theme-collapse-btn:hover {
             color: var(--text-primary);
             background: var(--border-subtle);
+            transform: translateX(1px);
         }
     </style>
 </head>
@@ -1490,10 +1505,10 @@
                 </main>
             </div>
 
-            <!-- 解法 A：右下角呼吸展开胶囊主题开关 (emil-design-eng 旋转展开微动效) -->
+            <!-- 解法 1：自适应形态变形胶囊主题开关 (Emil Kowalski 纯粹形态变形 · 告别翻倒电脑) -->
             <div id="themeFloatingDock" class="theme-floating-dock collapsed" role="radiogroup" aria-label="启动器主题偏好切换">
-                <!-- 折叠态触发纽 (Collapsed Trigger) -->
-                <button id="themeTriggerBtn" class="theme-trigger-btn" onclick="toggleThemeDock()" title="主题模式 · 点击旋转展开">
+                <!-- 折叠态触发纽 (Collapsed Trigger · 平正直立无旋转) -->
+                <button id="themeTriggerBtn" class="theme-trigger-btn" onclick="toggleThemeDock()" title="启动器外观偏好 · 点击展开">
                     <span id="themeTriggerIcon" class="theme-trigger-icon">🌙</span>
                 </button>
 
@@ -2097,8 +2112,9 @@
                 if (themeDockTimer) clearTimeout(themeDockTimer);
             } else {
                 dock.classList.remove('collapsed');
-                // 展开后更新滑动指示底座位置
+                // 展开后更新滑动指示底座位置 (双频确保弹性宽度插值完成精准附着)
                 setTimeout(updateThemeSliderIndicator, 40);
+                setTimeout(updateThemeSliderIndicator, 140);
                 // 8秒无操作自动收拢
                 if (themeDockTimer) clearTimeout(themeDockTimer);
                 themeDockTimer = setTimeout(() => {
