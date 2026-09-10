@@ -2140,6 +2140,641 @@
             background: var(--theme-accent);
             color: #ffffff;
         }
+
+        /* ==========================================================================
+           Unmod 社区插件市场与版本详情下载体系 (PCL2 Market & Detail Style)
+           ========================================================================== */
+        .market-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
+            padding-bottom: 40px;
+            animation: fadeIn 0.22s ease-out;
+        }
+
+        /* 顶部搜索过滤卡片 (PCL2 经典卡片 1) */
+        .market-filter-card {
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
+            border-radius: 8px;
+            padding: 14px 18px;
+            box-shadow: var(--surface-card-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .market-filter-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .market-filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 16px;
+        }
+
+        .market-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .market-input-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            min-width: 34px;
+            text-align: right;
+            user-select: none;
+        }
+
+        .market-select,
+        .market-input-text {
+            flex: 1;
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-size: 12px;
+            color: var(--text-primary);
+            font-family: inherit;
+            outline: none;
+            transition: all var(--duration-fast) var(--ease-spring);
+        }
+
+        .market-select {
+            cursor: pointer;
+        }
+
+        .market-select option {
+            background: var(--surface-header-bg);
+            color: var(--text-primary);
+        }
+
+        .market-select:focus,
+        .market-input-text:focus {
+            border-color: var(--theme-accent);
+            box-shadow: 0 0 0 2px var(--theme-accent-bg);
+        }
+
+        .market-filter-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 44px;
+            margin-top: 2px;
+        }
+
+        .market-btn-primary {
+            background: var(--theme-accent-bg);
+            border: 1px solid var(--theme-accent-border);
+            border-radius: 6px;
+            padding: 6px 18px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--theme-accent);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-spring);
+            user-select: none;
+        }
+
+        .market-btn-primary:hover {
+            background: var(--theme-accent);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .market-btn-primary:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .market-btn-reset {
+            background: transparent;
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-spring);
+            user-select: none;
+        }
+
+        .market-btn-reset:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+            background: var(--surface-card-hover-bg);
+        }
+
+        /* 社区插件行流列表容器 (PCL2 经典卡片 2) */
+        .market-list-card {
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--surface-card-shadow);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .market-mod-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 18px;
+            gap: 14px;
+            border-bottom: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-spring);
+            user-select: none;
+            position: relative;
+        }
+
+        .market-mod-row:last-child {
+            border-bottom: none;
+        }
+
+        .market-mod-row:hover {
+            background: var(--theme-accent-bg);
+            padding-left: 22px;
+        }
+
+        .market-mod-row:active {
+            transform: scale(0.995);
+        }
+
+        .market-mod-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            transition: transform var(--duration-fast) var(--ease-spring);
+        }
+
+        .market-mod-row:hover .market-mod-avatar {
+            transform: scale(1.08);
+        }
+
+        .market-mod-main {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .market-mod-title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .market-mod-name-cn {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .market-mod-sep {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .market-mod-name-en {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: var(--unturned-font-mono);
+        }
+
+        .market-tag {
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 10.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .market-tag.highlight {
+            background: var(--theme-accent-bg);
+            border-color: var(--theme-accent-border);
+            color: var(--theme-accent);
+        }
+
+        .market-mod-desc {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .market-mod-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--unturned-font-mono);
+            flex-wrap: wrap;
+        }
+
+        .market-meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .market-arrow {
+            color: var(--text-muted);
+            font-size: 14px;
+            transition: transform var(--duration-fast) var(--ease-spring), color var(--duration-fast) ease;
+        }
+
+        .market-mod-row:hover .market-arrow {
+            transform: translateX(4px);
+            color: var(--theme-accent);
+        }
+
+        /* ==========================================================================
+           插件详情与版本下载页 (PCL2 经典第二张图)
+           ========================================================================== */
+        .market-detail-view {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            animation: slideInRight 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+            padding-bottom: 50px;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* 顶部返回导航条 */
+        .detail-nav-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-back-btn {
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all var(--duration-fast) var(--ease-spring);
+            font-family: inherit;
+        }
+
+        .detail-back-btn:hover {
+            background: var(--theme-accent-bg);
+            border-color: var(--theme-accent-border);
+            color: var(--theme-accent);
+            transform: translateX(-2px);
+        }
+
+        .detail-title-crumb {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* 详情头部 Hero 卡片 */
+        .detail-hero-card {
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
+            border-radius: 8px;
+            padding: 18px 20px;
+            box-shadow: var(--surface-card-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .detail-hero-top {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .detail-hero-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 10px;
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .detail-hero-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .detail-hero-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+
+        /* 外部快捷直达按钮组 (对标 PCL2: 转到 Modrinth / 转到 MC百科 / 复制名称) */
+        .detail-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding-top: 6px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .detail-action-btn {
+            background: transparent;
+            border: 1px solid var(--theme-accent-border);
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--theme-accent);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all var(--duration-fast) var(--ease-spring);
+            font-family: inherit;
+        }
+
+        .detail-action-btn:hover {
+            background: var(--theme-accent-bg);
+            transform: translateY(-1px);
+        }
+
+        .detail-action-btn.secondary {
+            border-color: var(--border-strong);
+            color: var(--text-secondary);
+        }
+
+        .detail-action-btn.secondary:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+            background: var(--surface-card-hover-bg);
+        }
+
+        /* 游戏版本过滤胶囊条 (PCL2 第二张图中部的 全部 / 26.2 / 26.1 / 1.21 等) */
+        .detail-version-filter-bar {
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+        }
+
+        .detail-ver-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            white-space: nowrap;
+            margin-right: 4px;
+        }
+
+        .detail-ver-pill {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-family: var(--unturned-font-mono);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all var(--duration-fast) var(--ease-spring);
+        }
+
+        .detail-ver-pill:hover {
+            color: var(--text-primary);
+            background: var(--surface-inset-bg);
+        }
+
+        .detail-ver-pill.active {
+            background: var(--theme-accent);
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        /* 手风琴折叠下载列表 (PCL2 第二张图的 Accordion 卡片) */
+        .detail-accordion-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .accordion-item {
+            background: var(--surface-card-bg);
+            border: 1px solid var(--surface-card-border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--surface-card-shadow);
+            transition: border-color var(--duration-fast) ease;
+        }
+
+        .accordion-item.expanded {
+            border-color: var(--theme-accent-border);
+        }
+
+        .accordion-header {
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+            background: transparent;
+            transition: background var(--duration-fast) ease;
+        }
+
+        .accordion-header:hover {
+            background: var(--surface-card-hover-bg);
+        }
+
+        .accordion-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .accordion-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: var(--unturned-font-mono);
+        }
+
+        .accordion-badge {
+            font-size: 10.5px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .accordion-badge.latest {
+            background: var(--theme-accent-bg);
+            color: var(--theme-accent);
+            border: 1px solid var(--theme-accent-border);
+        }
+
+        .accordion-badge.installed {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.35);
+        }
+
+        .accordion-chevron {
+            font-size: 12px;
+            color: var(--text-muted);
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .accordion-item.expanded .accordion-chevron {
+            transform: rotate(180deg);
+            color: var(--theme-accent);
+        }
+
+        .accordion-body {
+            display: none;
+            padding: 14px 18px 16px 18px;
+            background: var(--surface-inset-bg);
+            border-top: 1px solid var(--border-subtle);
+            flex-direction: column;
+            gap: 12px;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .accordion-item.expanded .accordion-body {
+            display: flex;
+        }
+
+        .accordion-changelog {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            background: var(--surface-card-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 10px 14px;
+        }
+
+        .accordion-meta-grid {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--unturned-font-mono);
+            flex-wrap: wrap;
+        }
+
+        .accordion-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 2px;
+        }
+
+        .install-btn {
+            background: var(--theme-accent);
+            border: 1px solid var(--theme-accent);
+            color: var(--theme-accent-contrast-text, #ffffff);
+            border-radius: 6px;
+            padding: 7px 18px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all var(--duration-fast) var(--ease-spring);
+            user-select: none;
+            font-family: inherit;
+        }
+
+        .install-btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .install-btn:active {
+            transform: scale(0.98);
+        }
+
+        .install-btn.installed {
+            background: var(--theme-accent-bg);
+            color: var(--theme-accent);
+            border-color: var(--theme-accent-border);
+            cursor: default;
+        }
+
+        .download-raw-btn {
+            background: transparent;
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            padding: 7px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all var(--duration-fast) var(--ease-spring);
+            font-family: inherit;
+        }
+
+        .download-raw-btn:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+            background: var(--surface-card-hover-bg);
+        }
     </style>
 </head>
 <body>
@@ -3399,101 +4034,756 @@
                 if (tabLocal) tabLocal.classList.remove('active');
                 if (tabStore) tabStore.classList.add('active');
 
-                // 切换到社区发现市场卡片
-                container.className = 'data-card-grid';
-                container.innerHTML = `
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>BetterUnturnedExperience (BUE)</span>
-                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">★ 4.9 · 48.2k</span>
+                // 挂载 PCL2 社区资源下载主页 (第一张图风格：顶部搜索过滤卡片 + 社区模组行流列表)
+                renderMarketBrowseView();
+            }
+        }
+
+        // ==========================================================================
+        // Unmod 社区插件市场与详情下载引擎 (PCL2 Market & Detail Views)
+        // ==========================================================================
+        const marketPluginsData = [
+            {
+                id: "bue",
+                nameCn: "更好的未转变者体验",
+                nameEn: "BetterUnturnedExperience",
+                author: "YU80Rice",
+                icon: "🧭",
+                category: "hud",
+                categoryCn: "HUD 界面增强",
+                source: "unmod",
+                sourceCn: "Unmod 官方社区源",
+                tags: ["官方推荐", "HUD增强", "生存体验"],
+                desc: "现代化原汁原味体验增强套件，全方位重构方位标罗盘、生命体征平视显示、准星动画与联机交互手感。",
+                fullDesc: "BetterUnturnedExperience (BUE) 是专为 Unturned 3.x 打造的深度体验增强模组套件。基于 BepInEx 架构，在不破坏原版联机兼容性与纯净体验的前提下，引入现代 FPS 战术指南针、智能准星收敛动效、生命状态圆环监控以及沉浸式音画反馈。受到社区数万服主与玩家一致好评。",
+                compatVersion: "Unturned 3.26+ · BepInEx 5.4+",
+                downloads: "48.2 万",
+                updatedTime: "2 天前",
+                communityUrl: "https://unmod.online/plugins/bue",
+                githubUrl: "https://github.com/YU80Rice/BetterUnturnedExperience",
+                versions: [
+                    {
+                        id: "bue-1.4.5",
+                        gameVer: "3.26.3",
+                        title: "Unturned 3.26.3 · BepInEx (v1.4.5 最新正式版 - 推荐)",
+                        isLatest: true,
+                        isInstalled: false,
+                        releaseDate: "2026-09-08",
+                        fileSize: "1.42 MB",
+                        sha256: "8f7b3a9c2401d8e6a1b2c3d4e5f6789012345678",
+                        changelog: "修复 Unturned 3.26.3 小版本更新带来的罗盘指针插值漂移；重构网络包平滑算法，解决高延迟下队友位置卡顿；新增准星透明度自定义滑动条与按键绑定覆盖。"
+                    },
+                    {
+                        id: "bue-1.4.2",
+                        gameVer: "3.26.2",
+                        title: "Unturned 3.26.2 · BepInEx (v1.4.2 稳定版)",
+                        isLatest: false,
+                        isInstalled: true,
+                        releaseDate: "2026-08-20",
+                        fileSize: "1.38 MB",
+                        sha256: "4a5b6c7d8e9f0123456789abcdef0123456789ab",
+                        changelog: "全面适配 Unturned 3.26.2 官方网络协议；优化内存分配与垃圾回收占用，高密度战场掉帧降低 15%。"
+                    },
+                    {
+                        id: "bue-1.3.8",
+                        gameVer: "3.25.4",
+                        title: "Unturned 3.25.4 · BepInEx (v1.3.8 长期支持版)",
+                        isLatest: false,
+                        isInstalled: false,
+                        releaseDate: "2026-05-12",
+                        fileSize: "1.25 MB",
+                        sha256: "90abcdef1234567890abcdef1234567890abcdef",
+                        changelog: "针对 Unturned 3.25.4 经典旧版本的长期维护分支，确保老服务器与经典单机地图的完美兼容。"
+                    }
+                ]
+            },
+            {
+                id: "quickloot",
+                nameCn: "自动快速拾取与背包整理",
+                nameEn: "QuickLootOrganizer",
+                author: "NelsonFan",
+                icon: "🎒",
+                category: "gameplay",
+                categoryCn: "生存玩法扩展",
+                source: "unmod",
+                sourceCn: "Unmod 官方社区源",
+                tags: ["便捷操作", "背包管理", "联机必备"],
+                desc: "准星对准地面掉落物长按快捷键即可快速批量收纳，并按类别自动规整弹匣、医疗品与建材。",
+                fullDesc: "彻底终结在激烈搜刮中繁琐的手动拖拽！QuickLootOrganizer 支持鼠标悬停批量拾取、按类型智能分类（弹药置顶、武器规整、食物自动堆叠），并具备满包自动音效警报与队友掉落优先权保护机制。",
+                compatVersion: "Unturned 3.26+ · BepInEx 5.4+",
+                downloads: "23.5 万",
+                updatedTime: "5 天前",
+                communityUrl: "https://unmod.online/plugins/quickloot",
+                githubUrl: "https://github.com/NelsonFan/QuickLootOrganizer",
+                versions: [
+                    {
+                        id: "ql-2.1.0",
+                        gameVer: "3.26.3",
+                        title: "Unturned 3.26.3 · BepInEx (v2.1.0 最新正式版 - 推荐)",
+                        isLatest: true,
+                        isInstalled: false,
+                        releaseDate: "2026-09-05",
+                        fileSize: "840 KB",
+                        sha256: "e1f2a3b4c5d6e7f8091a2b3c4d5e6f7a8b9c0d1e",
+                        changelog: "新增自定义黑白名单拾取过滤；修复联机状态下高延迟丢包导致的重复进包异常；增加与自定义背包 Mod 的尺寸适配。"
+                    },
+                    {
+                        id: "ql-2.0.2",
+                        gameVer: "3.26.1",
+                        title: "Unturned 3.26.1 · BepInEx (v2.0.2 稳定版)",
+                        isLatest: false,
+                        isInstalled: true,
+                        releaseDate: "2026-07-15",
+                        fileSize: "810 KB",
+                        sha256: "f2e3d4c5b6a70981928374650192837465abcdef",
+                        changelog: "重构整理排序算法，支持按重量与耐久度降序排列。"
+                    }
+                ]
+            },
+            {
+                id: "carphysics",
+                nameCn: "真实载具操控与物理重构",
+                nameEn: "CarPhysicsOverhaul",
+                author: "DriftKing",
+                icon: "🚗",
+                category: "physics",
+                categoryCn: "载具与物理手感",
+                source: "unmod",
+                sourceCn: "Unmod 官方社区源",
+                tags: ["车辆操控", "悬挂物理", "直升机防侧翻"],
+                desc: "重构原版载具悬挂阻尼与抓地力物理曲线，大幅减缓转向翻车，提升越野与直升机悬停手感。",
+                fullDesc: "未转变者原版车辆往往容易遭遇轻微颠簸便直接侧翻起飞。CarPhysicsOverhaul 针对每款载具质量中心、悬挂刚度与轮胎抓地力进行全面重调，带来顺滑可控的漂移与越野驾驶质感，支持手柄微操输入。",
+                compatVersion: "Unturned 3.26+ · BepInEx 5.4+",
+                downloads: "14.8 万",
+                updatedTime: "1 周前",
+                communityUrl: "https://unmod.online/plugins/carphysics",
+                githubUrl: "https://github.com/DriftKing/CarPhysicsOverhaul",
+                versions: [
+                    {
+                        id: "cpo-1.2.0",
+                        gameVer: "3.26.3",
+                        title: "Unturned 3.26.3 · BepInEx (v1.2.0 最新正式版 - 推荐)",
+                        isLatest: true,
+                        isInstalled: false,
+                        releaseDate: "2026-09-02",
+                        fileSize: "1.15 MB",
+                        sha256: "abcdef1234567890abcdef1234567890abcdef12",
+                        changelog: "新增装甲车与重型卡车双桥减震调校；优化直升机低空失速保护模型。"
+                    },
+                    {
+                        id: "cpo-1.1.2",
+                        gameVer: "3.25.4",
+                        title: "Unturned 3.25.4 · BepInEx (v1.1.2 稳定版)",
+                        isLatest: false,
+                        isInstalled: true,
+                        releaseDate: "2026-06-18",
+                        fileSize: "1.08 MB",
+                        sha256: "1234567890abcdef1234567890abcdef12345678",
+                        changelog: "经典旧版本维护分支，稳定兼容原版所有基础载具。"
+                    }
+                ]
+            },
+            {
+                id: "crafthelper",
+                nameCn: "高级合成配方树与图鉴助手",
+                nameEn: "AdvancedCraftingHelper",
+                author: "CraftMaster",
+                icon: "🛠️",
+                category: "gameplay",
+                categoryCn: "生存玩法扩展",
+                source: "unmod",
+                sourceCn: "Unmod 官方社区源",
+                tags: ["合成配方", "图鉴检索", "新人推荐"],
+                desc: "在游戏内随时呼出全配方合成树状检索器，直观展示所需原材料数量、掉落地图与前置科技要求。",
+                fullDesc: "再也不需要切到网页查百科！AdvancedCraftingHelper 内置完整物品科技树，输入想要制造的建筑、枪械或药品，即可一步步拆解所需的所有次级原料与工具，并支持高亮背包现有素材。",
+                compatVersion: "Unturned 3.26+ · BepInEx 5.4+",
+                downloads: "19.5 万",
+                updatedTime: "2 周前",
+                communityUrl: "https://unmod.online/plugins/crafthelper",
+                githubUrl: "https://github.com/CraftMaster/AdvancedCraftingHelper",
+                versions: [
+                    {
+                        id: "ach-2.0.1",
+                        gameVer: "3.26.3",
+                        title: "Unturned 3.26.3 · BepInEx (v2.0.1 最新正式版 - 推荐)",
+                        isLatest: true,
+                        isInstalled: false,
+                        releaseDate: "2026-08-25",
+                        fileSize: "960 KB",
+                        sha256: "4567890abcdef1234567890abcdef1234567890a",
+                        changelog: "同步 Unturned 3.26 新增制造物品数据；新增多语言本地化配置支持。"
+                    }
+                ]
+            },
+            {
+                id: "minihud",
+                nameCn: "极简平视准星与状态圆环",
+                nameEn: "MinimalistHUDCrosshair",
+                author: "PixelSniper",
+                icon: "🎯",
+                category: "hud",
+                categoryCn: "HUD 界面增强",
+                source: "workshop",
+                sourceCn: "Steam 创意工坊源",
+                tags: ["极简UI", "准星定制", "帧率友好"],
+                desc: "将繁复厚重的底部血量饥渴条精简为半透明拟态动态圆环，搭配可自定义粗细与颜色的战术动态准星。",
+                fullDesc: "专为竞技射击与硬核沉浸玩家打造。精简界面视野遮挡，以极低 GPU 开销渲染高刷新率平滑动态准星，支持跑步扩散、开镜隐去与受击震颤微反馈。",
+                compatVersion: "Unturned 3.26+ · BepInEx 5.4+",
+                downloads: "32.1 万",
+                updatedTime: "3 周前",
+                communityUrl: "https://unmod.online/plugins/minihud",
+                githubUrl: "https://github.com/PixelSniper/MinimalistHUD",
+                versions: [
+                    {
+                        id: "mhc-1.3.0",
+                        gameVer: "3.26.3",
+                        title: "Unturned 3.26.3 · BepInEx (v1.3.0 最新稳定版 - 推荐)",
+                        isLatest: true,
+                        isInstalled: false,
+                        releaseDate: "2026-08-18",
+                        fileSize: "620 KB",
+                        sha256: "7890abcdef1234567890abcdef1234567890abcd",
+                        changelog: "新增十字准星与动态点状准星预设；优化抗锯齿渲染。"
+                    }
+                ]
+            },
+            {
+                id: "anticheat",
+                nameCn: "服务器安全审计与异常行为检测",
+                nameEn: "ServerSecurityAuditor",
+                author: "SecTeam",
+                icon: "🛡️",
+                category: "management",
+                categoryCn: "服务器管理与防作弊",
+                source: "github",
+                sourceCn: "GitHub 开源通道",
+                tags: ["服主必备", "防瞬移", "防自瞄"],
+                desc: "为服务器与单机主机提供全面的内存完整性检验，实时拦截异常速度位移、视角突变与非法物品注入。",
+                fullDesc: "Unturned 社区服务器安全防线。具备高性能服务端行为分析引擎，无任何性能卡顿，毫秒级捕获非法外挂特征并自动输出安全日志审计报告。",
+                compatVersion: "Unturned 3.26+ · Dedicated Server",
+                downloads: "8.9 万",
+                updatedTime: "1 个月前",
+                communityUrl: "https://unmod.online/plugins/anticheat",
+                githubUrl: "https://github.com/SecTeam/ServerSecurityAuditor",
+                versions: [
+                    {
+                        id: "ssa-3.0.4",
+                        gameVer: "3.26.3",
+                        title: "Unturned 3.26.3 · Dedicated Server (v3.0.4 最新版 - 推荐)",
+                        isLatest: true,
+                        isInstalled: false,
+                        releaseDate: "2026-08-10",
+                        fileSize: "2.10 MB",
+                        sha256: "cdef1234567890abcdef1234567890abcdef1234",
+                        changelog: "重构无感知物理碰撞碰撞盒检验；新增 Discord Webhook 实时报警推送。"
+                    }
+                ]
+            },
+            {
+                id: "weatheramb",
+                nameCn: "动态天气大雾与极光粒子",
+                nameEn: "WeatherAmbiencePlus",
+                author: "SkyPainter",
+                icon: "🌧️",
+                category: "audio",
+                categoryCn: "音画与环境粒子",
+                source: "unmod",
+                sourceCn: "Unmod 官方社区源",
+                tags: ["环境氛围", "暴风雨", "极光粒子"],
+                desc: "大幅增强暴风雨、高空浓雾与极夜极光的粒子渲染层级，重构雨滴打击屋顶与风暴的环境立体声混音。",
+                fullDesc: "让末日生存回归大自然的壮丽与危机。通过动态着色器实现地表积水与潮湿反光特效，环境声随庇护所隔绝程度动态衰减，带来身临其境的孤寂沉浸感。",
+                compatVersion: "Unturned 3.26+ · BepInEx 5.4+",
+                downloads: "12.3 万",
+                updatedTime: "1 个月前",
+                communityUrl: "https://unmod.online/plugins/weatheramb",
+                githubUrl: "https://github.com/SkyPainter/WeatherAmbiencePlus",
+                versions: [
+                    {
+                        id: "wap-1.0.2",
+                        gameVer: "3.26.3",
+                        title: "Unturned 3.26.3 · BepInEx (v1.0.2 最新版 - 推荐)",
+                        isLatest: true,
+                        isInstalled: false,
+                        releaseDate: "2026-08-01",
+                        fileSize: "3.45 MB",
+                        sha256: "def1234567890abcdef1234567890abcdef12345",
+                        changelog: "优化浓雾下远距离渲染剔除，避免显存溢出；调整雷击声音衰减曲线。"
+                    }
+                ]
+            },
+            {
+                id: "raidalert",
+                nameCn: "领地柜入侵与爆破即时警报",
+                nameEn: "BaseRaidAlert",
+                author: "BaseDefender",
+                icon: "🚨",
+                category: "gameplay",
+                categoryCn: "生存玩法扩展",
+                source: "unmod",
+                sourceCn: "Unmod 官方社区源",
+                tags: ["联机防抄", "家园保护", "音效警报"],
+                desc: "当金属建筑、据点门或领地柜遭受 C4/火箭筒高爆破坏时，全队即时收到屏幕告警与雷达方位标注。",
+                fullDesc: "防抄家神器！不仅能在游戏内第一时间提供防御警报，还支持与移动端 App 或 Web 机器人打通，离线也能第一时间收到庇护所遇袭通知。",
+                compatVersion: "Unturned 3.26+ · BepInEx 5.4+",
+                downloads: "11.3 万",
+                updatedTime: "1 个月前",
+                communityUrl: "https://unmod.online/plugins/raidalert",
+                githubUrl: "https://github.com/BaseDefender/BaseRaidAlert",
+                versions: [
+                    {
+                        id: "bra-1.0.5",
+                        gameVer: "3.26.2",
+                        title: "Unturned 3.26.2 · BepInEx (v1.0.5 稳定版 - 推荐)",
+                        isLatest: true,
+                        isInstalled: false,
+                        releaseDate: "2026-07-28",
+                        fileSize: "780 KB",
+                        sha256: "ef1234567890abcdef1234567890abcdef123456",
+                        changelog: "修复小队成员不在同个区域时无法共享告警方位的 bug；减少网络开销。"
+                    }
+                ]
+            }
+        ];
+
+        let marketFilterState = {
+            keyword: '',
+            source: 'all',
+            version: 'all',
+            category: 'all'
+        };
+        let activeDetailModId = null;
+        let activeDetailVersionTag = 'all';
+        let expandedAccordionId = null;
+
+        // 挂载 PCL2 社区资源下载主页 (第一张图风格：顶部搜索过滤卡片 + 社区模组行流列表)
+        function renderMarketBrowseView() {
+            const container = document.getElementById('modContent');
+            if (!container) return;
+            activeDetailModId = null;
+
+            container.className = 'market-container';
+            container.innerHTML = `
+                <!-- 1. 顶部搜索与多维过滤卡片 (PCL2 经典第一张图) -->
+                <div class="market-filter-card">
+                    <div class="market-filter-title">
+                        <span>🔍 搜索 Mod</span>
+                        <span style="font-size: 11px; font-weight: 500; color: var(--text-muted); font-family: var(--unturned-font-mono);">[Unmod 社区市场数据接口已接入]</span>
+                    </div>
+                    <div class="market-filter-grid">
+                        <div class="market-input-group">
+                            <span class="market-input-label">名称</span>
+                            <input type="text" id="marketSearchInput" class="market-input-text" placeholder="输入插件名称 / 英文原名 / 描述关键字..." value="${marketFilterState.keyword}" oninput="handleMarketSearchInput(this.value)">
                         </div>
-                        <div class="data-item-meta">
-                            作者: <code>YU80Rice</code> | 标签: [官方推荐] [HUD] [BepInEx]<br>
-                            现代化原汁原味体验增强套件，全方位优化 HUD 布局与联机手感。<br>
-                            最新版本: v1.4.2 (2026-09-08 更新)
+                        <div class="market-input-group">
+                            <span class="market-input-label">来源</span>
+                            <select id="marketSourceSelect" class="market-select" onchange="handleMarketSourceChange(this.value)">
+                                <option value="all" ${marketFilterState.source === 'all' ? 'selected' : ''}>全部来源 (Unmod/工坊/GitHub)</option>
+                                <option value="unmod" ${marketFilterState.source === 'unmod' ? 'selected' : ''}>Unmod 官方社区源 (unmod.online)</option>
+                                <option value="workshop" ${marketFilterState.source === 'workshop' ? 'selected' : ''}>Steam 创意工坊源 (Workshop)</option>
+                                <option value="github" ${marketFilterState.source === 'github' ? 'selected' : ''}>GitHub 开源发布通道</option>
+                            </select>
                         </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--theme-accent-bg); color: var(--theme-accent); border-color: var(--theme-accent-border); font-weight: 700;" onclick="showToast('✔ 检查完毕', '已安装最新版本 (v1.4.2)，无需更新')">✔ 已是最新版</button>
-                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '正在打开 unmod.online/plugins/bue 详情页')">查看详情</button>
+                        <div class="market-input-group">
+                            <span class="market-input-label">版本</span>
+                            <select id="marketVersionSelect" class="market-select" onchange="handleMarketVersionChange(this.value)">
+                                <option value="all" ${marketFilterState.version === 'all' ? 'selected' : ''}>全部 (也可自行输入)</option>
+                                <option value="3.26" ${marketFilterState.version === '3.26' ? 'selected' : ''}>Unturned 3.26.x (最新版本)</option>
+                                <option value="3.25" ${marketFilterState.version === '3.25' ? 'selected' : ''}>Unturned 3.25.x (稳定版本)</option>
+                                <option value="3.24" ${marketFilterState.version === '3.24' ? 'selected' : ''}>Unturned 3.24.x (旧版兼容)</option>
+                            </select>
+                        </div>
+                        <div class="market-input-group">
+                            <span class="market-input-label">类型</span>
+                            <select id="marketCategorySelect" class="market-select" onchange="handleMarketCategoryChange(this.value)">
+                                <option value="all" ${marketFilterState.category === 'all' ? 'selected' : ''}>全部类型</option>
+                                <option value="hud" ${marketFilterState.category === 'hud' ? 'selected' : ''}>HUD / 界面增强</option>
+                                <option value="gameplay" ${marketFilterState.category === 'gameplay' ? 'selected' : ''}>生存玩法扩展</option>
+                                <option value="physics" ${marketFilterState.category === 'physics' ? 'selected' : ''}>载具与物理手感</option>
+                                <option value="performance" ${marketFilterState.category === 'performance' ? 'selected' : ''}>性能优化与防卡顿</option>
+                                <option value="management" ${marketFilterState.category === 'management' ? 'selected' : ''}>服务器管理与防作弊</option>
+                                <option value="audio" ${marketFilterState.category === 'audio' ? 'selected' : ''}>音画与环境粒子</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>Advanced Crafting Helper</span>
-                            <span style="color: var(--accent-gold-text); font-size: 11px;">★ 4.7 · 19.5k</span>
+                    <div class="market-filter-actions">
+                        <button class="market-btn-primary" onclick="applyMarketFilters()">搜索</button>
+                        <button class="market-btn-reset" onclick="resetMarketFilters()">重置条件</button>
+                    </div>
+                </div>
+
+                <!-- 2. 社区插件行流列表容器 (PCL2 经典第一张图下半区) -->
+                <div id="marketListContainer" class="market-list-card">
+                    <!-- 动态渲染 -->
+                </div>
+            `;
+
+            renderMarketModList();
+        }
+
+        // 渲染社区市场行流列表
+        function renderMarketModList() {
+            const listEl = document.getElementById('marketListContainer');
+            if (!listEl) return;
+
+            const filtered = marketPluginsData.filter(item => {
+                if (marketFilterState.source !== 'all' && item.source !== marketFilterState.source) return false;
+                if (marketFilterState.category !== 'all' && item.category !== marketFilterState.category) return false;
+                if (marketFilterState.version !== 'all') {
+                    const hasVer = item.versions.some(v => v.gameVer.startsWith(marketFilterState.version));
+                    if (!hasVer) return false;
+                }
+                if (marketFilterState.keyword) {
+                    const kw = marketFilterState.keyword.toLowerCase();
+                    const matchCn = item.nameCn.toLowerCase().includes(kw);
+                    const matchEn = item.nameEn.toLowerCase().includes(kw);
+                    const matchDesc = item.desc.toLowerCase().includes(kw);
+                    const matchAuthor = item.author.toLowerCase().includes(kw);
+                    const matchTags = item.tags.some(t => t.toLowerCase().includes(kw));
+                    return matchCn || matchEn || matchDesc || matchAuthor || matchTags;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div style="text-align: center; padding: 48px 20px; color: var(--text-muted);">
+                        <div style="font-size: 32px; margin-bottom: 8px;">🔍</div>
+                        <div style="font-size: 13.5px; font-weight: 700; color: var(--text-primary);">未找到符合条件的社区 Mod</div>
+                        <div style="font-size: 11.5px; margin-top: 4px; color: var(--text-secondary);">请尝试清空关键词或放宽筛选条件</div>
+                        <button class="btn-compact" style="margin-top: 14px;" onclick="resetMarketFilters()">重置所有过滤条件</button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(item => {
+                html += `
+                    <div class="market-mod-row" onclick="openMarketPluginDetail('${item.id}')" title="点击进入 ${item.nameCn} 详情与版本下载页">
+                        <div class="market-mod-avatar">${item.icon}</div>
+                        <div class="market-mod-main">
+                            <div class="market-mod-title-row">
+                                <span class="market-mod-name-cn">${item.nameCn}</span>
+                                <span class="market-mod-sep">|</span>
+                                <span class="market-mod-name-en">${item.nameEn}</span>
+                                <span class="market-tag highlight">${item.categoryCn}</span>
+                                ${item.tags.slice(0, 2).map(t => `<span class="market-tag">${t}</span>`).join('')}
+                            </div>
+                            <div class="market-mod-desc">${item.desc}</div>
+                            <div class="market-mod-meta-row">
+                                <span class="market-meta-item">◎ ${item.compatVersion}</span>
+                                <span class="market-meta-item">⬇ ${item.downloads}</span>
+                                <span class="market-meta-item">↑ ${item.updatedTime}</span>
+                                <span class="market-meta-item">🌐 ${item.sourceCn}</span>
+                            </div>
                         </div>
-                        <div class="data-item-meta">
-                            作者: <code>NelsonFan</code> | 标签: [合成助手] [图鉴]<br>
-                            游戏内树状配方检索器，直观展示所需素材与掉落地图。<br>
-                            最新版本: v2.0.1 (适配 Unturned 3.26+)
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--btn-primary-bg); color: var(--btn-primary-text); font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Advanced Crafting Helper...')">⬇ 一键安装</button>
-                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开配方助手详情页')">查看详情</button>
+                        <span class="market-arrow">❯</span>
+                    </div>
+                `;
+            });
+
+            listEl.innerHTML = html;
+        }
+
+        // 打开插件详情与多版本下载页 (PCL2 经典第二张图)
+        function openMarketPluginDetail(modId) {
+            const mod = marketPluginsData.find(m => m.id === modId);
+            if (!mod) return;
+
+            activeDetailModId = modId;
+            activeDetailVersionTag = 'all';
+            // 默认展开第一个（最新推荐）版本
+            expandedAccordionId = mod.versions[0]?.id || null;
+
+            const container = document.getElementById('modContent');
+            if (!container) return;
+
+            // 提取该插件涉及的所有游戏版本（去重）
+            const gameVers = ['all', ...new Set(mod.versions.map(v => v.gameVer))];
+
+            container.className = 'market-detail-view';
+            container.innerHTML = `
+                <!-- 1. 顶部返回导航条 -->
+                <div class="detail-nav-bar">
+                    <button class="detail-back-btn" onclick="closeMarketPluginDetail()">
+                        <span>← 返回市场列表</span>
+                    </button>
+                    <span class="detail-title-crumb">${mod.nameCn} (${mod.nameEn})</span>
+                </div>
+
+                <!-- 2. 插件详情 Hero 卡片 (对标 PCL2 第二张图头部) -->
+                <div class="detail-hero-card">
+                    <div class="detail-hero-top">
+                        <div class="detail-hero-avatar">${mod.icon}</div>
+                        <div class="detail-hero-info">
+                            <div class="market-mod-title-row">
+                                <span class="market-mod-name-cn" style="font-size: 15px;">${mod.nameCn}</span>
+                                <span class="market-mod-sep">|</span>
+                                <span class="market-mod-name-en" style="font-size: 13px;">${mod.nameEn}</span>
+                                <span class="market-tag highlight">${mod.categoryCn}</span>
+                                ${mod.tags.map(t => `<span class="market-tag">${t}</span>`).join('')}
+                            </div>
+                            <div class="detail-hero-desc">${mod.fullDesc}</div>
+                            <div class="market-mod-meta-row" style="margin-top: 4px;">
+                                <span class="market-meta-item">作者: <strong style="color: var(--text-primary);">${mod.author}</strong></span>
+                                <span class="market-meta-item">◎ ${mod.compatVersion}</span>
+                                <span class="market-meta-item">⬇ 累计下载: ${mod.downloads}</span>
+                                <span class="market-meta-item">↑ 最近更新: ${mod.updatedTime}</span>
+                                <span class="market-meta-item">🌐 来源: ${mod.sourceCn}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>Minimalist HUD & Crosshair</span>
-                            <span style="color: var(--accent-gold-text); font-size: 11px;">★ 4.8 · 32.1k</span>
-                        </div>
-                        <div class="data-item-meta">
-                            作者: <code>PixelSniper</code> | 标签: [极简界面] [准星]<br>
-                            精简原版厚重血条，替换为半透明动态圆环与自定义准星。<br>
-                            最新版本: v1.3.0
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--btn-primary-bg); color: var(--btn-primary-text); font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Minimalist HUD...')">⬇ 一键安装</button>
-                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开极简准星详情页')">查看详情</button>
-                        </div>
+
+                    <!-- 快捷操作外链按钮组 (对标 PCL2: 转到 Modrinth / 转到 MC百科 / 复制名称) -->
+                    <div class="detail-actions-row">
+                        <button class="detail-action-btn" onclick="openExternalCommunity('${mod.id}', '${mod.communityUrl}')">
+                            <span>🌐</span>
+                            <span>转到 Unmod 社区</span>
+                        </button>
+                        <button class="detail-action-btn secondary" onclick="openExternalGithub('${mod.id}', '${mod.githubUrl}')">
+                            <span>📖</span>
+                            <span>查看 GitHub 源码 / 文档</span>
+                        </button>
+                        <button class="detail-action-btn secondary" onclick="copyPluginName('${mod.nameEn}')">
+                            <span>📋</span>
+                            <span>复制插件名称</span>
+                        </button>
                     </div>
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>Vehicle Physics Overhaul</span>
-                            <span style="color: var(--accent-gold-text); font-size: 11px;">★ 4.6 · 14.8k</span>
-                        </div>
-                        <div class="data-item-meta">
-                            作者: <code>DriftKing</code> | 标签: [载具操控] [手感优化]<br>
-                            优化原版越野车与直升机的阻尼与操控，显著减轻翻车失控。<br>
-                            最新版本: v1.1.2
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--btn-primary-bg); color: var(--btn-primary-text); font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Vehicle Physics Overhaul...')">⬇ 一键安装</button>
-                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开载具物理详情页')">查看详情</button>
-                        </div>
+                </div>
+
+                <!-- 3. 游戏版本过滤胶囊条 (对标 PCL2 第二张图中部的版本筛选) -->
+                <div class="detail-version-filter-bar">
+                    <span class="detail-ver-label">游戏版本:</span>
+                    ${gameVers.map(v => `
+                        <button class="detail-ver-pill ${activeDetailVersionTag === v ? 'active' : ''}" onclick="filterDetailVersions('${v}')">
+                            ${v === 'all' ? '全部' : v}
+                        </button>
+                    `).join('')}
+                </div>
+
+                <!-- 4. 版本下载手风琴卡片组 (对标 PCL2 第二张图的 Accordion 卡片) -->
+                <div id="detailAccordionContainer" class="detail-accordion-group">
+                    <!-- 动态渲染手风琴列表 -->
+                </div>
+            `;
+
+            renderDetailAccordions();
+        }
+
+        // 渲染详情页版本手风琴列表
+        function renderDetailAccordions() {
+            const accordionContainer = document.getElementById('detailAccordionContainer');
+            if (!accordionContainer || !activeDetailModId) return;
+
+            const mod = marketPluginsData.find(m => m.id === activeDetailModId);
+            if (!mod) return;
+
+            const versions = mod.versions.filter(v => {
+                if (activeDetailVersionTag === 'all') return true;
+                return v.gameVer === activeDetailVersionTag;
+            });
+
+            if (versions.length === 0) {
+                accordionContainer.innerHTML = `
+                    <div style="text-align: center; padding: 24px; color: var(--text-muted); background: var(--surface-card-bg); border-radius: 8px;">
+                        未找到适配 Unturned ${activeDetailVersionTag} 的发布版本，请选择“全部”查看更多历史兼容分支。
                     </div>
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>More Raid Alerts</span>
-                            <span style="color: var(--accent-gold-text); font-size: 11px;">★ 4.5 · 11.3k</span>
+                `;
+                return;
+            }
+
+            let html = '';
+            versions.forEach(v => {
+                const isExpanded = expandedAccordionId === v.id;
+                // 检查本地是否已安装
+                const alreadyInLocal = localPlugins.some(p => p.id === mod.id) || v.isInstalled;
+
+                html += `
+                    <div class="accordion-item ${isExpanded ? 'expanded' : ''}" id="acc-item-${v.id}">
+                        <div class="accordion-header" onclick="toggleMarketAccordion('${v.id}')">
+                            <div class="accordion-title-group">
+                                <span class="accordion-title">${v.title}</span>
+                                ${v.isLatest ? '<span class="accordion-badge latest">★ 最新正式版</span>' : ''}
+                                ${alreadyInLocal ? '<span class="accordion-badge installed">✔ 本地已安装</span>' : ''}
+                            </div>
+                            <span class="accordion-chevron">⮟</span>
                         </div>
-                        <div class="data-item-meta">
-                            作者: <code>BaseDefender</code> | 标签: [联机防抄] [警报]<br>
-                            当领地柜或金属建筑遭受爆破时，在屏幕右侧弹出醒目提示。<br>
-                            最新版本: v1.0.5
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--btn-primary-bg); color: var(--btn-primary-text); font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 More Raid Alerts...')">⬇ 一键安装</button>
-                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开防抄警报详情页')">查看详情</button>
-                        </div>
-                    </div>
-                    <div class="data-item-card">
-                        <div class="data-item-title">
-                            <span>Map GPS & Landmark Pin</span>
-                            <span style="color: var(--theme-accent); font-size: 11px; font-weight: 700;">★ 4.9 · 26.7k</span>
-                        </div>
-                        <div class="data-item-meta">
-                            作者: <code>ExplorerTeam</code> | 标签: [地图标注] [导航]<br>
-                            支持在游戏内地图右键添加自定义地标坐标，并小队共享指引。<br>
-                            最新版本: v2.3.0
-                        </div>
-                        <div style="display: flex; gap: 6px; margin-top: 10px;">
-                            <button class="btn-compact" style="background: var(--btn-primary-bg); color: var(--btn-primary-text); font-weight: 700;" onclick="showToast('⬇ 开始安装', '正在从 unmod.online 下载 Map GPS & Landmark Pin...')">⬇ 一键安装</button>
-                            <button class="btn-compact" onclick="showToast('🌐 详情页面', '打开地图标点详情页')">查看详情</button>
+                        <div class="accordion-body">
+                            <div class="accordion-changelog">
+                                <strong style="color: var(--theme-accent);">📌 版本更新日志：</strong><br>
+                                ${v.changelog}
+                            </div>
+                            <div class="accordion-meta-grid">
+                                <span>📅 发布时间: <code>${v.releaseDate}</code></span>
+                                <span>📦 文件大小: <code>${v.fileSize}</code></span>
+                                <span>🔒 校验和: <code>${v.sha256.substring(0, 16)}...</code></span>
+                                <span>⚙ 依赖: <code>BepInEx 5.4+</code></span>
+                            </div>
+                            <div class="accordion-actions">
+                                ${alreadyInLocal ? `
+                                    <button class="install-btn installed">
+                                        <span>✔</span>
+                                        <span>本地已安装此版本</span>
+                                    </button>
+                                    <button class="download-raw-btn" onclick="downloadRawPlugin('${mod.id}', '${v.id}')">
+                                        <span>💾</span>
+                                        <span>重新下载 .dll 文件</span>
+                                    </button>
+                                ` : `
+                                    <button id="install-btn-${v.id}" class="install-btn" onclick="installMarketPlugin('${mod.id}', '${v.id}')">
+                                        <span>⬇</span>
+                                        <span>一键安装到本地 (自动部署到 plugins)</span>
+                                    </button>
+                                    <button class="download-raw-btn" onclick="downloadRawPlugin('${mod.id}', '${v.id}')">
+                                        <span>💾</span>
+                                        <span>仅下载文件 (.dll)</span>
+                                    </button>
+                                `}
+                            </div>
                         </div>
                     </div>
                 `;
+            });
+
+            accordionContainer.innerHTML = html;
+        }
+
+        // 手风琴折叠展开切换
+        function toggleMarketAccordion(versionId) {
+            expandedAccordionId = expandedAccordionId === versionId ? null : versionId;
+            renderDetailAccordions();
+        }
+
+        // 详情页版本过滤
+        function filterDetailVersions(verTag) {
+            activeDetailVersionTag = verTag;
+            document.querySelectorAll('.detail-ver-pill').forEach(pill => {
+                const text = pill.innerText.trim();
+                const isMatch = (verTag === 'all' && text === '全部') || text === verTag;
+                pill.classList.toggle('active', isMatch);
+            });
+            renderDetailAccordions();
+        }
+
+        // 返回社区市场列表
+        function closeMarketPluginDetail() {
+            renderMarketBrowseView();
+        }
+
+        // 一键安装社区插件到本地 BepInEx/plugins
+        function installMarketPlugin(modId, versionId) {
+            const mod = marketPluginsData.find(m => m.id === modId);
+            if (!mod) return;
+            const ver = mod.versions.find(v => v.id === versionId);
+            if (!ver) return;
+
+            const btn = document.getElementById(`install-btn-${versionId}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<span>⏳</span><span>正在从 unmod.online 下载 (48%)...</span>`;
             }
+
+            setTimeout(() => {
+                if (btn) {
+                    btn.innerHTML = `<span>⚙</span><span>正在校验 SHA256 并解压至 BepInEx/plugins...</span>`;
+                }
+
+                setTimeout(() => {
+                    ver.isInstalled = true;
+                    // 如果本地列表中没有该插件，动态注入本地插件数组
+                    if (!localPlugins.some(p => p.id === mod.id)) {
+                        localPlugins.unshift({
+                            id: mod.id,
+                            nameCn: mod.nameCn,
+                            nameEn: mod.nameEn,
+                            assembly: `${mod.nameEn}.dll`,
+                            version: ver.gameVer,
+                            hasUpdate: false,
+                            enabled: true,
+                            icon: mod.icon,
+                            tags: mod.tags,
+                            desc: mod.desc,
+                            configFile: `${mod.nameEn}.cfg`
+                        });
+                    }
+
+                    // 更新本地已安装徽章
+                    const badge = document.getElementById('tabLocalBadge');
+                    if (badge) {
+                        badge.innerText = `(已安装 ${localPlugins.length})`;
+                    }
+
+                    updateFilterCounts();
+                    showToast("🎉 安装成功", `已成功将 ${mod.nameCn} 部署至 BepInEx/plugins 目录！`);
+                    renderDetailAccordions();
+                }, 450);
+            }, 400);
+        }
+
+        // 外部链接与辅助功能
+        function openExternalCommunity(modId, url) {
+            showToast("🌐 Unmod 社区", `已调起浏览器访问社区官方发布帖: ${url}`);
+        }
+
+        function openExternalGithub(modId, url) {
+            showToast("📖 开源仓库", `已调起浏览器访问 GitHub 源码仓库: ${url}`);
+        }
+
+        function copyPluginName(name) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(name).catch(() => {});
+            }
+            showToast("📋 复制成功", `已将插件标识 "${name}" 复制到系统剪贴板！`);
+        }
+
+        function downloadRawPlugin(modId, versionId) {
+            const mod = marketPluginsData.find(m => m.id === modId);
+            showToast("💾 下载文件", `正在将 ${mod?.nameEn || 'Plugin'}.dll 独立下载至本地 Downloads 目录`);
+        }
+
+        function handleMarketSearchInput(val) {
+            marketFilterState.keyword = val;
+            renderMarketModList();
+        }
+
+        function handleMarketSourceChange(val) {
+            marketFilterState.source = val;
+            renderMarketModList();
+        }
+
+        function handleMarketVersionChange(val) {
+            marketFilterState.version = val;
+            renderMarketModList();
+        }
+
+        function handleMarketCategoryChange(val) {
+            marketFilterState.category = val;
+            renderMarketModList();
+        }
+
+        function applyMarketFilters() {
+            renderMarketModList();
+            showToast("🔍 搜索完成", `已根据过滤条件检索出符合要求的社区 Mod`);
+        }
+
+        function resetMarketFilters() {
+            marketFilterState = {
+                keyword: '',
+                source: 'all',
+                version: 'all',
+                category: 'all'
+            };
+            const input = document.getElementById('marketSearchInput');
+            if (input) input.value = '';
+            const selSource = document.getElementById('marketSourceSelect');
+            if (selSource) selSource.value = 'all';
+            const selVer = document.getElementById('marketVersionSelect');
+            if (selVer) selVer.value = 'all';
+            const selCat = document.getElementById('marketCategorySelect');
+            if (selCat) selCat.value = 'all';
+
+            renderMarketModList();
+            showToast("🔄 条件已重置", "已恢复全部社区插件展示");
         }
 
         // 渲染 PCL2 模组列表行流
