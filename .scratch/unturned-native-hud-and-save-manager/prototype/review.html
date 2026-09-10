@@ -805,6 +805,7 @@
             flex: 1;
             min-height: 0;
             overflow: hidden;
+            position: relative;
         }
 
         /* 5 槽位导航条 (左侧视口固定，高度自适应且保证退出按键始终在底部) */
@@ -1184,6 +1185,19 @@
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
             scrollbar-color: var(--scrollbar-thumb, rgba(255, 255, 255, 0.18)) transparent;
+            overscroll-behavior-y: none;
+        }
+
+        /* 物理橡皮筋弹性包裹层 (Apple Rubber-band Overscroll Wrapper) */
+        .viewport-elastic-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 100%;
+            width: 100%;
+            transform: translate3d(0, 0, 0);
+            will-change: transform;
+            transform-origin: center center;
         }
 
         .frame-viewport::-webkit-scrollbar {
@@ -2977,29 +2991,30 @@
             background: rgba(229, 62, 62, 0.1);
         }
 
-        /* 底部多选/单选悬浮操作栏 (PCL2 经典 Floating Selection Dock) */
+        /* 保持在界面右下角的多选/单选悬浮操作栏 (PCL2 经典 Floating Selection Dock) */
         .pcl-floating-dock {
-            position: sticky;
-            bottom: 16px;
-            left: 50%;
-            margin: -50px auto 0 auto;
+            position: absolute;
+            right: 28px;
+            bottom: 24px;
+            margin: 0;
             width: fit-content;
-            max-width: 92%;
+            max-width: calc(100% - 250px);
             background: var(--surface-card-bg);
             border: 1px solid var(--theme-accent-border);
             border-radius: 28px;
             padding: 6px 16px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.32), 0 2px 10px var(--theme-accent-glow);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 2px 14px var(--theme-accent-glow);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: flex;
             align-items: center;
             gap: 12px;
-            z-index: 100;
-            transform: translateY(28px) scale(0.94);
+            z-index: 1000;
+            transform-origin: bottom right;
+            transform: translateY(24px) scale(0.92);
             opacity: 0;
             pointer-events: none;
-            transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease-out;
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease-out;
         }
 
         .pcl-floating-dock.visible {
@@ -3847,6 +3862,7 @@
 
                 <!-- 右侧可插拔 Page Frame 挂载容器 -->
                 <main class="frame-viewport">
+                    <div id="viewportElasticWrapper" class="viewport-elastic-wrapper">
 
                     <!-- A. 首页 (PrototypePlayPage) 挂载展示 -->
                     <div id="viewPlay" class="play-view">
@@ -4319,7 +4335,44 @@
                         </div>
                     </div>
 
+                    </div> <!-- /#viewportElasticWrapper -->
                 </main>
+
+                <!-- 保持在界面右下方的高优先级悬浮操作栏 (PCL2 经典 Floating Selection Dock) -->
+                <div id="pclFloatingDock" class="pcl-floating-dock">
+                    <div class="dock-select-label">
+                        <span>已选择</span>
+                        <span id="dockSelectCount">0</span>
+                        <span>个文件</span>
+                    </div>
+                    <div class="dock-divider"></div>
+                    <div class="dock-actions">
+                        <button class="dock-btn primary" onclick="batchUpdateMods()">
+                            <span>⇧</span>
+                            <span>更新已选</span>
+                        </button>
+                        <button class="dock-btn" onclick="batchToggleEnable(true)">
+                            <span>✓</span>
+                            <span>启用</span>
+                        </button>
+                        <button class="dock-btn" onclick="batchToggleEnable(false)">
+                            <span>⊖</span>
+                            <span>禁用</span>
+                        </button>
+                        <button class="dock-btn" onclick="batchOpenConfig()">
+                            <span>⚙</span>
+                            <span>配置</span>
+                        </button>
+                        <button class="dock-btn danger" onclick="batchDeleteMods()">
+                            <span>🗑</span>
+                            <span>删除</span>
+                        </button>
+                        <button class="dock-btn" onclick="clearModSelection()">
+                            <span>✕</span>
+                            <span>取消选择</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- 左下角中枢背景遮罩 -->
@@ -4979,6 +5032,7 @@
                 viewSettings.style.display = 'flex';
                 switchSettingsTab('appearance');
             }
+            updateFloatingDock();
         }
 
         // =========================================================================
@@ -5228,42 +5282,6 @@
                     <!-- 4. 模组行流列表 (PCL2 经典列表视图) -->
                     <div id="pclModList" class="pcl-mod-list">
                         <!-- 由 renderPclModRows 动态渲染 -->
-                    </div>
-
-                    <!-- 5. 底部多选/单选悬浮操作栏 (PCL2 经典 Floating Selection Dock) -->
-                    <div id="pclFloatingDock" class="pcl-floating-dock ${selectedModIds.size > 0 ? 'visible' : ''}">
-                        <div class="dock-select-label">
-                            <span>已选择</span>
-                            <span id="dockSelectCount">${selectedModIds.size}</span>
-                            <span>个文件</span>
-                        </div>
-                        <div class="dock-divider"></div>
-                        <div class="dock-actions">
-                            <button class="dock-btn primary" onclick="batchUpdateMods()">
-                                <span>⇧</span>
-                                <span>更新已选</span>
-                            </button>
-                            <button class="dock-btn" onclick="batchToggleEnable(true)">
-                                <span>✓</span>
-                                <span>启用</span>
-                            </button>
-                            <button class="dock-btn" onclick="batchToggleEnable(false)">
-                                <span>⊖</span>
-                                <span>禁用</span>
-                            </button>
-                            <button class="dock-btn" onclick="batchOpenConfig()">
-                                <span>⚙</span>
-                                <span>配置</span>
-                            </button>
-                            <button class="dock-btn danger" onclick="batchDeleteMods()">
-                                <span>🗑</span>
-                                <span>删除</span>
-                            </button>
-                            <button class="dock-btn" onclick="clearModSelection()">
-                                <span>✕</span>
-                                <span>取消选择</span>
-                            </button>
-                        </div>
                     </div>
                 `;
 
@@ -6198,7 +6216,9 @@
 
             if (countEl) countEl.innerText = count;
             if (dock) {
-                if (count > 0) {
+                const viewMods = document.getElementById('viewMods');
+                const isModsActive = viewMods && viewMods.style.display !== 'none';
+                if (count > 0 && isModsActive) {
                     dock.classList.add('visible');
                 } else {
                     dock.classList.remove('visible');
@@ -7064,9 +7084,99 @@
             setSimulatorWindowMode(isExpanded ? 'standard' : 'expanded');
         }
 
+        // =========================================================================
+        // Apple 物理动效：滚动边界橡皮筋阻尼回弹 (Rubber-band Overscroll Bounce)
+        // =========================================================================
+        function initOverscrollBounce() {
+            const viewport = document.querySelector('.frame-viewport');
+            const wrapper = document.getElementById('viewportElasticWrapper');
+            if (!viewport || !wrapper) return;
+
+            let overshootY = 0;
+            let releaseTimer = null;
+
+            // Apple WWDC 2018 Fluid Interfaces 经典橡皮筋阻尼公式
+            function rubberband(distance, dimension, constant = 0.55) {
+                return (distance * dimension * constant) / (dimension + constant * Math.abs(distance));
+            }
+
+            function triggerSpringBounce() {
+                overshootY = 0;
+                wrapper.style.transition = 'transform 0.44s cubic-bezier(0.25, 1.45, 0.5, 1)';
+                wrapper.style.transform = 'translate3d(0, 0, 0)';
+            }
+
+            // 1. 鼠标滚轮/触控板滚动过冲回弹
+            viewport.addEventListener('wheel', (e) => {
+                if (Math.abs(e.deltaY) < 0.5) return;
+
+                const maxScroll = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+                const currentScroll = viewport.scrollTop;
+
+                const atBottom = currentScroll >= maxScroll - 1 && e.deltaY > 0;
+                const atTop = currentScroll <= 1 && e.deltaY < 0;
+
+                if (atBottom || atTop || overshootY !== 0) {
+                    if (releaseTimer) clearTimeout(releaseTimer);
+
+                    overshootY += e.deltaY * 0.4;
+                    const clampedRubber = rubberband(overshootY, viewport.clientHeight, 0.45);
+
+                    wrapper.style.transition = 'none';
+                    wrapper.style.transform = `translate3d(0, ${-clampedRubber}px, 0)`;
+
+                    releaseTimer = setTimeout(triggerSpringBounce, 75);
+                }
+            }, { passive: true });
+
+            // 2. 触摸屏/指针拖拽过冲回弹
+            let touchStartY = 0;
+            let isTouching = false;
+
+            viewport.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 1) return;
+                touchStartY = e.touches[0].clientY;
+                isTouching = true;
+                if (releaseTimer) clearTimeout(releaseTimer);
+            }, { passive: true });
+
+            viewport.addEventListener('touchmove', (e) => {
+                if (!isTouching || e.touches.length !== 1) return;
+                const touchY = e.touches[0].clientY;
+                const deltaY = touchStartY - touchY;
+                touchStartY = touchY;
+
+                const maxScroll = Math.max(0, viewport.scrollHeight - viewport.clientHeight);
+                const currentScroll = viewport.scrollTop;
+
+                const atBottom = currentScroll >= maxScroll - 1 && deltaY > 0;
+                const atTop = currentScroll <= 1 && deltaY < 0;
+
+                if (atBottom || atTop || overshootY !== 0) {
+                    overshootY += deltaY * 0.6;
+                    const clampedRubber = rubberband(overshootY, viewport.clientHeight, 0.45);
+
+                    wrapper.style.transition = 'none';
+                    wrapper.style.transform = `translate3d(0, ${-clampedRubber}px, 0)`;
+                }
+            }, { passive: true });
+
+            const onTouchEnd = () => {
+                if (!isTouching) return;
+                isTouching = false;
+                if (overshootY !== 0) {
+                    triggerSpringBounce();
+                }
+            };
+
+            viewport.addEventListener('touchend', onTouchEnd, { passive: true });
+            viewport.addEventListener('touchcancel', onTouchEnd, { passive: true });
+        }
+
         // 页面初始化时挂载天体串珠拖拽与图标、状态机共振与设置页初始化
         window.addEventListener('DOMContentLoaded', () => {
             initBeadDragging();
+            initOverscrollBounce();
             setTimeout(() => updateBeadPosition(themeToIndex(activeAppTheme), false), 150);
             handleStateLoop();
             updateFilterCounts();
