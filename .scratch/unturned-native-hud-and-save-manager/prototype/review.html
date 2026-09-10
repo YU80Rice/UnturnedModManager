@@ -1910,27 +1910,106 @@
             50% { opacity: 0.85; transform: scale(1.18); }
         }
 
-        /* 更新公告卡片与吉祥物挂件 */
+        /* 更新公告卡片与吉祥物挂件 (集成防遮挡安全避让区与萌趣交互气泡) */
         .patch-notes-card {
             position: relative;
             overflow: visible;
         }
 
+        /* 核心安全避让：预留右侧 96px 空间，无论公告文字多长均在安全线内换行，绝不与吉祥物重叠 */
+        .patch-notes-card .patch-list {
+            padding-right: 96px;
+            transition: padding-right 0.32s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .patch-notes-card.mascot-collapsed .patch-list {
+            padding-right: 0;
+        }
+
         .mascot-chibi-badge {
             position: absolute;
-            right: 8px;
-            bottom: -10px;
-            font-size: 48px;
-            line-height: 1;
+            right: -6px;
+            bottom: -16px;
+            width: 104px;
+            height: 112px;
             user-select: none;
-            transition: all 0.35s var(--ease-spring);
-            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.6));
-            pointer-events: none;
+            transition: transform 0.38s cubic-bezier(0.25, 1.4, 0.5, 1), opacity 0.28s ease;
+            filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+            cursor: pointer;
+            z-index: 10;
+            transform-origin: bottom center;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .mascot-chibi-badge:hover .mascot-chibi-img {
+            transform: translateY(-5px) scale(1.06) rotate(1.5deg);
+        }
+
+        .mascot-chibi-badge.jiggle .mascot-chibi-img {
+            animation: mascotJiggle 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes mascotJiggle {
+            0% { transform: scale(1) rotate(0deg); }
+            30% { transform: scale(1.14) rotate(-6deg) translateY(-8px); }
+            60% { transform: scale(0.96) rotate(4deg) translateY(2px); }
+            100% { transform: scale(1) rotate(0deg) translateY(0); }
         }
 
         .mascot-chibi-badge.collapsed {
             opacity: 0;
-            transform: translateY(24px) scale(0.5);
+            transform: translateY(28px) scale(0.5);
+            pointer-events: none;
+        }
+
+        .mascot-chibi-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.26s cubic-bezier(0.25, 1.4, 0.5, 1);
+            pointer-events: auto;
+            display: block;
+        }
+
+        /* 吉祥物交互萌趣对话气泡 (Speech Bubble) */
+        .mascot-speech-bubble {
+            position: absolute;
+            bottom: 106px;
+            right: 8px;
+            background: var(--surface-card-bg, rgba(20, 26, 31, 0.95));
+            color: var(--text-primary);
+            border: 1px solid var(--theme-accent, #10b981);
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 12px var(--theme-accent-glow, rgba(16, 185, 129, 0.25));
+            opacity: 0;
+            transform: translateY(8px) scale(0.86);
+            transition: all 0.24s cubic-bezier(0.25, 1.4, 0.5, 1);
+            pointer-events: none;
+            z-index: 25;
+        }
+
+        .mascot-speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            right: 28px;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid var(--theme-accent, #10b981);
+        }
+
+        .mascot-chibi-badge:hover .mascot-speech-bubble,
+        .mascot-speech-bubble.force-show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
         }
 
         /* 下半区精选与更新日志 */
@@ -4025,8 +4104,14 @@
                                             <li>• 建立 Unturned 原生 UI Shell 空间原型与动态闭环。</li>
                                         </ul>
 
-                                        <!-- 吉祥物挂件位于更新公告栏右下角 -->
-                                        <div id="mascotBadge" class="mascot-chibi-badge">🦊</div>
+                                        <!-- 吉祥物挂件位于更新公告栏右下角 (预留96px文字避让区 + 萌趣语音气泡) -->
+                                        <div id="mascotBadge" class="mascot-chibi-badge" onclick="onMascotClick(event)" title="点击与 Q 版小狐狸吉祥物互动！">
+                                            <div class="mascot-speech-bubble" id="mascotBubble">模组环境就绪喵！✨</div>
+                                            <img src="assets/umm-mascot-chibi-v2.png" 
+                                                 onerror="this.src='../../../Assets/umm-mascot-chibi-v2.png'" 
+                                                 alt="UMM 吉祥物" 
+                                                 class="mascot-chibi-img" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -4997,16 +5082,55 @@
         }
 
         function toggleMascot() {
+            const card = document.querySelector('.patch-notes-card');
             const badge = document.getElementById('mascotBadge');
             const btnText = document.getElementById('mascotBtnText');
+            if (!badge) return;
+
             badge.classList.toggle('collapsed');
-            if (badge.classList.contains('collapsed')) {
-                btnText.innerText = "🦊 隐藏";
-                showToast("🦊 吉祥物", "吉祥物挂件已折叠隐藏");
-            } else {
-                btnText.innerText = "🦊 挂件";
-                showToast("🦊 吉祥物", "吉祥物挂件已在更新公告栏右下角展开");
+            const isCollapsed = badge.classList.contains('collapsed');
+            if (card) {
+                card.classList.toggle('mascot-collapsed', isCollapsed);
             }
+            if (isCollapsed) {
+                if (btnText) btnText.innerText = "🦊 显示挂件";
+                showToast("🦊 吉祥物", "吉祥物挂件已折叠收起，公告栏文字已恢复全宽展示");
+            } else {
+                if (btnText) btnText.innerText = "🦊 挂件";
+                showToast("🦊 吉祥物", "吉祥物挂件已展开，公告栏已自动避让安全区");
+            }
+        }
+
+        let mascotQuoteIndex = 0;
+        const mascotQuotes = [
+            "模组环境就绪喵！✨",
+            "今天去爱德华王子岛探险吗？🎒",
+            "已为你拦截 10 个安全插件~ 🛡️",
+            "点击右上角可以把我暂时收起来哦！🦊",
+            "Unturned 启动！准备好搜刮物资了吗？⚔️"
+        ];
+
+        function onMascotClick(event) {
+            if (event) event.stopPropagation();
+            const bubble = document.getElementById('mascotBubble');
+            const badge = document.getElementById('mascotBadge');
+            if (!bubble) return;
+
+            mascotQuoteIndex = (mascotQuoteIndex + 1) % mascotQuotes.length;
+            bubble.innerText = mascotQuotes[mascotQuoteIndex];
+            bubble.classList.add('force-show');
+
+            if (badge) {
+                badge.classList.remove('jiggle');
+                void badge.offsetWidth; // 触发 reflow 重新触发抖动
+                badge.classList.add('jiggle');
+                setTimeout(() => badge.classList.remove('jiggle'), 380);
+            }
+
+            if (window._mascotBubbleTimer) clearTimeout(window._mascotBubbleTimer);
+            window._mascotBubbleTimer = setTimeout(() => {
+                bubble.classList.remove('force-show');
+            }, 2600);
         }
 
         function switchNav(slot) {
