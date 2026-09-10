@@ -1910,106 +1910,139 @@
             50% { opacity: 0.85; transform: scale(1.18); }
         }
 
-        /* 更新公告卡片与吉祥物挂件 (集成防遮挡安全避让区与萌趣交互气泡) */
+        /* 顶栏小助理开关按钮高亮 */
+        #topMascotToggleBtn.active {
+            background: rgba(234, 88, 12, 0.16);
+            border-color: rgba(234, 88, 12, 0.45);
+            color: #fb923c;
+            box-shadow: 0 0 10px rgba(234, 88, 12, 0.2);
+        }
+
+        /* 更新公告卡片 (恢复标准全宽排版) */
         .patch-notes-card {
             position: relative;
             overflow: visible;
         }
 
-        /* 核心安全避让：预留右侧 96px 空间，无论公告文字多长均在安全线内换行，绝不与吉祥物重叠 */
-        .patch-notes-card .patch-list {
-            padding-right: 96px;
-            transition: padding-right 0.32s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .patch-notes-card.mascot-collapsed .patch-list {
-            padding-right: 0;
-        }
-
-        .mascot-chibi-badge {
+        /* 游戏启动页独立贴心小助理展台 (位于红箭头右下角绝对锚定位置，支持即时互动与多级彩蛋) */
+        .mascot-assistant-dock {
             position: absolute;
-            right: -6px;
-            bottom: -16px;
-            width: 104px;
-            height: 112px;
-            user-select: none;
-            transition: transform 0.38s cubic-bezier(0.25, 1.4, 0.5, 1), opacity 0.28s ease;
-            filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
-            cursor: pointer;
-            z-index: 10;
-            transform-origin: bottom center;
+            right: 24px;
+            bottom: 12px;
+            width: 128px;
+            height: 136px;
+            z-index: 850;
             display: flex;
-            align-items: flex-end;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            user-select: none;
+            cursor: pointer;
+            filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.55)) drop-shadow(0 2px 8px rgba(234, 88, 12, 0.25));
+            transition: transform 0.44s cubic-bezier(0.25, 1.45, 0.5, 1), opacity 0.32s ease;
+            transform-origin: bottom center;
         }
 
-        .mascot-chibi-badge:hover .mascot-chibi-img {
-            transform: translateY(-5px) scale(1.06) rotate(1.5deg);
+        .mascot-assistant-dock:hover .assistant-chibi-img {
+            transform: translateY(-8px) scale(1.06) rotate(-2deg);
         }
 
-        .mascot-chibi-badge.jiggle .mascot-chibi-img {
-            animation: mascotJiggle 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
+        .mascot-assistant-dock.jiggle .assistant-chibi-img {
+            animation: assistantBounce 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        @keyframes mascotJiggle {
+        @keyframes assistantBounce {
             0% { transform: scale(1) rotate(0deg); }
-            30% { transform: scale(1.14) rotate(-6deg) translateY(-8px); }
-            60% { transform: scale(0.96) rotate(4deg) translateY(2px); }
-            100% { transform: scale(1) rotate(0deg) translateY(0); }
+            25% { transform: scale(1.18, 0.84) translateY(4px) rotate(-5deg); }
+            55% { transform: scale(0.92, 1.12) translateY(-12px) rotate(4deg); }
+            80% { transform: scale(1.04, 0.98) translateY(-2px) rotate(-1deg); }
+            100% { transform: scale(1) translateY(0) rotate(0deg); }
         }
 
-        .mascot-chibi-badge.collapsed {
+        .mascot-assistant-dock.hidden-dock {
             opacity: 0;
-            transform: translateY(28px) scale(0.5);
+            transform: translateY(44px) scale(0.55);
             pointer-events: none;
         }
 
-        .mascot-chibi-img {
+        .assistant-chibi-img {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            transition: transform 0.26s cubic-bezier(0.25, 1.4, 0.5, 1);
-            pointer-events: auto;
+            transition: transform 0.28s cubic-bezier(0.25, 1.4, 0.5, 1);
             display: block;
+            animation: assistantIdleFloat 4.2s ease-in-out infinite;
         }
 
-        /* 吉祥物交互萌趣对话气泡 (Speech Bubble) */
-        .mascot-speech-bubble {
+        @keyframes assistantIdleFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-4px) rotate(0.8deg); }
+        }
+
+        /* 助理萌趣即时交互气泡 (Speech Bubble) */
+        .assistant-speech-bubble {
             position: absolute;
-            bottom: 106px;
-            right: 8px;
-            background: var(--surface-card-bg, rgba(20, 26, 31, 0.95));
+            bottom: 130px;
+            right: 4px;
+            background: var(--surface-card-bg, rgba(20, 26, 31, 0.96));
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             color: var(--text-primary);
-            border: 1px solid var(--theme-accent, #10b981);
-            border-radius: 8px;
-            padding: 5px 10px;
-            font-size: 11px;
+            border: 1.5px solid var(--theme-accent, #10b981);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 11.5px;
             font-weight: 600;
+            line-height: 1.45;
             white-space: nowrap;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 12px var(--theme-accent-glow, rgba(16, 185, 129, 0.25));
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 14px var(--theme-accent-glow, rgba(16, 185, 129, 0.25));
             opacity: 0;
-            transform: translateY(8px) scale(0.86);
-            transition: all 0.24s cubic-bezier(0.25, 1.4, 0.5, 1);
+            transform: translateY(10px) scale(0.86);
+            transition: all 0.26s cubic-bezier(0.25, 1.4, 0.5, 1);
             pointer-events: none;
-            z-index: 25;
+            z-index: 900;
         }
 
-        .mascot-speech-bubble::after {
+        .assistant-speech-bubble::after {
             content: '';
             position: absolute;
-            bottom: -6px;
-            right: 28px;
+            bottom: -7px;
+            right: 36px;
             width: 0;
             height: 0;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            border-top: 6px solid var(--theme-accent, #10b981);
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 7px solid var(--theme-accent, #10b981);
         }
 
-        .mascot-chibi-badge:hover .mascot-speech-bubble,
-        .mascot-speech-bubble.force-show {
+        .mascot-assistant-dock:hover .assistant-speech-bubble,
+        .assistant-speech-bubble.force-show {
             opacity: 1;
             transform: translateY(0) scale(1);
+        }
+
+        /* 点击爱心/粒子特效发射器 */
+        .assistant-fx-emitter {
+            position: absolute;
+            bottom: 80px;
+            right: 45px;
+            width: 1px;
+            height: 1px;
+            pointer-events: none;
+            z-index: 920;
+        }
+
+        .assistant-particle {
+            position: absolute;
+            font-size: 18px;
+            pointer-events: none;
+            animation: floatUpFade 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes floatUpFade {
+            0% { opacity: 1; transform: translate(0, 0) scale(0.6) rotate(0deg); }
+            50% { opacity: 1; transform: translate(var(--tx, 10px), -36px) scale(1.2) rotate(var(--rot, 15deg)); }
+            100% { opacity: 0; transform: translate(var(--tx, 20px), -68px) scale(0.85) rotate(var(--rot, 30deg)); }
         }
 
         /* 下半区精选与更新日志 */
@@ -3887,6 +3920,9 @@
 
                 <!-- 右侧次级浮动入口 -->
                 <div class="top-actions">
+                    <button id="topMascotToggleBtn" class="top-action-btn active" onclick="toggleMascotAssistant()" title="开启/收起游戏启动页贴心小助理">
+                        <span>🦊 助理</span>
+                    </button>
                     <button id="topTaskCenterBtn" class="top-action-btn" onclick="toggleActivityDrawer()" title="打开任务中心与操作履历">
                         <span>⚡ 任务中心</span>
                         <span id="taskCenterBadge" class="task-badge">3</span>
@@ -4090,28 +4126,17 @@
                                         </div>
                                     </div>
 
-                                    <!-- 更新公告卡片 (吉祥物挂件位于此栏右下角) -->
+                                    <!-- 更新公告卡片 (纯净展示，文字全宽展开，无任何遮挡风险) -->
                                     <div class="hud-card patch-notes-card">
                                         <div class="section-header">
                                             <span>v2.2.1 Patch Notes</span>
-                                            <button class="btn-compact" style="padding: 2px 8px; font-size: 10px;" onclick="toggleMascot()">
-                                                <span id="mascotBtnText">🦊 挂件</span>
-                                            </button>
+                                            <span style="font-size: 10px; color: var(--theme-accent); font-weight: 700; background: var(--theme-accent-bg); padding: 2px 7px; border-radius: 4px; border: 1px solid var(--theme-accent-border);">最新正式版</span>
                                         </div>
                                         <ul class="patch-list">
                                             <li>• 新增玩家自定义全屏壁纸与毛玻璃模糊。</li>
                                             <li>• 接入 <strong>PreviewMouseWheel</strong> 隧道路由，修复滚轮卡滞。</li>
                                             <li>• 建立 Unturned 原生 UI Shell 空间原型与动态闭环。</li>
                                         </ul>
-
-                                        <!-- 吉祥物挂件位于更新公告栏右下角 (预留96px文字避让区 + 萌趣语音气泡) -->
-                                        <div id="mascotBadge" class="mascot-chibi-badge" onclick="onMascotClick(event)" title="点击与 Q 版小狐狸吉祥物互动！">
-                                            <div class="mascot-speech-bubble" id="mascotBubble">模组环境就绪喵！✨</div>
-                                            <img src="assets/umm-mascot-chibi-v2.png" 
-                                                 onerror="this.src='../../../Assets/umm-mascot-chibi-v2.png'" 
-                                                 alt="UMM 吉祥物" 
-                                                 class="mascot-chibi-img" />
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -4422,6 +4447,18 @@
 
                     </div> <!-- /#viewportElasticWrapper -->
                 </main>
+
+                <!-- 游戏启动页独立贴心小助理 (位于界面右下角红箭头位置，具备多级彩蛋与即时反馈) -->
+                <div id="mascotAssistant" class="mascot-assistant-dock" onclick="onAssistantClick(event)" title="点击与贴心小助理互动！">
+                    <div class="assistant-speech-bubble" id="assistantBubble">
+                        <span id="assistantSpeechText">模组环境就绪喵！随时出发探险~ ✨</span>
+                    </div>
+                    <div class="assistant-fx-emitter" id="assistantFxEmitter"></div>
+                    <img src="assets/umm-mascot-chibi-v2.png" 
+                         onerror="this.src='../../../Assets/umm-mascot-chibi-v2.png'" 
+                         alt="UMM 贴心小助理" 
+                         class="assistant-chibi-img" />
+                </div>
 
                 <!-- 保持在界面右下方的高优先级悬浮操作栏 (PCL2 经典 Floating Selection Dock) -->
                 <div id="pclFloatingDock" class="pcl-floating-dock">
@@ -4865,6 +4902,13 @@
             });
 
             handleStateLoop();
+
+            // 小助理即时语境反馈
+            if (typeof showAssistantBubble === 'function') {
+                showAssistantBubble(checked 
+                    ? "模组引擎已点火！已安全挂载社区模组与钩子~ 🚀" 
+                    : "已切换为官方纯净模式，直连官方服务器安心防封！🛡️");
+            }
         }
 
         function syncDxvkToggle(checked) {
@@ -4886,6 +4930,13 @@
             });
 
             handleStateLoop();
+
+            // 小助理即时语境反馈
+            if (typeof showAssistantBubble === 'function') {
+                showAssistantBubble(checked 
+                    ? "Vulkan 渲染加速已开启！画面帧率更丝滑稳定⚡" 
+                    : "已回退至原版 DirectX 11 渲染通道~");
+            }
         }
 
         // =================================================================
@@ -5081,56 +5132,134 @@
             showToast("📦 诊断包已生成", `已打包脱敏日志: UMM-诊断包_${ts}.zip`);
         }
 
-        function toggleMascot() {
-            const card = document.querySelector('.patch-notes-card');
-            const badge = document.getElementById('mascotBadge');
-            const btnText = document.getElementById('mascotBtnText');
-            if (!badge) return;
+        // =========================================================================
+        // 游戏启动页独立贴心小助理 (Standalone Interactive Assistant & Easter Eggs)
+        // =========================================================================
+        let isMascotAssistantEnabled = true;
+        let assistantClickCount = 0;
+        let assistantBubbleTimer = null;
 
-            badge.classList.toggle('collapsed');
-            const isCollapsed = badge.classList.contains('collapsed');
-            if (card) {
-                card.classList.toggle('mascot-collapsed', isCollapsed);
+        const assistantDialogues = [
+            "你好呀！我是你的 UMM 贴心小助理！随时点击我可以互动哦~ 👋",
+            "今天打算去爱德华王子岛、夏威夷还是俄罗斯搜刮物资？🎒",
+            "背包快捷整理已就绪！Shift+点击箱子一秒归纳所有弹药📦",
+            "小心身后的毒液僵尸！记得常看顶栏的战术 HUD 标记🧭",
+            "发现空投直升机信号！准备好你的四驱越野车了吗？🚗💨",
+            "悄悄告诉你：点击左下角头像，可以切换白天/黑夜与主题调色板哦~ 🌙",
+            "网络插值已优化，与好友联机射击手感更加丝滑平顺~ 🎯"
+        ];
+
+        function toggleMascotAssistant() {
+            isMascotAssistantEnabled = !isMascotAssistantEnabled;
+            const btn = document.getElementById('topMascotToggleBtn');
+            if (btn) {
+                btn.classList.toggle('active', isMascotAssistantEnabled);
             }
-            if (isCollapsed) {
-                if (btnText) btnText.innerText = "🦊 显示挂件";
-                showToast("🦊 吉祥物", "吉祥物挂件已折叠收起，公告栏文字已恢复全宽展示");
+
+            const currentViewPlay = document.getElementById('viewPlay');
+            const isPlayActive = currentViewPlay && currentViewPlay.style.display !== 'none';
+            updateMascotAssistantVisibility(isPlayActive ? 'play' : 'other');
+
+            if (isMascotAssistantEnabled) {
+                showToast("🦊 贴心小助理", "小助理已在右下角就位，随时点击我互动哦！");
+                showAssistantBubble("我回来啦！今天也一起畅玩 Unturned 吧~ ✨");
             } else {
-                if (btnText) btnText.innerText = "🦊 挂件";
-                showToast("🦊 吉祥物", "吉祥物挂件已展开，公告栏已自动避让安全区");
+                showToast("🦊 贴心小助理", "小助理已暂时休眠，点击顶栏【🦊 助理】可随时唤醒！");
             }
         }
 
-        let mascotQuoteIndex = 0;
-        const mascotQuotes = [
-            "模组环境就绪喵！✨",
-            "今天去爱德华王子岛探险吗？🎒",
-            "已为你拦截 10 个安全插件~ 🛡️",
-            "点击右上角可以把我暂时收起来哦！🦊",
-            "Unturned 启动！准备好搜刮物资了吗？⚔️"
-        ];
+        // 兼容别名
+        function toggleMascot() {
+            toggleMascotAssistant();
+        }
 
-        function onMascotClick(event) {
-            if (event) event.stopPropagation();
-            const bubble = document.getElementById('mascotBubble');
-            const badge = document.getElementById('mascotBadge');
-            if (!bubble) return;
+        function showAssistantBubble(text) {
+            const bubble = document.getElementById('assistantBubble');
+            const speechText = document.getElementById('assistantSpeechText');
+            if (!bubble || !speechText) return;
 
-            mascotQuoteIndex = (mascotQuoteIndex + 1) % mascotQuotes.length;
-            bubble.innerText = mascotQuotes[mascotQuoteIndex];
+            speechText.innerText = text;
             bubble.classList.add('force-show');
 
-            if (badge) {
-                badge.classList.remove('jiggle');
-                void badge.offsetWidth; // 触发 reflow 重新触发抖动
-                badge.classList.add('jiggle');
-                setTimeout(() => badge.classList.remove('jiggle'), 380);
+            if (assistantBubbleTimer) clearTimeout(assistantBubbleTimer);
+            assistantBubbleTimer = setTimeout(() => {
+                bubble.classList.remove('force-show');
+            }, 3000);
+        }
+
+        function onAssistantClick(event) {
+            if (event) event.stopPropagation();
+            assistantClickCount++;
+
+            const dock = document.getElementById('mascotAssistant');
+
+            // 依据点击次数与彩蛋里程碑选择台词
+            let msg = "";
+            if (assistantClickCount === 1) {
+                msg = assistantDialogues[0];
+            } else if (assistantClickCount === 5) {
+                msg = "哇！你已经戳了我 5 次啦，耳朵都要被你捏扁了！(>_<) 💖";
+            } else if (assistantClickCount === 7) {
+                msg = "✨ 彩蛋时刻：控制台输入【/give 363】直接生成军用手枪！但联机服可不能作弊哦~ 🔫";
+            } else if (assistantClickCount === 10) {
+                msg = "🎉 恭喜解锁终极彩蛋成就：【金牌饲养员】！指挥官，谢谢你一路陪伴！🌟";
+            } else {
+                const idx = Math.floor(Math.random() * assistantDialogues.length);
+                msg = assistantDialogues[idx];
             }
 
-            if (window._mascotBubbleTimer) clearTimeout(window._mascotBubbleTimer);
-            window._mascotBubbleTimer = setTimeout(() => {
-                bubble.classList.remove('force-show');
-            }, 2600);
+            showAssistantBubble(msg);
+
+            // Emil Kowalski 果冻弹性回弹动画
+            if (dock) {
+                dock.classList.remove('jiggle');
+                void dock.offsetWidth;
+                dock.classList.add('jiggle');
+                setTimeout(() => dock.classList.remove('jiggle'), 420);
+            }
+
+            // 抛射爱心与星光特效粒子
+            spawnAssistantParticle();
+        }
+
+        function spawnAssistantParticle() {
+            const emitter = document.getElementById('assistantFxEmitter');
+            if (!emitter) return;
+
+            const particles = ['💖', '✨', '⭐', '🦊', '🐾', '🎮'];
+            const p = document.createElement('div');
+            p.className = 'assistant-particle';
+            p.innerText = particles[Math.floor(Math.random() * particles.length)];
+
+            const tx = (Math.random() * 60 - 30) + 'px';
+            const rot = (Math.random() * 60 - 30) + 'deg';
+            p.style.setProperty('--tx', tx);
+            p.style.setProperty('--rot', rot);
+
+            emitter.appendChild(p);
+            setTimeout(() => {
+                if (p.parentNode) p.parentNode.removeChild(p);
+            }, 900);
+        }
+
+        function updateMascotAssistantVisibility(slot) {
+            const assistant = document.getElementById('mascotAssistant');
+            if (!assistant) return;
+
+            const isPlay = (slot === 'play');
+            if (isPlay && isMascotAssistantEnabled) {
+                assistant.style.display = 'flex';
+                requestAnimationFrame(() => {
+                    assistant.classList.remove('hidden-dock');
+                });
+            } else {
+                assistant.classList.add('hidden-dock');
+                setTimeout(() => {
+                    if (!isPlay || !isMascotAssistantEnabled) {
+                        assistant.style.display = 'none';
+                    }
+                }, 320);
+            }
         }
 
         function switchNav(slot) {
@@ -5163,6 +5292,7 @@
                 switchSettingsTab('appearance');
             }
             updateFloatingDock();
+            updateMascotAssistantVisibility(slot);
         }
 
         // =========================================================================
@@ -7308,6 +7438,7 @@
             updateFilterCounts();
             switchSettingsTab('appearance');
             updateActivityBadge();
+            updateMascotAssistantVisibility('play');
         });
     </script>
 </body>
