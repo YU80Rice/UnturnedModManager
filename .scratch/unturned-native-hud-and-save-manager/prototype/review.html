@@ -1187,20 +1187,22 @@
                 // 官方纯净模式 (沉稳蓝灰调)
                 heroBtn.classList.add('blue-mode');
                 heroBtnText.innerText = "启动游戏 (官方纯净模式)";
-                heroSubtitle.innerText = "纯净原版 · 直连官方 BattlEye 服务器";
+                heroSubtitle.innerText = dxvkOn
+                    ? "纯净原版 · BattlEye 将阻止 dxgi.dll 并自动回退至 DX11 正常启动"
+                    : "纯净原版 · 直连官方 BattlEye 服务器";
 
                 banner.classList.add('blue-mode');
                 bannerIcon.innerText = "🌐";
                 bannerTitle.innerText = "官方纯净模式：";
                 bannerDesc.innerText = dxvkOn
-                    ? "BepInEx 已停用，已开启 BattlEye 反作弊守护 + DXVK Vulkan 渲染，支持加入全球官方服。"
+                    ? "BepInEx 已停用。检测到开启 DXVK，BattlEye 会阻止 dxgi.dll 并自动回退至 DirectX 11，游戏可安全启动直连官方服。"
                     : "BepInEx 已停用，已开启 BattlEye 反作弊守护，支持安全直连全球官方服务器。";
-                bannerTag.innerText = "官方安全模式";
-                bannerTag.style.color = "var(--unturned-accent-blue)";
+                bannerTag.innerText = dxvkOn ? "BE阻断dxgi·回退DX11" : "官方安全模式";
+                bannerTag.style.color = dxvkOn ? "var(--unturned-accent-gold)" : "var(--unturned-accent-blue)";
 
                 globalDot.classList.add('blue');
-                globalModeText.innerText = dxvkOn ? "官方纯净 (+BattlEye +DXVK)" : "官方纯净 (+BattlEye)";
-                globalBepText.innerText = "BepInEx 已停用";
+                globalModeText.innerText = "官方纯净 (+BattlEye)";
+                globalBepText.innerText = dxvkOn ? "dxgi被BE阻止(回退DX11)" : "BepInEx 已停用";
                 globalModsText.innerText = "原生游戏环境";
                 globalModsText.style.color = "var(--unturned-text-muted)";
 
@@ -1211,11 +1213,20 @@
                 bepStateText.innerText = "BepInEx 5.4.23.5 已停用 (启动原生游戏)";
             }
 
-            // DXVK 渲染器联动
+            // DXVK 渲染器联动 (还原实测 BattlEye 行为)
             if (dxvkOn) {
                 launchDxvkTag.style.display = "inline";
-                dxvkHint.innerText = "✔ 已激活 DXVK：游戏将使用 Vulkan 渲染器启动 (建议在 RTX 显卡上配合全屏无边框)";
-                dxvkHint.style.color = "var(--unturned-accent-green)";
+                if (bepOn) {
+                    launchDxvkTag.innerText = "[+DXVK Vulkan]";
+                    launchDxvkTag.style.color = "var(--unturned-accent-gold)";
+                    dxvkHint.innerText = "✔ 模组模式 (-NoBattlEye) 下 DXVK 完整生效：游戏将使用 Vulkan 渲染器启动以优化帧率稳定性。";
+                    dxvkHint.style.color = "var(--unturned-accent-green)";
+                } else {
+                    launchDxvkTag.innerText = "[DXVK受限·回退DX11]";
+                    launchDxvkTag.style.color = "var(--unturned-accent-gold)";
+                    dxvkHint.innerText = "⚠️ 官方 BattlEye 模式下会阻止 dxgi.dll 加载 (游戏将安全回退至 DirectX 11 正常启动，DXVK 不生效；若需 Vulkan 加速请在模组模式下使用)";
+                    dxvkHint.style.color = "var(--unturned-accent-gold)";
+                }
             } else {
                 launchDxvkTag.style.display = "none";
                 dxvkHint.innerText = "ℹ️ 检测到 NVIDIA GeForce RTX 4070 (支持 Vulkan 1.3，可按需开启提升帧率稳定性)";
@@ -1232,10 +1243,16 @@
             const origText = document.getElementById('launchBtnText').innerText;
             document.getElementById('launchBtnText').innerText = "⏳ 正在调起 Unturned 进程...";
 
-            const modeArgs = bepOn ? "-NoBattlEye" : "+BattlEye (Official)";
-            const renderStr = dxvkOn ? " [Vulkan/DXVK]" : " [DirectX 11]";
+            let modeArgs, renderNote;
+            if (bepOn) {
+                modeArgs = "Unturned.exe -NoBattlEye";
+                renderNote = dxvkOn ? " [DXVK Vulkan 生效]" : " [DirectX 11]";
+            } else {
+                modeArgs = "Unturned.exe (+BattlEye)";
+                renderNote = dxvkOn ? " [BE阻止dxgi，自动回退DX11启动]" : " [DirectX 11]";
+            }
 
-            showToast("🚀 游戏启动中", `通过 LaunchCoordinator 调起: Unturned.exe ${modeArgs}${renderStr}`);
+            showToast("🚀 游戏启动中", `调起: ${modeArgs}${renderNote}`);
 
             setTimeout(() => {
                 heroBtn.classList.remove('launching');

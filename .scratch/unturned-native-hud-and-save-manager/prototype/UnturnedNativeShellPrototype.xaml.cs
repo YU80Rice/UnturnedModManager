@@ -182,8 +182,8 @@ public partial class UnturnedNativeShellPrototype : UserControl
         else
         {
             GlobalStatusDot.Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x3B, 0x82, 0xF6)); // Blue
-            GlobalStatusModeText.Text = dxvkEnabled ? "官方原版 (+BattlEye +DXVK)" : "官方原版 (+BattlEye)";
-            GlobalStatusBepText.Text = "BepInEx 已停用";
+            GlobalStatusModeText.Text = "官方纯净 (+BattlEye)";
+            GlobalStatusBepText.Text = dxvkEnabled ? "dxgi被BE阻止(回退DX11)" : "BepInEx 已停用";
             GlobalStatusModsText.Text = "原生游戏环境";
             GlobalStatusModsText.Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x71, 0x80, 0x96));
         }

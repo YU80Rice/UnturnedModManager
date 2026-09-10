@@ -97,17 +97,19 @@ public partial class PrototypePlayPage : Page
             HeroLaunchBtn.Background = new SolidColorBrush(Color.FromArgb(0xD8, 0x1E, 0x3A, 0x5F));
             HeroLaunchBtn.BorderBrush = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
             HeroLaunchBtnText.Text = "启动游戏 (官方纯净模式)";
-            HeroSubtitleText.Text = "纯净原版 · 直连官方 BattlEye 服务器";
+            HeroSubtitleText.Text = dxvkOn
+                ? "纯净原版 · BattlEye 将阻止 dxgi.dll 并自动回退至 DX11 正常启动"
+                : "纯净原版 · 直连官方 BattlEye 服务器";
 
             StatusBanner.Background = new SolidColorBrush(Color.FromArgb(0xD0, 0x14, 0x22, 0x32));
             StatusBanner.BorderBrush = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
             StatusBannerIcon.Text = "🌐";
             StatusBannerTitle.Text = "官方纯净模式：";
             StatusBannerDesc.Text = dxvkOn
-                ? "BepInEx 已停用，已开启 BattlEye 保护 + DXVK Vulkan 渲染，支持加入全球官方服。"
+                ? "BepInEx 已停用。检测到开启 DXVK，BattlEye 会阻止 dxgi.dll 并自动回退至 DirectX 11，游戏可安全启动直连官方服。"
                 : "BepInEx 已停用，已开启 BattlEye 反作弊守护，支持安全直连全球官方服务器。";
-            StatusBannerTag.Text = "官方安全模式";
-            StatusBannerTag.Foreground = new SolidColorBrush(Color.FromRgb(0x3B, 0x82, 0xF6));
+            StatusBannerTag.Text = dxvkOn ? "BE阻断dxgi·回退DX11" : "官方安全模式";
+            StatusBannerTag.Foreground = new SolidColorBrush(dxvkOn ? Color.FromRgb(0xEC, 0xC9, 0x4B) : Color.FromRgb(0x3B, 0x82, 0xF6));
 
             ProfileTitleText.Text = "默认联机优化 (已停用加载)";
             ProfileTitleText.Foreground = new SolidColorBrush(Color.FromRgb(0x71, 0x80, 0x96));
@@ -116,13 +118,24 @@ public partial class PrototypePlayPage : Page
             BepInExStateText.Text = "BepInEx 5.4.23.5 已停用 (启动原生游戏)";
         }
 
-        // DXVK 标签与提示联动
+        // DXVK 标签与显卡适配提示联动 (实测还原 BattlEye 行为)
         if (dxvkOn)
         {
-            HeroLaunchTagText.Text = "[+DXVK]";
             HeroLaunchTagText.Visibility = Visibility.Visible;
-            DxvkGpuHintText.Text = "✔ 已激活 DXVK：游戏将使用 Vulkan 渲染器启动 (建议在 RTX 显卡上配合全屏无边框)";
-            DxvkGpuHintText.Foreground = new SolidColorBrush(Color.FromRgb(0x38, 0xA1, 0x69));
+            if (bepOn)
+            {
+                HeroLaunchTagText.Text = "[+DXVK Vulkan]";
+                HeroLaunchTagText.Foreground = new SolidColorBrush(Color.FromRgb(0xE2, 0xB0, 0x24));
+                DxvkGpuHintText.Text = "✔ 模组模式 (-NoBattlEye) 下 DXVK 完整生效：游戏将使用 Vulkan 渲染器启动以优化帧率稳定性。";
+                DxvkGpuHintText.Foreground = new SolidColorBrush(Color.FromRgb(0x38, 0xA1, 0x69));
+            }
+            else
+            {
+                HeroLaunchTagText.Text = "[DXVK受限·回退DX11]";
+                HeroLaunchTagText.Foreground = new SolidColorBrush(Color.FromRgb(0xEC, 0xC9, 0x4B));
+                DxvkGpuHintText.Text = "⚠️ 在官方 BattlEye 模式下，BE 会阻止 dxgi.dll 加载 (游戏将自动回退至 DX11 正常启动，DXVK 不生效；DXVK 渲染加速需在模组模式下生效)";
+                DxvkGpuHintText.Foreground = new SolidColorBrush(Color.FromRgb(0xEC, 0xC9, 0x4B));
+            }
         }
         else
         {
@@ -140,8 +153,19 @@ public partial class PrototypePlayPage : Page
 
     private void HeroLaunchBtn_Click(object sender, RoutedEventArgs e)
     {
-        string modeStr = IsBepInExEnabled ? "【模组模式】Unturned.exe -NoBattlEye" : "【官方纯净模式】Unturned.exe (+BattlEye)";
-        if (IsDxvkEnabled) modeStr += " (DXVK Vulkan)";
+        string modeStr;
+        if (IsBepInExEnabled)
+        {
+            modeStr = "【模组模式】Unturned.exe -NoBattlEye" + (IsDxvkEnabled ? " (+DXVK Vulkan 加载生效)" : "");
+        }
+        else
+        {
+            modeStr = "【官方纯净模式】Unturned.exe (+BattlEye)";
+            if (IsDxvkEnabled)
+            {
+                modeStr += "\n[BE 提示] BattlEye 服务将阻止 dxgi.dll 加载，游戏自动回退至 DirectX 11 正常启动。";
+            }
+        }
 
         MessageBox.Show(
             $"【启动模拟循环演示】\n\n已通过 LaunchCoordinator 调起目标进程：\n{modeStr}\n\n当前方案: {ProfileTitleText.Text}\n工作目录: E:\\Steam\\steamapps\\common\\Unturned",
