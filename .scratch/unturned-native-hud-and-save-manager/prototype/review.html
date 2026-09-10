@@ -56,9 +56,9 @@
 
             /* Profile Pill Tokens (针对红箭头处重点优化) */
             --pill-profile-bg: rgba(0, 0, 0, 0.45);
-            --pill-profile-border: rgba(226, 176, 36, 0.25);
+            --pill-profile-border: rgba(56, 161, 105, 0.35);
             --pill-profile-label: #a0aec0;
-            --pill-profile-val: #e2b024;
+            --pill-profile-val: #48bb78;
 
             /* Navigation Slots */
             --nav-pill-bg: rgba(26, 33, 40, 0.55);
@@ -66,20 +66,32 @@
             --nav-pill-selected: rgba(32, 41, 51, 0.95);
             --nav-pill-text: #ffffff;
             --nav-pill-border: #2a3441;
-            --nav-pill-active-border: #e2b024;
+            --nav-pill-active-border: #38a169;
 
-            /* Buttons & Controls */
-            --btn-compact-bg: #2d3748;
-            --btn-compact-border: #4a5568;
-            --btn-compact-text: #e2b024;
-            --btn-compact-hover-bg: #3f4d63;
+            /* Buttons & Controls (Graphite Slate 战术中性风 · 彻底消除杂乱暗金色) */
+            --btn-compact-bg: #1e252f;
+            --btn-compact-border: #334155;
+            --btn-compact-text: #cbd5e0;
+            --btn-compact-hover-bg: #2d3748;
             --btn-compact-hover-text: #ffffff;
-            --btn-primary-bg: #e2b024;
-            --btn-primary-text: #14191f;
+            --btn-primary-bg: #38a169;
+            --btn-primary-text: #ffffff;
+
+            /* Custom Accent Color Tokens (由调色盘动态改写) */
+            --accent-custom: #10b981;
+            --accent-custom-bg: rgba(16, 185, 129, 0.16);
+            --accent-custom-border: rgba(16, 185, 129, 0.45);
+            --accent-custom-glow: rgba(16, 185, 129, 0.35);
+
+            /* Wallpaper & Visual Filter Tokens */
+            --wallpaper-blur: 0px;
+            --wallpaper-mask: rgba(0, 0, 0, 0);
+            --wallpaper-image: none;
+            --wallpaper-opacity: 1;
 
             /* Floating Docks & Toast */
             --toast-bg: rgba(18, 25, 33, 0.95);
-            --toast-border: #e2b024;
+            --toast-border: #38a169;
             --toast-text: #ffffff;
             --toast-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
 
@@ -327,6 +339,35 @@
             display: flex;
             flex-direction: column;
             transition: background var(--duration-base) var(--ease-spring);
+            overflow: hidden;
+        }
+
+        .shell-wallpaper-backdrop {
+            position: absolute;
+            inset: 0;
+            background-image: var(--wallpaper-image, none);
+            background-size: cover;
+            background-position: center;
+            filter: blur(var(--wallpaper-blur, 0px));
+            opacity: var(--wallpaper-opacity, 1);
+            transform: scale(1.04);
+            pointer-events: none;
+            z-index: 0;
+            transition: filter 0.25s ease, opacity 0.25s ease, background-image 0.3s ease;
+        }
+
+        .shell-wallpaper-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--wallpaper-mask, rgba(0, 0, 0, 0));
+            pointer-events: none;
+            z-index: 1;
+            transition: background 0.25s ease;
+        }
+
+        .shell-topbar, .stage-body {
+            position: relative;
+            z-index: 2;
         }
 
         /* 顶部品牌与全局状态 */
@@ -647,7 +688,7 @@
             justify-content: center;
             gap: 10px;
             transition: all 0.22s var(--ease-spring);
-            box-shadow: 0 4px 16px rgba(56, 161, 105, 0.35);
+            box-shadow: 0 4px 16px var(--accent-custom-glow, rgba(56, 161, 105, 0.35));
             outline: none;
         }
 
@@ -1026,6 +1067,90 @@
             font-weight: bold;
         }
 
+        /* 调色盘与外观设置样式 (Color Palette & Custom Appearance Controls) */
+        .color-palette-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .color-picker-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .color-swatches-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .color-swatch-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface-inset-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 6px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.18s var(--ease-spring);
+            text-align: left;
+        }
+
+        .color-swatch-btn:hover {
+            border-color: var(--border-strong);
+            background: var(--surface-card-bg);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .color-swatch-btn.active {
+            border-color: var(--accent-custom);
+            box-shadow: 0 0 0 1px var(--accent-custom);
+            color: var(--text-primary);
+            background: var(--accent-custom-bg);
+        }
+
+        .swatch-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .range-slider-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            margin: 6px 0;
+        }
+
+        .range-slider-row input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent-custom);
+            cursor: pointer;
+        }
+
+        .range-slider-row span.val-label {
+            font-family: var(--unturned-font-mono);
+            font-weight: 700;
+            color: var(--text-primary);
+            min-width: 48px;
+            text-align: right;
+        }
+
         /* =========================================================
            解法 B：右下角状态变形流主题开关 (Morphing Trigger Anchor)
            折叠态为当前直立图标，展开态锚点平滑原地变形为收拢控制纽 ‹，杜绝翻倒电脑与重复图标
@@ -1232,6 +1357,9 @@
 
         <!-- 原型主视口 (Shell Viewport) -->
         <div class="shell-viewport">
+            <!-- 全屏沉浸壁纸与毛玻璃/暗色遮罩层 -->
+            <div id="wallpaperBackdrop" class="shell-wallpaper-backdrop"></div>
+            <div id="wallpaperOverlay" class="shell-wallpaper-overlay"></div>
 
             <!-- 1. 顶部状态与品牌层 -->
             <div class="shell-topbar">
@@ -1497,42 +1625,19 @@
                     <!-- D. 启动器设置 (PrototypeSettingsView) -->
                     <div id="viewSettings" class="data-view" style="display: none;">
                         <div class="data-nav-tabs">
-                            <button class="data-tab-btn active">🛠️ 通用与路径</button>
-                            <button class="data-tab-btn" onclick="showToast('🎨 外观设置', '支持自定义壁纸、背景模糊度与主题色选择')">🎨 外观与壁纸</button>
-                            <button class="data-tab-btn" onclick="showToast('🌐 网络诊断', 'unmod.online API 连接测试与延迟检测')">🌐 网络与诊断</button>
+                            <button id="tabSettingsAppearance" class="data-tab-btn active" onclick="switchSettingsTab('appearance')">🎨 外观、调色盘与壁纸</button>
+                            <button id="tabSettingsGeneral" class="data-tab-btn" onclick="switchSettingsTab('general')">🛠️ 路径与运行环境</button>
+                            <button id="tabSettingsNetwork" class="data-tab-btn" onclick="switchSettingsTab('network')">🌐 社区网络与诊断</button>
                         </div>
 
-                        <div class="data-card-grid" style="grid-template-columns: 1fr 1fr;">
-                            <div class="data-item-card">
-                                <div class="data-item-title">
-                                    <span>游戏根目录路径</span>
-                                    <span style="color: var(--accent-green-text); font-size: 11px;">已校验</span>
-                                </div>
-                                <div class="data-item-meta">
-                                    当前检测路径: <code>E:\Steam\steamapps\common\Unturned</code><br>
-                                    主执行程序: <code>Unturned.exe</code> (v3.26.3.11)<br>
-                                    Steam 状态: 已连接 Steam 客户端
-                                </div>
-                                <button class="btn-compact" style="margin-top: 10px;" onclick="showToast('🔍 路径浏览', '调起文件夹选择器重新定位游戏目录')">更改路径...</button>
-                            </div>
-
-                            <div class="data-item-card">
-                                <div class="data-item-title">
-                                    <span>自定义全屏沉浸壁纸</span>
-                                    <span style="color: var(--accent-gold-text); font-size: 11px;">v2.2.1 新增</span>
-                                </div>
-                                <div class="data-item-meta">
-                                    当前模式: 默认沉浸暗调末日背景<br>
-                                    背景毛玻璃模糊: 12 px | 暗色遮罩: 60%<br>
-                                    支持导入 PNG / JPG 4K 高清自定义壁纸
-                                </div>
-                                <button class="btn-compact" style="margin-top: 10px;" onclick="showToast('🖼️ 更换壁纸', '选择本地壁纸图片作为启动器全屏底座')">选择壁纸图片...</button>
-                            </div>
+                        <!-- 设置子域动态渲染挂载容器 -->
+                        <div id="settingsContent" class="data-card-grid" style="grid-template-columns: 1fr 1fr;">
+                            <!-- 由 switchSettingsTab 动态装载 -->
                         </div>
 
                         <div style="background: var(--surface-inset-bg); border: 1px dashed var(--border-strong); border-radius: 6px; padding: 10px 14px; font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
-                            <span style="color: var(--accent-gold);">💡</span>
-                            <span><strong>Ticket 03 迁移契约说明：</strong>生产现有的 <code>SettingsPage.xaml</code> 及其壁纸个性化、主题管理器服务，将在 Ticket 03 中通过同一套 Seam 零改动迁入。</span>
+                            <span style="color: var(--accent-custom);">💡</span>
+                            <span><strong>Ticket 03 迁移契约说明：</strong>生产现有的 <code>SettingsPage.xaml</code> 及其壁纸个性化、主题管理器服务（含 <code>.ummtheme</code> 格式），将在 Ticket 03 中通过同一套 Seam 零改动迁入。</span>
                         </div>
                     </div>
 
@@ -1670,6 +1775,10 @@
 
     <script>
         let toastTimer = null;
+        let activeCustomAccent = '#10b981';
+        let currentWallpaperBlur = 0;
+        let currentWallpaperMask = 0;
+        let customWallpaperActive = false;
 
         function showToast(icon, msg) {
             const toast = document.getElementById('toastNotification');
@@ -1717,7 +1826,7 @@
             const profilePillBox = document.getElementById('profilePillBox');
 
             if (bepOn) {
-                // 模组模式 (绿色风格)
+                // 模组模式 (绿色风格 / 自定义调色盘强调色)
                 heroBtn.classList.remove('blue-mode');
                 heroBtnText.innerText = "启动游戏 (模组模式)";
                 heroSubtitle.innerText = "模组就绪 · 将加载 12 个本地插件与 BUE";
@@ -1743,6 +1852,9 @@
 
                 bepStateDot.style.color = "var(--accent-green)";
                 bepStateText.innerText = "BepInEx 5.4.23.5 (x64) 运行就绪";
+
+                // 方案 A 状态共振：导航激活槽位与模组模式/自定义强调色共振
+                document.documentElement.style.setProperty('--nav-pill-active-border', activeCustomAccent || 'var(--accent-green)');
             } else {
                 // 官方纯净模式 (沉稳蓝灰调)
                 heroBtn.classList.add('blue-mode');
@@ -1772,6 +1884,9 @@
 
                 bepStateDot.style.color = "var(--text-muted)";
                 bepStateText.innerText = "BepInEx 5.4.23.5 已停用 (启动原生游戏)";
+
+                // 方案 A 状态共振：导航激活槽位与官方纯净蓝共振！
+                document.documentElement.style.setProperty('--nav-pill-active-border', 'var(--accent-blue)');
             }
 
             // DXVK 渲染器联动 (还原实测 BattlEye 行为)
@@ -1875,6 +1990,7 @@
             } else if (slot === 'settings') {
                 document.getElementById('navSettings').classList.add('active');
                 viewSettings.style.display = 'flex';
+                switchSettingsTab('appearance');
             }
         }
 
@@ -2144,6 +2260,384 @@
         }
 
         // =================================================================
+        // 启动器设置域与自定义强调色调色盘 (Settings Subdomain & Color Palette)
+        // =================================================================
+        function switchSettingsTab(tab) {
+            const btnAppearance = document.getElementById('tabSettingsAppearance');
+            const btnGeneral = document.getElementById('tabSettingsGeneral');
+            const btnNetwork = document.getElementById('tabSettingsNetwork');
+            const container = document.getElementById('settingsContent');
+
+            if (btnAppearance) btnAppearance.classList.remove('active');
+            if (btnGeneral) btnGeneral.classList.remove('active');
+            if (btnNetwork) btnNetwork.classList.remove('active');
+
+            if (tab === 'appearance') {
+                if (btnAppearance) btnAppearance.classList.add('active');
+                
+                const themeName = activeAppTheme === 'light' ? '白天模式 (明亮战术色)' : (activeAppTheme === 'dark' ? '黑夜模式 (经典军工暗调)' : '跟随系统');
+
+                container.innerHTML = `
+                    <!-- 1. 启动器外观基座卡片 -->
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>启动器外观底座</span>
+                            <span id="settingsThemeBadge" style="color: var(--accent-custom); font-size: 11px;">${themeName}</span>
+                        </div>
+                        <div class="data-item-meta" style="margin-bottom: 12px;">
+                            基于三层语义代币架构（Primitive → Semantic → Component），支持高对比白天模式与军工黑夜模式无缝切换。
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button class="btn-compact ${activeAppTheme === 'light' ? 'active' : ''}" style="${activeAppTheme === 'light' ? 'border-color: var(--accent-custom); color: var(--accent-custom);' : ''}" onclick="setAppTheme('light'); switchSettingsTab('appearance');">☀ 白天模式</button>
+                            <button class="btn-compact ${activeAppTheme === 'dark' ? 'active' : ''}" style="${activeAppTheme === 'dark' ? 'border-color: var(--accent-custom); color: var(--accent-custom);' : ''}" onclick="setAppTheme('dark'); switchSettingsTab('appearance');">🌙 黑夜模式</button>
+                            <button class="btn-compact ${activeAppTheme === 'system' ? 'active' : ''}" style="${activeAppTheme === 'system' ? 'border-color: var(--accent-custom); color: var(--accent-custom);' : ''}" onclick="setAppTheme('system'); switchSettingsTab('appearance');">💻 跟随系统</button>
+                        </div>
+                        <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 10px;">
+                            💡 提示：右下角常驻悬浮控制纽亦可在任意界面一键极速切换底座模式。
+                        </div>
+                    </div>
+
+                    <!-- 2. 战术强调色调色盘卡片 (自由取色色谱图 + 16进制输入 + 预设色) -->
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>战术强调色调色盘</span>
+                            <span style="color: var(--accent-custom); font-size: 11px;">自由取色 & Hex 代码</span>
+                        </div>
+                        <div class="data-item-meta" style="margin-bottom: 10px;">
+                            支持在色谱图上自由吸色或直接输入 16 进制颜色代码。模组模式启动按钮、高亮指示槽位将即刻产生视觉共鸣。
+                        </div>
+                        <div class="color-palette-container">
+                            <div class="color-picker-row">
+                                <label style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-secondary); cursor: pointer;">
+                                    <span>色谱取色:</span>
+                                    <input type="color" id="colorPickerAccent" value="${activeCustomAccent}" oninput="handleColorPickerInput(this.value)" style="width: 44px; height: 32px; border: 1px solid var(--border-strong); border-radius: 6px; cursor: pointer; background: transparent; padding: 2px;">
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-secondary);">
+                                    <span>Hex 代码:</span>
+                                    <input type="text" id="hexInputAccent" value="${activeCustomAccent.toUpperCase()}" oninput="handleHexCodeInput(this.value)" placeholder="#10B981" maxlength="7" style="font-family: var(--unturned-font-mono); font-size: 12px; font-weight: 700; width: 84px; padding: 5px 8px; background: var(--surface-inset-bg); border: 1px solid var(--border-strong); border-radius: 6px; color: var(--text-primary); text-transform: uppercase;">
+                                </label>
+                                <div id="accentPreviewChip" style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; background: var(--accent-custom-bg); border: 1px solid var(--accent-custom-border); font-size: 11px; font-weight: 700; color: var(--text-primary);">
+                                    <span style="width: 9px; height: 9px; border-radius: 50%; background: var(--accent-custom); box-shadow: 0 0 6px var(--accent-custom);"></span>
+                                    <span id="accentPreviewText">${activeCustomAccent.toUpperCase()}</span>
+                                </div>
+                            </div>
+
+                            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">精选战术预设配色：</div>
+                            <div class="color-swatches-grid">
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#10b981' ? 'active' : ''}" onclick="applyCustomAccent('#10b981')">
+                                    <span class="swatch-dot" style="background: #10b981;"></span>
+                                    <span>战术绿 (默认)</span>
+                                </button>
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#3b82f6' ? 'active' : ''}" onclick="applyCustomAccent('#3b82f6')">
+                                    <span class="swatch-dot" style="background: #3b82f6;"></span>
+                                    <span>防作弊钴蓝</span>
+                                </button>
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#e2b024' ? 'active' : ''}" onclick="applyCustomAccent('#e2b024')">
+                                    <span class="swatch-dot" style="background: #e2b024;"></span>
+                                    <span>废土荒野金</span>
+                                </button>
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#a855f7' ? 'active' : ''}" onclick="applyCustomAccent('#a855f7')">
+                                    <span class="swatch-dot" style="background: #a855f7;"></span>
+                                    <span>赛博极光紫</span>
+                                </button>
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#ec4899' ? 'active' : ''}" onclick="applyCustomAccent('#ec4899')">
+                                    <span class="swatch-dot" style="background: #ec4899;"></span>
+                                    <span>樱花粉 Sakura</span>
+                                </button>
+                                <button class="color-swatch-btn ${activeCustomAccent.toLowerCase() === '#ef4444' ? 'active' : ''}" onclick="applyCustomAccent('#ef4444')">
+                                    <span class="swatch-dot" style="background: #ef4444;"></span>
+                                    <span>警戒战术红</span>
+                                </button>
+                            </div>
+
+                            <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                                <button class="btn-compact" onclick="resetCustomAccent()">↺ 恢复默认战术绿</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 自定义壁纸与滤镜卡片 -->
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>全屏沉浸壁纸与毛玻璃滤镜</span>
+                            <span style="color: var(--accent-custom); font-size: 11px;">v2.2.1 实机契约</span>
+                        </div>
+                        <div class="data-item-meta" style="margin-bottom: 10px;">
+                            支持加载高清自定义壁纸，并可无级微调毛玻璃模糊度与暗色遮罩浓度。
+                        </div>
+                        <div class="range-slider-row">
+                            <span>毛玻璃模糊 (Blur):</span>
+                            <input type="range" id="wallpaperBlurSlider" min="0" max="30" value="${currentWallpaperBlur}" oninput="updateWallpaperBlur(this.value)">
+                            <span id="wallpaperBlurVal" class="val-label">${currentWallpaperBlur} px</span>
+                        </div>
+                        <div class="range-slider-row">
+                            <span>暗色遮罩暗度 (Mask):</span>
+                            <input type="range" id="wallpaperMaskSlider" min="0" max="90" value="${currentWallpaperMask}" oninput="updateWallpaperMask(this.value)">
+                            <span id="wallpaperMaskVal" class="val-label">${currentWallpaperMask}%</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button class="btn-compact" onclick="simulateWallpaperSelect()">🖼️ 选择壁纸图片...</button>
+                            <button class="btn-compact" onclick="resetWallpaper()">重置壁纸与滤镜</button>
+                        </div>
+                    </div>
+
+                    <!-- 4. 主题包生态卡片 -->
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>主题包生态契约 (.ummtheme)</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">ZIP 开放格式</span>
+                        </div>
+                        <div class="data-item-meta">
+                            UMM 采用开放的 <code>.ummtheme</code> 压缩包规范（如仓库内置的 <code>SakuraPink.ummtheme</code>）。调色盘所选色彩与壁纸设定可一键序列化输出，或分享给其他玩家。
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button class="btn-compact" onclick="showToast('💾 导出主题', '已将当前自定义强调色配置导出为 CustomTheme.ummtheme')">导出为 .ummtheme 主题包</button>
+                            <button class="btn-compact" onclick="showToast('📂 主题目录', '已打开主题包存放路径: AppData/Roaming/UMM/Themes')">浏览主题包目录...</button>
+                        </div>
+                    </div>
+                `;
+            } else if (tab === 'general') {
+                if (btnGeneral) btnGeneral.classList.add('active');
+                container.innerHTML = `
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>游戏根目录路径</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">已校验一致</span>
+                        </div>
+                        <div class="data-item-meta">
+                            当前检测路径: <code>E:\\Steam\\steamapps\\common\\Unturned</code><br>
+                            主执行程序: <code>Unturned.exe</code> (v3.26.3.11)<br>
+                            Steam 客户端: 已连接 (SteamID64: 76561198000000000)
+                        </div>
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <button class="btn-compact" onclick="showToast('🔍 路径浏览', '调起文件夹选择器重新定位游戏目录')">更改路径...</button>
+                            <button class="btn-compact" onclick="showToast('📂 打开目录', '已在文件资源管理器中打开 Unturned 根目录')">在资源管理器中打开</button>
+                        </div>
+                    </div>
+
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>BepInEx 模组加载器核心</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">v5.4.23.5 x64</span>
+                        </div>
+                        <div class="data-item-meta">
+                            注入通道: <code>winhttp.dll</code> (Unity Doorstop 引导器)<br>
+                            插件扫描目录: <code>Unturned/BepInEx/plugins/</code><br>
+                            安全隔离: 官方 BattlEye 纯净模式下自动旁路卸载
+                        </div>
+                        <button class="btn-compact" style="margin-top: 10px;" onclick="triggerRepairSimulation()">🔧 校验与修复注入钩子</button>
+                    </div>
+
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>DXVK Vulkan 渲染组件</span>
+                            <span style="color: var(--accent-blue-text); font-size: 11px;">DirectX 11 转 Vulkan</span>
+                        </div>
+                        <div class="data-item-meta">
+                            动态库: <code>dxgi.dll</code> / <code>d3d11.dll</code><br>
+                            运行特征: 模组模式 (-NoBattlEye) 享受 Vulkan 帧率稳定加速；官方模式 BattlEye 会阻止 dxgi 并由游戏安全回退 DX11。
+                        </div>
+                        <button class="btn-compact" style="margin-top: 10px;" onclick="showToast('⚡ DXVK 检测', 'DXVK 运行时版本 2.3 就绪，驱动支持 Vulkan 1.3')">检测 Vulkan 运行时...</button>
+                    </div>
+
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>启动参数与高级调试</span>
+                            <span style="color: var(--text-muted); font-size: 11px;">配置注入</span>
+                        </div>
+                        <div class="data-item-meta">
+                            预设参数: <code>-nographics -batchmode</code> (未启用)<br>
+                            控制台日志: <code>Unturned/BepInEx/LogOutput.log</code><br>
+                            崩溃转储: <code>AppData/Local/Temp/UnturnedCrashes</code>
+                        </div>
+                        <button class="btn-compact" style="margin-top: 10px;" onclick="showToast('⚙️ 高级参数', '已打开自定义启动参数对话框')">编辑启动参数...</button>
+                    </div>
+                `;
+            } else if (tab === 'network') {
+                if (btnNetwork) btnNetwork.classList.add('active');
+                container.innerHTML = `
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>官方社区 API 连通性</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">HTTP 200 OK</span>
+                        </div>
+                        <div class="data-item-meta">
+                            API 端点: <code>https://unmod.online/api/v1/</code><br>
+                            往返延迟 (RTT): <strong>42 ms</strong> (TLS 1.3 加密)<br>
+                            账户认证: <code>YU80Rice</code> (凭据 Token 活跃有效)
+                        </div>
+                        <button class="btn-compact" style="margin-top: 10px;" onclick="showToast('🌐 网络测速', '向 unmod.online 发起 HTTP HEAD Ping: 41.8ms，连接极佳！')">重新测试连接延迟</button>
+                    </div>
+
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>模组工坊索引同步</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">已是最新</span>
+                        </div>
+                        <div class="data-item-meta">
+                            已缓存元数据: 1,420+ 个模组 / 插件<br>
+                            上次同步时间: 2026-09-10 16:45<br>
+                            本地差异校验: 无冲突、无过期清单
+                        </div>
+                        <button class="btn-compact" style="margin-top: 10px;" onclick="showToast('🔄 索引同步', '已从 unmod.online 增量拉取最新 3 个模组清单')">立即拉取增量索引</button>
+                    </div>
+
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>脱敏诊断报告生成</span>
+                            <span style="color: var(--accent-gold-text); font-size: 11px;">排障专用</span>
+                        </div>
+                        <div class="data-item-meta">
+                            自动清洗 Steam 账户 Token、绝对敏感路径与私有凭据。<br>
+                            包含项: BepInEx 堆栈、DXVK Vulkan 初始化日志、OS 版本号。
+                        </div>
+                        <button class="btn-compact" style="margin-top: 10px;" onclick="triggerExportDiagnostics()">📦 导出脱敏诊断包 (.zip)</button>
+                    </div>
+
+                    <div class="data-item-card">
+                        <div class="data-item-title">
+                            <span>CDN 镜像源加速</span>
+                            <span style="color: var(--accent-green-text); font-size: 11px;">智能优选</span>
+                        </div>
+                        <div class="data-item-meta">
+                            当前首选: <code>Cloudflare Global CDN</code> (优选)<br>
+                            备选镜像: <code>Hong Kong Edge 01</code> / <code>Direct Origin</code><br>
+                            支持自定义代理服务器 (HTTP / SOCKS5)
+                        </div>
+                        <button class="btn-compact" style="margin-top: 10px;" onclick="showToast('🚀 CDN 切换', '已自动优选延迟最低的节点: Cloudflare Edge (38ms)')">优选最佳节点</button>
+                    </div>
+                `;
+            }
+        }
+
+        // =================================================================
+        // 战术调色盘色彩计算与视觉共鸣 (Color Palette Resonance Engine)
+        // =================================================================
+        function hexToRgba(hex, alpha) {
+            hex = hex.replace('#', '');
+            if (hex.length === 3) {
+                hex = hex.split('').map(c => c + c).join('');
+            }
+            const r = parseInt(hex.substring(0, 2), 16) || 0;
+            const g = parseInt(hex.substring(2, 4), 16) || 0;
+            const b = parseInt(hex.substring(4, 6), 16) || 0;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function handleColorPickerInput(hex) {
+            applyCustomAccent(hex, false);
+            const hexInput = document.getElementById('hexInputAccent');
+            if (hexInput) hexInput.value = hex.toUpperCase();
+        }
+
+        function handleHexCodeInput(hex) {
+            if (!hex.startsWith('#')) hex = '#' + hex;
+            if (/^#([0-9A-Fa-f]{3}){1,2}$/.test(hex)) {
+                applyCustomAccent(hex, false);
+                const picker = document.getElementById('colorPickerAccent');
+                if (picker) {
+                    if (hex.length === 4) {
+                        const r = hex[1], g = hex[2], b = hex[3];
+                        picker.value = `#${r}${r}${g}${g}${b}${b}`;
+                    } else {
+                        picker.value = hex;
+                    }
+                }
+            }
+        }
+
+        function applyCustomAccent(hex, showNotification = true) {
+            if (!hex.startsWith('#')) hex = '#' + hex;
+            if (!/^#([0-9A-Fa-f]{3}){1,2}$/.test(hex)) return;
+            if (hex.length === 4) {
+                const r = hex[1], g = hex[2], b = hex[3];
+                hex = `#${r}${r}${g}${g}${b}${b}`;
+            }
+
+            activeCustomAccent = hex;
+
+            const root = document.documentElement;
+            root.style.setProperty('--accent-custom', hex);
+            root.style.setProperty('--accent-custom-bg', hexToRgba(hex, 0.16));
+            root.style.setProperty('--accent-custom-border', hexToRgba(hex, 0.45));
+            root.style.setProperty('--accent-custom-glow', hexToRgba(hex, 0.35));
+            root.style.setProperty('--accent-green', hex);
+            root.style.setProperty('--accent-green-bg', hex);
+            root.style.setProperty('--accent-green-text', hex);
+            root.style.setProperty('--accent-green-banner-border', hex);
+            root.style.setProperty('--accent-green-banner-bg', hexToRgba(hex, 0.16));
+            root.style.setProperty('--pill-profile-val', hex);
+            root.style.setProperty('--pill-profile-border', hexToRgba(hex, 0.35));
+            root.style.setProperty('--btn-primary-bg', hex);
+            root.style.setProperty('--toast-border', hex);
+
+            // 更新控件状态
+            const picker = document.getElementById('colorPickerAccent');
+            if (picker) picker.value = hex;
+            const hexInput = document.getElementById('hexInputAccent');
+            if (hexInput && document.activeElement !== hexInput) hexInput.value = hex.toUpperCase();
+
+            const previewText = document.getElementById('accentPreviewText');
+            if (previewText) previewText.innerText = hex.toUpperCase();
+
+            // 预设按钮激活态联动
+            document.querySelectorAll('.color-swatch-btn').forEach(btn => {
+                const match = btn.getAttribute('onclick') && btn.getAttribute('onclick').toLowerCase().includes(hex.toLowerCase());
+                btn.classList.toggle('active', !!match);
+            });
+
+            // 触发方案 A 状态共振
+            handleStateLoop();
+
+            if (showNotification) {
+                showToast('🎨 调色盘已应用', `强调色已更新为 ${hex.toUpperCase()}`);
+            }
+        }
+
+        function resetCustomAccent() {
+            applyCustomAccent('#10b981', true);
+        }
+
+        function updateWallpaperBlur(val) {
+            currentWallpaperBlur = val;
+            document.documentElement.style.setProperty('--wallpaper-blur', val + 'px');
+            const label = document.getElementById('wallpaperBlurVal');
+            if (label) label.innerText = val + ' px';
+        }
+
+        function updateWallpaperMask(val) {
+            currentWallpaperMask = val;
+            const alpha = (val / 100).toFixed(2);
+            document.documentElement.style.setProperty('--wallpaper-mask', `rgba(0, 0, 0, ${alpha})`);
+            const label = document.getElementById('wallpaperMaskVal');
+            if (label) label.innerText = val + '%';
+        }
+
+        function simulateWallpaperSelect() {
+            customWallpaperActive = true;
+            document.documentElement.style.setProperty('--wallpaper-image', 'radial-gradient(circle at 20% 30%, rgba(30, 58, 95, 0.55) 0%, transparent 65%), radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.35) 0%, transparent 65%), linear-gradient(180deg, #0d1217 0%, #17212b 100%)');
+            updateWallpaperBlur(8);
+            updateWallpaperMask(40);
+            const blurSlider = document.getElementById('wallpaperBlurSlider');
+            if (blurSlider) blurSlider.value = 8;
+            const maskSlider = document.getElementById('wallpaperMaskSlider');
+            if (maskSlider) maskSlider.value = 40;
+            showToast('🖼️ 自定义壁纸', '已载入战术沉浸壁纸，并自动应用 8px 毛玻璃与 40% 遮罩');
+        }
+
+        function resetWallpaper() {
+            customWallpaperActive = false;
+            document.documentElement.style.setProperty('--wallpaper-image', 'none');
+            updateWallpaperBlur(0);
+            updateWallpaperMask(0);
+            const blurSlider = document.getElementById('wallpaperBlurSlider');
+            if (blurSlider) blurSlider.value = 0;
+            const maskSlider = document.getElementById('wallpaperMaskSlider');
+            if (maskSlider) maskSlider.value = 0;
+            showToast('🖼️ 重置壁纸', '已恢复默认极简沉浸底座');
+        }
+
+        // =================================================================
         // 解法 B：右下角状态变形流主题开关 (Morphing Trigger Anchor)
         // 锚点原地变形为收拢控制纽 ‹，杜绝翻倒电脑与重复图标
         // =================================================================
@@ -2232,6 +2726,12 @@
                 syncTriggerIcon();
             }
 
+            // 若设置页外观卡片存在，同步更新状态徽章
+            const settingsThemeBadge = document.getElementById('settingsThemeBadge');
+            if (settingsThemeBadge) {
+                settingsThemeBadge.innerText = themeName;
+            }
+
             showToast("🎨 主题切换", `已应用：${themeName}`);
 
             // 选择后稍作停顿，自动优雅收拢并变回直立图标
@@ -2267,10 +2767,12 @@
             }
         });
 
-        // 页面初始化时挂载滑动底座与图标
+        // 页面初始化时挂载滑动底座与图标、状态机共振与设置页初始化
         window.addEventListener('DOMContentLoaded', () => {
             syncTriggerIcon();
             setTimeout(updateThemeSliderIndicator, 150);
+            handleStateLoop();
+            switchSettingsTab('appearance');
         });
     </script>
 </body>
