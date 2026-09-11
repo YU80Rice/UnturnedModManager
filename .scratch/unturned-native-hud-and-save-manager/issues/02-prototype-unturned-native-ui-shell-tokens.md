@@ -81,3 +81,25 @@ Blocked by:
 
 ### 3. 生产隔离守卫审计
 - 生产代码（`MainWindow.xaml`、生产导航类、7 大现有页面与业务服务、发布配置）保持 100% 干净，未作任何侵入性修改。
+
+---
+
+## PM 终审与二轮全域同步 (Revision 2 - Final Synchronization)
+
+### 1. 关单刚性同步准则达成
+根据 PM 关单要求：“不能只把 HTML 捏满意。最终决定的设计还要同步到：UnturnedNativeShellPrototype.xaml、PrototypePlayPage.xaml、PrototypeDataPage.xaml、UnturnedNativeTokens.xaml 以及对应原型测试”，已完成全部同步映射：
+1. **独立小助理展台从公告卡片解耦**：
+   - 公告卡片恢复纯净全宽排版，彻底移除旧版卡片内嵌的挂件与按钮；
+   - 页面右下角独立挂载悬浮式 `MascotAssistantContainer`，接入真实高清资源 `/Assets/umm-mascot-chibi-v2.png`，支持点击趣味对白轮播彩蛋；
+2. **顶栏与小助理通信联动**：
+   - 顶栏右侧新增 `SecondaryMascotBtn`（`[🦊 助理]` 胶囊按钮），点击跨组件联动展开/收起小助理展台；
+3. **左侧导航栏中枢微卡片**：
+   - 在退出按钮上方增加 `NavHubTriggerBtn`（`[💻 YU80Rice · Steam 就绪 🟢]`），打通本机环境、Steam 状态与社区中枢操作闭环；
+4. **代币体系补充**：
+   - `UnturnedNativeTokens.xaml` 补充小助理暖橙画刷（`UnturnedMascotOrangeBrush`、`UnturnedMascotBadgeBrush`）；
+5. **测试套件扩充与全绿**：
+   - `UnturnedNativeShellPrototypeTests.cs` 新增代币、结构与代码后置契约测试用例，断言总数增至 **162/162 全通过**。
+
+### 2. 状态更新
+- Status: ready-for-human (所有代码、XAML 资产、HTML 模拟器与自动化测试已完全同步，可正式由人类审批关单)
+
