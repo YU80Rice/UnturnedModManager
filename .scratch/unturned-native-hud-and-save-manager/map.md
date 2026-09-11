@@ -27,7 +27,16 @@
 
 ## 当前活跃 Frontier
 
-*(当前地图全部 5 张工单已全部决议闭环，无活跃 Frontier)*
+*(当前地图全部 5 张决策工单已全部决议闭环，进入实施工单交付阶段)*
+
+## 实施工单拓扑 (Implementation Tickets)
+
+- [Ticket A: NavigationShell 契约定义与逻辑宿主状态机](issues/06-ticket-a-navigationshell-contract-and-host.md) — `Status: ready-for-agent` (Blocked by: None)
+- [Ticket B: Legacy NavigationFacade 兼容桥与无底层 UI 泄漏请求重构](issues/07-ticket-b-legacy-navigationfacade-adapter.md) — `Status: ready-for-agent` (Blocked by: Ticket A)
+- [Ticket C: PluginWorkshopPage 模组工坊纯导航聚合外壳与上下文恢复](issues/08-ticket-c-plugin-workshop-aggregation.md) — `Status: ready-for-agent` (Blocked by: Ticket A)
+- [Ticket D: HomeSnapshot Coordinator 响应式投影管道与多态离线降级](issues/09-ticket-d-homesnapshot-coordinator-and-adapters.md) — `Status: ready-for-agent` (Blocked by: Ticket A)
+- [Ticket E: MainWindow 原生 Shell 生产挂载与现有 7 大业务页面平稳集成](issues/10-ticket-e-mainwindow-native-shell-mounting.md) — `Status: ready-for-agent` (Blocked by: Ticket A, B, C, D)
+- [Ticket F: 全链路 0 回归门禁防线、无障碍与视口自适应综合验收](issues/11-ticket-f-zero-regression-and-accessibility-verification.md) — `Status: ready-for-agent` (Blocked by: Ticket E)
 
 ## 尚未明确
 
