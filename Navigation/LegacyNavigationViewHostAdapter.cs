@@ -25,24 +25,37 @@ internal interface ILegacyNavigationTarget
 /// 在 Ticket E 挂载原生 Shell 之前，使既有主窗口与重构后的 AppNavigationService 建立显式宿主绑定，
 /// 严格保证单一事实源，杜绝隐式备用状态机，并消除已迁移页面的导航功能回归。
 /// </summary>
-public sealed class LegacyNavigationViewHostAdapter : INavigationShellHost
+public sealed class LegacyNavigationViewHostAdapter : INavigationShellHost, IDisposable
 {
     private readonly ILegacyNavigationTarget _target;
+    private readonly Wpf.Ui.Controls.NavigationView? _navigationView;
     private PrimarySlot _activeSlot = PrimarySlot.Play;
     private SecondaryNavigationTarget? _activeSecondary;
     private ReturnContext? _rootReturnContext;
     private WorkshopSubDomain? _currentSubDomain;
     private NavigationContext? _currentContext;
+    private bool _disposed;
 
     public LegacyNavigationViewHostAdapter(MainWindow mainWindow, Wpf.Ui.Controls.NavigationView navigationView)
         : this(new MainWindowNavigationTarget(mainWindow, navigationView))
     {
-        navigationView.Navigated += OnNavigationViewNavigated;
+        _navigationView = navigationView ?? throw new ArgumentNullException(nameof(navigationView));
+        _navigationView.Navigated += OnNavigationViewNavigated;
     }
 
     internal LegacyNavigationViewHostAdapter(ILegacyNavigationTarget target)
     {
         _target = target ?? throw new ArgumentNullException(nameof(target));
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        if (_navigationView is not null)
+        {
+            _navigationView.Navigated -= OnNavigationViewNavigated;
+        }
     }
 
     public PrimarySlot ActiveSlot => _activeSlot;

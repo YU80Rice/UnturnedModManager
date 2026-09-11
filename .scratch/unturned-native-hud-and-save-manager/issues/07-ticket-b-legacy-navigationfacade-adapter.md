@@ -52,8 +52,5 @@
    - `MainWindow.xaml.cs` 复用 `OpenCommunityDetail(modId)` 便捷重载，消解重复构造。
 8. **适配器契约测试与 0 回归门禁**：
    - 编写并扩充 `UnturnedModManager.Tests/LegacyNavigationFacadeAdapterTests.cs`，涵盖：默认无宿主置空与未挂载异常、未挂载时受控拒绝与零历史创建、宿主 Attach/Detach 生命周期与置空语义、双向单一事实源同步、结构化模组详情请求转发、防御性参数校验、来源恢复、便捷导航方法、事件重绑、宿主解绑后延迟事件隔离（`StateChanged_DelayedEventFromDetachedHost_IsNotRelayed`）、并发 Attach/Detach/Navigate 竞态一致性、Data 槽位 `PendingInitialization` 拒绝假成功、次级来源完整上下文保存，以及 Journal 不可用时精准恢复子域与搜索/详情上下文等 6 项新增测试；
-   - 271 项测试（Release 模式）100% 绿灯通过；Debug 与 Release 模式全量编译通过，0 警告、0 错误。
-
-
-
-
+   - 实现 `IDisposable`，在窗口 `Closed` 时解绑 `NavigationView.Navigated` 事件监听，保证生命周期干净释放；
+   - 包含本次 6 项新增测试的全量回归测试集（实测 273 项，审查基线 258 项）在 Release 模式下 100% 绿灯通过；Debug 与 Release 模式全量编译通过，0 警告、0 错误。

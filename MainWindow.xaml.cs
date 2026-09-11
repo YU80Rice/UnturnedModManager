@@ -39,6 +39,7 @@ public partial class MainWindow : FluentWindow
             if (_navigationHost is not null)
             {
                 AppNavigationService.Current.DetachHost(_navigationHost);
+                _navigationHost.Dispose();
                 _navigationHost = null;
             }
         };
