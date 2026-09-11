@@ -185,14 +185,14 @@ public sealed class ProductionCommunityContentAdapter : ICommunityContentAdapter
         {
             var category = ClassifyException(ex);
 
-            // 网络或解析失败时，尝试读取本地缓存进行降级
-            var cached = await _cache.ReadStaleAsync<List<FeaturedPluginItem>>(CacheKey, token);
-            if (cached is { Count: > 0 })
+            // 网络或解析失败时，读取本地真实缓存条目及其原始写入时间
+            var cachedEntry = await _cache.ReadEntryAsync<List<FeaturedPluginItem>>(CacheKey, token);
+            if (cachedEntry is { Value.Count: > 0 })
             {
-                var cachedArray = cached.ToImmutableArray();
+                var cachedArray = cachedEntry.Value.ToImmutableArray();
                 return FeedSectionSnapshot<FeaturedPluginItem>.CachedStale(
                     cachedArray,
-                    DateTimeOffset.UtcNow.AddMinutes(-30));
+                    cachedEntry.SavedAt);
             }
 
             return FeedSectionSnapshot<FeaturedPluginItem>.Failed(category, canRetry: true);
@@ -214,10 +214,15 @@ public sealed class ProductionCommunityContentAdapter : ICommunityContentAdapter
 public sealed class ProductionReleaseAnnouncementAdapter : IReleaseAnnouncementAdapter
 {
     private readonly LauncherUpdateService _launcherUpdates;
+    private readonly CommunityCacheService? _cache;
+    private const string CacheKey = "latest_announcements";
 
-    public ProductionReleaseAnnouncementAdapter(LauncherUpdateService launcherUpdates)
+    public ProductionReleaseAnnouncementAdapter(
+        LauncherUpdateService launcherUpdates,
+        CommunityCacheService? cache = null)
     {
         _launcherUpdates = launcherUpdates ?? throw new ArgumentNullException(nameof(launcherUpdates));
+        _cache = cache;
     }
 
     public async Task<FeedSectionSnapshot<PatchNoteItem>> GetAnnouncementsFeedAsync(CancellationToken token = default)
@@ -230,14 +235,19 @@ public sealed class ProductionReleaseAnnouncementAdapter : IReleaseAnnouncementA
             if (checkResult.LatestRelease is { } notes)
             {
                 var highlights = ParseHighlights(notes.ReleaseNotes);
+                var syncTime = notes.PublishedAt ?? DateTimeOffset.UtcNow;
                 var item = new PatchNoteItem(
                     VersionTag: notes.Version.ToString(3),
-                    ReleasedAt: notes.PublishedAt ?? DateTimeOffset.UtcNow,
+                    ReleasedAt: syncTime,
                     Highlights: highlights
                 );
 
                 var items = ImmutableArray.Create(item);
-                return FeedSectionSnapshot<PatchNoteItem>.LiveOnline(items, DateTimeOffset.UtcNow);
+                if (_cache != null)
+                {
+                    await _cache.WriteAsync(CacheKey, items.ToList(), token);
+                }
+                return FeedSectionSnapshot<PatchNoteItem>.LiveOnline(items, syncTime);
             }
 
             return FeedSectionSnapshot<PatchNoteItem>.Empty(DateTimeOffset.UtcNow);
@@ -255,6 +265,17 @@ public sealed class ProductionReleaseAnnouncementAdapter : IReleaseAnnouncementA
                 JsonException => FeedFailureCategory.DataCorrupted,
                 _ => FeedFailureCategory.ServerUnavailable
             };
+
+            if (_cache != null)
+            {
+                var cachedEntry = await _cache.ReadEntryAsync<List<PatchNoteItem>>(CacheKey, token);
+                if (cachedEntry is { Value.Count: > 0 })
+                {
+                    return FeedSectionSnapshot<PatchNoteItem>.CachedStale(
+                        cachedEntry.Value.ToImmutableArray(),
+                        cachedEntry.SavedAt);
+                }
+            }
 
             return FeedSectionSnapshot<PatchNoteItem>.Failed(category, canRetry: true);
         }

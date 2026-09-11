@@ -37,6 +37,13 @@ public sealed class CommunityCacheService
         return envelope.Value;
     }
 
+    public async Task<CacheEntry<T>?> ReadEntryAsync<T>(string key, CancellationToken token = default)
+    {
+        var envelope = await ReadEnvelopeAsync<T>(key, token);
+        if (envelope is null || envelope.Value is null) return null;
+        return new CacheEntry<T>(envelope.Value, envelope.SavedAt);
+    }
+
     public async Task WriteAsync<T>(string key, T value, CancellationToken token = default)
     {
         try
@@ -77,3 +84,5 @@ public sealed class CommunityCacheService
         public T? Value { get; set; }
     }
 }
+
+public sealed record CacheEntry<T>(T Value, DateTimeOffset SavedAt);

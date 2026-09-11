@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace UnturnedModManager.Domain.Home;
 
 /// <summary>
-/// 首页快照协调器实现 (双代际流转、防抖合并、防饿死强制截断与两阶段局部发布)
+/// 首页快照协调器实现 (双代际流转、局部故障隔离、防抖合并、防饿死强制截断与两阶段局部发布)
 /// </summary>
 public sealed class HomeSnapshotCoordinator : IHomeSnapshotCoordinator
 {
@@ -92,7 +92,7 @@ public sealed class HomeSnapshotCoordinator : IHomeSnapshotCoordinator
                 CanExportDiagnostics: false),
             Featured: FeedSectionSnapshot<FeaturedPluginItem>.Uninitialized(),
             Announcements: FeedSectionSnapshot<PatchNoteItem>.Uninitialized(),
-            Mascot: _mascotAdapter.GetMascotSection()
+            Mascot: SafeGetMascot(_mascotAdapter)
         );
     }
 
@@ -176,11 +176,11 @@ public sealed class HomeSnapshotCoordinator : IHomeSnapshotCoordinator
 
         try
         {
-            // PHASE 1: 快速本地分区 (启动、环境、诊断、吉祥物) 先行组装
-            var launchTask = _launchAdapter.GetLaunchSectionAsync(token).AsTask();
-            var envTask = _environmentAdapter.GetEnvironmentSectionAsync(token).AsTask();
-            var diagTask = _diagnosticAdapter.GetDiagnosticSectionAsync(token).AsTask();
-            var mascot = _mascotAdapter.GetMascotSection();
+            // PHASE 1: 快速本地分区 (启动、环境、诊断、吉祥物) 先行组装与局部故障隔离
+            var launchTask = SafeGetLaunchAsync(_launchAdapter, token);
+            var envTask = SafeGetEnvironmentAsync(_environmentAdapter, token);
+            var diagTask = SafeGetDiagnosticAsync(_diagnosticAdapter, token);
+            var mascot = SafeGetMascot(_mascotAdapter);
 
             await Task.WhenAll(launchTask, envTask, diagTask).ConfigureAwait(false);
 
@@ -215,9 +215,13 @@ public sealed class HomeSnapshotCoordinator : IHomeSnapshotCoordinator
 
             PublishSnapshotChanged(phase1Snapshot);
 
-            // PHASE 2: 慢速网络分区 (社区推荐、版本公告) 并发异步获取
-            var featuredTask = _communityAdapter.GetFeaturedFeedAsync(token);
-            var announcementsTask = _announcementAdapter.GetAnnouncementsFeedAsync(token);
+            // PHASE 2: 慢速网络分区 (社区推荐、版本公告) 并发异步获取与局部故障隔离
+            var featuredTask = SafeGetFeedAsync(
+                t => _communityAdapter.GetFeaturedFeedAsync(t),
+                token);
+            var announcementsTask = SafeGetFeedAsync(
+                t => _announcementAdapter.GetAnnouncementsFeedAsync(t),
+                token);
 
             await Task.WhenAll(featuredTask, announcementsTask).ConfigureAwait(false);
 
@@ -257,7 +261,118 @@ public sealed class HomeSnapshotCoordinator : IHomeSnapshotCoordinator
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[HomeSnapshotCoordinator] Refresh cycle encountered error: {ex}");
+            Debug.WriteLine($"[HomeSnapshotCoordinator] Refresh cycle encountered unexpected error: {ex}");
+        }
+    }
+
+    private static async Task<LaunchSectionSnapshot> SafeGetLaunchAsync(
+        ILaunchStateAdapter adapter,
+        CancellationToken token)
+    {
+        try
+        {
+            return await adapter.GetLaunchSectionAsync(token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[HomeSnapshotCoordinator] Launch adapter failure: {ex}");
+            return new LaunchSectionSnapshot(
+                ModeTitle: "启动状态检测受阻",
+                ModeSubtitle: "启动环境状态读取失败，请检查游戏安装路径",
+                GamePath: "",
+                CanLaunch: false,
+                ActiveProfileName: "未知方案",
+                ActiveModCount: 0,
+                IsConfigReady: false);
+        }
+    }
+
+    private static async Task<EnvironmentSectionSnapshot> SafeGetEnvironmentAsync(
+        IEnvironmentStateAdapter adapter,
+        CancellationToken token)
+    {
+        try
+        {
+            return await adapter.GetEnvironmentSectionAsync(token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[HomeSnapshotCoordinator] Environment adapter failure: {ex}");
+            return new EnvironmentSectionSnapshot(
+                LoaderVersion: "检测失败",
+                IsLoaderEnabled: false,
+                IsGraphicsAccelerationActive: false,
+                IsFallbackRendering: true,
+                IsEnvironmentHealthy: false);
+        }
+    }
+
+    private static async Task<DiagnosticSectionSnapshot> SafeGetDiagnosticAsync(
+        IDiagnosticStateAdapter adapter,
+        CancellationToken token)
+    {
+        try
+        {
+            return await adapter.GetDiagnosticSectionAsync(token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[HomeSnapshotCoordinator] Diagnostic adapter failure: {ex}");
+            return new DiagnosticSectionSnapshot(
+                HealthSummary: "诊断分析服务不可用",
+                UnresolvedIssuesCount: 1,
+                CanExportDiagnostics: false);
+        }
+    }
+
+    private static MascotSectionSnapshot SafeGetMascot(IMascotPresentationAdapter adapter)
+    {
+        try
+        {
+            return adapter.GetMascotSection();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[HomeSnapshotCoordinator] Mascot adapter failure: {ex}");
+            return new MascotSectionSnapshot(IsVisible: false, QuoteIndex: 0, CurrentQuote: "");
+        }
+    }
+
+    private static async Task<FeedSectionSnapshot<T>> SafeGetFeedAsync<T>(
+        Func<CancellationToken, Task<FeedSectionSnapshot<T>>> fetcher,
+        CancellationToken token)
+    {
+        try
+        {
+            return await fetcher(token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[HomeSnapshotCoordinator] Feed adapter failure: {ex}");
+            var category = ex switch
+            {
+                TaskCanceledException or TimeoutException => FeedFailureCategory.Timeout,
+                System.Net.Http.HttpRequestException => FeedFailureCategory.NetworkUnavailable,
+                System.Text.Json.JsonException => FeedFailureCategory.DataCorrupted,
+                _ => FeedFailureCategory.ServerUnavailable
+            };
+            return FeedSectionSnapshot<T>.Failed(category, lastSynchronized: null, canRetry: true);
         }
     }
 

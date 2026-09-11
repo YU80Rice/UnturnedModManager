@@ -102,7 +102,7 @@ public sealed class AppServices : IDisposable
         var communityAdapter = new UnturnedModManager.Services.Home.ProductionCommunityContentAdapter(
             new CommunityApiClient(CommunityCache),
             CommunityCache);
-        var announcementAdapter = new UnturnedModManager.Services.Home.ProductionReleaseAnnouncementAdapter(LauncherUpdates);
+        var announcementAdapter = new UnturnedModManager.Services.Home.ProductionReleaseAnnouncementAdapter(LauncherUpdates, CommunityCache);
         var mascotAdapter = new UnturnedModManager.Services.Home.ProductionMascotPresentationAdapter();
 
         return new UnturnedModManager.Domain.Home.HomeSnapshotCoordinator(

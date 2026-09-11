@@ -357,7 +357,7 @@ public sealed class HomeSnapshotCoordinatorTests
     [InlineData(false, 1280, 800, 1.0, false, 0.0, 0.0, false)] // 隐藏小助理
     [InlineData(true, 1280, 800, 1.0, true, 96.0, 1.0, true)]   // 标准 1080p/720p 视口
     [InlineData(true, 1280, 800, 1.5, true, 144.0, 1.5, true)]  // 150% 高 DPI
-    [InlineData(true, 920, 580, 1.0, true, 72.0, 0.75, true)]   // 低于 960x600：防御性缩放
+    [InlineData(true, 920, 580, 1.0, true, 76.0, 0.75, true)]   // 低于 960x600：防御性缩放 (200*0.75*0.40 + 16 = 76)
     [InlineData(true, 750, 480, 1.0, false, 0.0, 0.0, false)]   // 低于 800x500 极限视口：防御性自动隐藏
     public void MascotLayoutPolicy_CalculatesAccurateSafetyInsets(
         bool isVisible,
@@ -387,6 +387,214 @@ public sealed class HomeSnapshotCoordinatorTests
         var quote2 = adapter.NextQuote();
         Assert.Equal(1, quote2.QuoteIndex);
         Assert.NotEqual(quote1.CurrentQuote, quote2.CurrentQuote);
+    }
+
+    [Fact]
+    public async Task Phase1_LaunchFailure_IsIsolatedAndPublishesDegradedLaunchWithOtherSectionsIntact()
+    {
+        var launchAdapter = new StubLaunchAdapter
+        {
+            Handler = _ => throw new InvalidOperationException("游戏路径未设置")
+        };
+        var envAdapter = new StubEnvironmentAdapter
+        {
+            Handler = _ => ValueTask.FromResult(new EnvironmentSectionSnapshot("v5.4.23", true, true, false, true))
+        };
+        var diagAdapter = new StubDiagnosticAdapter
+        {
+            Handler = _ => ValueTask.FromResult(new DiagnosticSectionSnapshot("健康良好", 0, true))
+        };
+
+        using var coordinator = CreateTestCoordinator(
+            launchAdapter: launchAdapter,
+            envAdapter: envAdapter,
+            diagAdapter: diagAdapter);
+
+        var snapshots = new List<HomeSnapshot>();
+        coordinator.SnapshotChanged += (_, e) => snapshots.Add(e.Snapshot);
+
+        await coordinator.RefreshAsync();
+
+        Assert.NotEmpty(snapshots);
+        var latest = coordinator.CurrentSnapshot;
+
+        // 启动分区进入受控降级状态
+        Assert.False(latest.Launch.CanLaunch);
+        Assert.Equal("启动状态检测受阻", latest.Launch.ModeTitle);
+        Assert.Contains("读取失败", latest.Launch.ModeSubtitle);
+
+        // 环境和诊断分区未被丢弃，正常承载各自数据
+        Assert.True(latest.Environment.IsEnvironmentHealthy);
+        Assert.Equal("v5.4.23", latest.Environment.LoaderVersion);
+        Assert.Equal("健康良好", latest.Diagnostics.HealthSummary);
+    }
+
+    [Fact]
+    public async Task Phase1_EnvironmentFailure_IsIsolatedAndPublishesDegradedEnvWithOtherSectionsIntact()
+    {
+        var envAdapter = new StubEnvironmentAdapter
+        {
+            Handler = _ => throw new InvalidOperationException("DirectX 显卡驱动查询崩溃")
+        };
+
+        using var coordinator = CreateTestCoordinator(envAdapter: envAdapter);
+
+        await coordinator.RefreshAsync();
+
+        var latest = coordinator.CurrentSnapshot;
+        // 环境分区进入结构化降级状态
+        Assert.Equal("检测失败", latest.Environment.LoaderVersion);
+        Assert.False(latest.Environment.IsEnvironmentHealthy);
+        Assert.True(latest.Environment.IsFallbackRendering);
+
+        // 启动分区保持正常
+        Assert.True(latest.Launch.CanLaunch);
+        Assert.Equal("单人", latest.Launch.ModeTitle);
+    }
+
+    [Fact]
+    public async Task Phase2_AnnouncementsFailure_IsIsolatedAndPublishesFeaturedWithFailedAnnouncements()
+    {
+        var communityAdapter = new StubCommunityAdapter
+        {
+            Handler = _ => Task.FromResult(FeedSectionSnapshot<FeaturedPluginItem>.LiveOnline(
+                ImmutableArray.Create(new FeaturedPluginItem("100", "武器增强", "描述", "武器", "1.0")),
+                DateTimeOffset.UtcNow))
+        };
+        var announcementAdapter = new StubAnnouncementAdapter
+        {
+            Handler = _ => throw new System.Net.Http.HttpRequestException("GitHub Release 503 Service Unavailable")
+        };
+
+        using var coordinator = CreateTestCoordinator(
+            communityAdapter: communityAdapter,
+            announcementAdapter: announcementAdapter);
+
+        var snapshots = new List<HomeSnapshot>();
+        coordinator.SnapshotChanged += (_, e) => snapshots.Add(e.Snapshot);
+
+        await coordinator.RefreshAsync();
+
+        // Phase 1 + Phase 2 各自发布，最终帧包含成功的精选与失败的公告
+        var latest = coordinator.CurrentSnapshot;
+        Assert.True(latest.Featured.IsInitialized);
+        Assert.Equal(FeedDataState.LiveOnline, latest.Featured.State);
+        Assert.Single(latest.Featured.Items);
+        Assert.Equal("武器增强", latest.Featured.Items[0].DisplayName);
+
+        // 公告分区进入明确的 Failed 状态并保留结构化类别，不阻断精选分区
+        Assert.True(latest.Announcements.IsInitialized);
+        Assert.Equal(FeedDataState.Failed, latest.Announcements.State);
+        Assert.Equal(FeedFailureCategory.NetworkUnavailable, latest.Announcements.FailureCategory);
+        Assert.True(latest.Announcements.CanRetry);
+        Assert.True(latest.Announcements.Items.IsEmpty);
+    }
+
+    [Fact]
+    public async Task Phase2_FeaturedFailure_IsIsolatedAndPublishesAnnouncementsWithFailedFeatured()
+    {
+        var communityAdapter = new StubCommunityAdapter
+        {
+            Handler = _ => throw new TimeoutException("unmod.online gateway timeout")
+        };
+        var announcementAdapter = new StubAnnouncementAdapter
+        {
+            Handler = _ => Task.FromResult(FeedSectionSnapshot<PatchNoteItem>.LiveOnline(
+                ImmutableArray.Create(new PatchNoteItem("v2.2.2", DateTimeOffset.UtcNow, ImmutableArray.Create("修复项"))),
+                DateTimeOffset.UtcNow))
+        };
+
+        using var coordinator = CreateTestCoordinator(
+            communityAdapter: communityAdapter,
+            announcementAdapter: announcementAdapter);
+
+        await coordinator.RefreshAsync();
+
+        var latest = coordinator.CurrentSnapshot;
+        // 精选分区进入 Timeout Failed 状态
+        Assert.True(latest.Featured.IsInitialized);
+        Assert.Equal(FeedDataState.Failed, latest.Featured.State);
+        Assert.Equal(FeedFailureCategory.Timeout, latest.Featured.FailureCategory);
+
+        // 公告分区正常发布
+        Assert.True(latest.Announcements.IsInitialized);
+        Assert.Equal(FeedDataState.LiveOnline, latest.Announcements.State);
+        Assert.Single(latest.Announcements.Items);
+        Assert.Equal("v2.2.2", latest.Announcements.Items[0].VersionTag);
+    }
+
+    [Fact]
+    public async Task Phase2_BothFeedsFail_PublishesFrameWithBothFailed()
+    {
+        var communityAdapter = new StubCommunityAdapter
+        {
+            Handler = _ => throw new System.Text.Json.JsonException("Malformed JSON")
+        };
+        var announcementAdapter = new StubAnnouncementAdapter
+        {
+            Handler = _ => throw new TimeoutException("Timeout")
+        };
+
+        using var coordinator = CreateTestCoordinator(
+            communityAdapter: communityAdapter,
+            announcementAdapter: announcementAdapter);
+
+        await coordinator.RefreshAsync();
+
+        var latest = coordinator.CurrentSnapshot;
+        Assert.Equal(FeedDataState.Failed, latest.Featured.State);
+        Assert.Equal(FeedFailureCategory.DataCorrupted, latest.Featured.FailureCategory);
+
+        Assert.Equal(FeedDataState.Failed, latest.Announcements.State);
+        Assert.Equal(FeedFailureCategory.Timeout, latest.Announcements.FailureCategory);
+    }
+
+    [Fact]
+    public async Task CacheEntry_ProvidesHonestSavedAtTimestamp()
+    {
+        var tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "umm-cache-test-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var cache = new UnturnedModManager.Services.CommunityCacheService(tempDir);
+            var writeTime = new DateTimeOffset(2026, 9, 11, 8, 30, 0, TimeSpan.Zero);
+
+            // 写入缓存条目
+            await cache.WriteAsync("test-key", new List<string> { "item1", "item2" });
+
+            // 读取真实缓存条目
+            var entry = await cache.ReadEntryAsync<List<string>>("test-key");
+            Assert.NotNull(entry);
+            Assert.Equal(2, entry.Value.Count);
+            // 真实保存时间必须接近当前写入时间，而不是人为硬编码的 -30 分钟
+            Assert.True((DateTimeOffset.UtcNow - entry.SavedAt).TotalSeconds < 10);
+        }
+        finally
+        {
+            if (System.IO.Directory.Exists(tempDir))
+            {
+                try { System.IO.Directory.Delete(tempDir, true); } catch { }
+            }
+        }
+    }
+
+    [Fact]
+    public void MascotLayoutPolicy_MeasuredDimensionsDirectlyDriveInsets()
+    {
+        // 测量高度为 200, 留白为 16: effectiveHeight = 200 * 1.0 = 200, (200 * 0.40 + 16) * 1.0 = 96.0
+        var m1 = new MascotMeasurements(180, 200, 16);
+        var spec1 = MascotLayoutPolicy.Calculate(true, 1280, 800, m1, 1.0);
+        Assert.Equal(96.0, spec1.SafeBottomInset);
+        Assert.Equal(1.0, spec1.ScaleFactor);
+
+        // 测量高度变化为 300, 留白为 20: effectiveHeight = 300 * 1.0 = 300, (300 * 0.40 + 20) * 1.0 = 140.0
+        var m2 = new MascotMeasurements(220, 300, 20);
+        var spec2 = MascotLayoutPolicy.Calculate(true, 1280, 800, m2, 1.0);
+        Assert.Equal(140.0, spec2.SafeBottomInset);
+
+        // 小视口防御缩放 (0.75x): effectiveHeight = 300 * 0.75 = 225, (225 * 0.40 + 20) * 1.0 = 110.0
+        var specSmall = MascotLayoutPolicy.Calculate(true, 920, 580, m2, 1.0);
+        Assert.Equal(0.75, specSmall.ScaleFactor);
+        Assert.Equal(110.0, specSmall.SafeBottomInset);
     }
 
     private static HomeSnapshotCoordinator CreateTestCoordinator(
