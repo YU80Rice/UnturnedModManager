@@ -84,6 +84,38 @@ public sealed class AppServices : IDisposable
         Authentication,
         LauncherUpdates);
 
+    public UnturnedModManager.Domain.Home.HomeSnapshotCoordinator CreateHomeSnapshotCoordinator(
+        TimeSpan? debounceDelay = null,
+        TimeSpan? maxDelayDeadline = null)
+    {
+        var launchAdapter = new UnturnedModManager.Services.Home.ProductionLaunchStateAdapter(
+            GamePaths,
+            GameLauncher,
+            PluginProfiles,
+            LocalMods,
+            BepInEx);
+        var envAdapter = new UnturnedModManager.Services.Home.ProductionEnvironmentStateAdapter(
+            BepInEx,
+            Dxvk,
+            Diagnostics);
+        var diagAdapter = new UnturnedModManager.Services.Home.ProductionDiagnosticStateAdapter(Diagnostics);
+        var communityAdapter = new UnturnedModManager.Services.Home.ProductionCommunityContentAdapter(
+            new CommunityApiClient(CommunityCache),
+            CommunityCache);
+        var announcementAdapter = new UnturnedModManager.Services.Home.ProductionReleaseAnnouncementAdapter(LauncherUpdates);
+        var mascotAdapter = new UnturnedModManager.Services.Home.ProductionMascotPresentationAdapter();
+
+        return new UnturnedModManager.Domain.Home.HomeSnapshotCoordinator(
+            launchAdapter,
+            envAdapter,
+            diagAdapter,
+            communityAdapter,
+            announcementAdapter,
+            mascotAdapter,
+            debounceDelay,
+            maxDelayDeadline);
+    }
+
     public void Dispose()
     {
         Authentication.Dispose();
