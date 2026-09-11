@@ -27,9 +27,9 @@ public sealed class HomeSnapshotCoordinatorTests
     [Fact]
     public void ModelInvariants_DefaultArrays_NormalizedToEmpty()
     {
-        // 传入 default 的 ImmutableArray
+        // 传入 default 的 ImmutableArray 到合法 Empty 构造，归一化为非 null 的 Empty 集合
         var feed = new FeedSectionSnapshot<FeaturedPluginItem>(
-            FeedDataState.LiveOnline,
+            FeedDataState.Empty,
             IsInitialized: true,
             Items: default,
             LastSynchronized: DateTimeOffset.UtcNow,
@@ -44,35 +44,84 @@ public sealed class HomeSnapshotCoordinatorTests
     }
 
     [Fact]
-    public void ModelInvariants_FailedAndEmptyStateRules_Enforced()
+    public void ModelInvariants_IllegalCombinations_ExplicitlyRejected()
     {
-        // Failed 状态下若未传 failureCategory，自动兜底为 NetworkUnavailable
-        var failed = new FeedSectionSnapshot<FeaturedPluginItem>(
-            FeedDataState.Failed,
-            IsInitialized: true,
-            Items: ImmutableArray<FeaturedPluginItem>.Empty,
-            LastSynchronized: null,
-            CanRetry: true,
-            FailureCategory: null);
+        var validItem = new FeaturedPluginItem("1", "插件", "描述", "分类", "1.0");
+        var itemsWithOne = ImmutableArray.Create(validItem);
+        var now = DateTimeOffset.UtcNow;
 
-        Assert.Equal(FeedFailureCategory.NetworkUnavailable, failed.FailureCategory);
+        // 1. Failed 必须提供 FailureCategory，且不得携带有效 Items
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.Failed, true, ImmutableArray<FeaturedPluginItem>.Empty, null, true, FailureCategory: null));
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.Failed, true, itemsWithOne, null, true, FeedFailureCategory.NetworkUnavailable));
 
-        // 非 Failed 状态下若传入 failureCategory，自动归一化为 null
-        var online = new FeedSectionSnapshot<FeaturedPluginItem>(
-            FeedDataState.LiveOnline,
-            IsInitialized: true,
-            Items: ImmutableArray.Create(new FeaturedPluginItem("1", "插件", "描述", "分类", "1.0")),
-            LastSynchronized: DateTimeOffset.UtcNow,
-            CanRetry: true,
-            FailureCategory: FeedFailureCategory.ServerUnavailable);
+        // 2. LiveOnline、CachedValid、CachedStale 必须有非空 Items 与 LastSynchronized，且不得携带 FailureCategory
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.LiveOnline, true, ImmutableArray<FeaturedPluginItem>.Empty, now, true));
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.LiveOnline, true, itemsWithOne, null, true));
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.LiveOnline, true, itemsWithOne, now, true, FeedFailureCategory.ServerUnavailable));
 
-        Assert.Null(online.FailureCategory);
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.CachedValid, true, ImmutableArray<FeaturedPluginItem>.Empty, now, true));
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.CachedStale, true, ImmutableArray<FeaturedPluginItem>.Empty, now, true));
 
-        // Empty 状态下 Items 自动归一化为空集合
-        var empty = FeedSectionSnapshot<FeaturedPluginItem>.Empty(DateTimeOffset.UtcNow);
+        // 3. Empty 必须为空 Items，且不得携带 FailureCategory
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.Empty, true, itemsWithOne, now, true));
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.Empty, true, ImmutableArray<FeaturedPluginItem>.Empty, now, true, FeedFailureCategory.NetworkUnavailable));
+
+        // 4. IsInitialized == false 不得与已加载/失败状态组合，不得有 Items、时间戳或失败类别
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.LiveOnline, false, itemsWithOne, now, true));
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.Failed, false, ImmutableArray<FeaturedPluginItem>.Empty, null, true, FeedFailureCategory.NetworkUnavailable));
+        Assert.Throws<ArgumentException>(() => new FeedSectionSnapshot<FeaturedPluginItem>(
+            FeedDataState.Empty, false, ImmutableArray<FeaturedPluginItem>.Empty, now, true));
+    }
+
+    [Fact]
+    public void ModelInvariants_FactoryMethods_ProduceValidInstances()
+    {
+        var item = new FeaturedPluginItem("1", "插件", "描述", "分类", "1.0");
+        var items = ImmutableArray.Create(item);
+        var now = DateTimeOffset.UtcNow;
+
+        var uninit = FeedSectionSnapshot<FeaturedPluginItem>.Uninitialized();
+        Assert.False(uninit.IsInitialized);
+        Assert.Equal(FeedDataState.Empty, uninit.State);
+        Assert.True(uninit.Items.IsEmpty);
+        Assert.Null(uninit.LastSynchronized);
+        Assert.Null(uninit.FailureCategory);
+
+        var live = FeedSectionSnapshot<FeaturedPluginItem>.LiveOnline(items, now);
+        Assert.True(live.IsInitialized);
+        Assert.Equal(FeedDataState.LiveOnline, live.State);
+        Assert.Single(live.Items);
+        Assert.Equal(now, live.LastSynchronized);
+
+        var valid = FeedSectionSnapshot<FeaturedPluginItem>.CachedValid(items, now);
+        Assert.True(valid.IsInitialized);
+        Assert.Equal(FeedDataState.CachedValid, valid.State);
+
+        var stale = FeedSectionSnapshot<FeaturedPluginItem>.CachedStale(items, now);
+        Assert.True(stale.IsInitialized);
+        Assert.Equal(FeedDataState.CachedStale, stale.State);
+
+        var empty = FeedSectionSnapshot<FeaturedPluginItem>.Empty(now);
+        Assert.True(empty.IsInitialized);
         Assert.Equal(FeedDataState.Empty, empty.State);
         Assert.True(empty.Items.IsEmpty);
-        Assert.Null(empty.FailureCategory);
+
+        var failed = FeedSectionSnapshot<FeaturedPluginItem>.Failed(FeedFailureCategory.Timeout);
+        Assert.True(failed.IsInitialized);
+        Assert.Equal(FeedDataState.Failed, failed.State);
+        Assert.Equal(FeedFailureCategory.Timeout, failed.FailureCategory);
+        Assert.True(failed.Items.IsEmpty);
     }
 
     [Fact]
@@ -355,9 +404,9 @@ public sealed class HomeSnapshotCoordinatorTests
 
     [Theory]
     [InlineData(false, 1280, 800, 1.0, false, 0.0, 0.0, false)] // 隐藏小助理
-    [InlineData(true, 1280, 800, 1.0, true, 96.0, 1.0, true)]   // 标准 1080p/720p 视口
-    [InlineData(true, 1280, 800, 1.5, true, 144.0, 1.5, true)]  // 150% 高 DPI
-    [InlineData(true, 920, 580, 1.0, true, 76.0, 0.75, true)]   // 低于 960x600：防御性缩放 (200*0.75*0.40 + 16 = 76)
+    [InlineData(true, 1280, 800, 1.0, true, 216.0, 1.0, true)]   // 标准 1080p/720p 视口 (200*1.0 + 16 = 216)
+    [InlineData(true, 1280, 800, 1.5, true, 324.0, 1.5, true)]  // 150% 高 DPI ((200*1.0 + 16) * 1.5 = 324)
+    [InlineData(true, 920, 580, 1.0, true, 166.0, 0.75, true)]   // 低于 960x600：防御性缩放 (200*0.75 + 16 = 166)
     [InlineData(true, 750, 480, 1.0, false, 0.0, 0.0, false)]   // 低于 800x500 极限视口：防御性自动隐藏
     public void MascotLayoutPolicy_CalculatesAccurateSafetyInsets(
         bool isVisible,
@@ -580,21 +629,21 @@ public sealed class HomeSnapshotCoordinatorTests
     [Fact]
     public void MascotLayoutPolicy_MeasuredDimensionsDirectlyDriveInsets()
     {
-        // 测量高度为 200, 留白为 16: effectiveHeight = 200 * 1.0 = 200, (200 * 0.40 + 16) * 1.0 = 96.0
+        // 测量高度为 200, 留白为 16: effectiveHeight = 200 * 1.0 = 200, (200 + 16) * 1.0 = 216.0
         var m1 = new MascotMeasurements(180, 200, 16);
         var spec1 = MascotLayoutPolicy.Calculate(true, 1280, 800, m1, 1.0);
-        Assert.Equal(96.0, spec1.SafeBottomInset);
+        Assert.Equal(216.0, spec1.SafeBottomInset);
         Assert.Equal(1.0, spec1.ScaleFactor);
 
-        // 测量高度变化为 300, 留白为 20: effectiveHeight = 300 * 1.0 = 300, (300 * 0.40 + 20) * 1.0 = 140.0
+        // 测量高度变化为 300, 留白为 20: effectiveHeight = 300 * 1.0 = 300, (300 + 20) * 1.0 = 320.0
         var m2 = new MascotMeasurements(220, 300, 20);
         var spec2 = MascotLayoutPolicy.Calculate(true, 1280, 800, m2, 1.0);
-        Assert.Equal(140.0, spec2.SafeBottomInset);
+        Assert.Equal(320.0, spec2.SafeBottomInset);
 
-        // 小视口防御缩放 (0.75x): effectiveHeight = 300 * 0.75 = 225, (225 * 0.40 + 20) * 1.0 = 110.0
+        // 小视口防御缩放 (0.75x): effectiveHeight = 300 * 0.75 = 225, (225 + 20) * 1.0 = 245.0
         var specSmall = MascotLayoutPolicy.Calculate(true, 920, 580, m2, 1.0);
         Assert.Equal(0.75, specSmall.ScaleFactor);
-        Assert.Equal(110.0, specSmall.SafeBottomInset);
+        Assert.Equal(245.0, specSmall.SafeBottomInset);
     }
 
     [Fact]

@@ -83,19 +83,120 @@ public enum FeedFailureCategory
 /// <summary>
 /// 内容投递分区快照 (使用真正不可变集合，保持纯值语义)
 /// </summary>
-public sealed record FeedSectionSnapshot<T>(
-    FeedDataState State,
-    bool IsInitialized,
-    ImmutableArray<T> Items,
-    DateTimeOffset? LastSynchronized,
-    bool CanRetry,
-    FeedFailureCategory? FailureCategory = null)
+public sealed record FeedSectionSnapshot<T>
 {
-    public ImmutableArray<T> Items { get; init; } = Items.IsDefault ? ImmutableArray<T>.Empty : Items;
+    public FeedDataState State { get; init; }
+    public bool IsInitialized { get; init; }
+    public ImmutableArray<T> Items { get; init; }
+    public DateTimeOffset? LastSynchronized { get; init; }
+    public bool CanRetry { get; init; }
+    public FeedFailureCategory? FailureCategory { get; init; }
 
-    public FeedFailureCategory? FailureCategory { get; init; } = State == FeedDataState.Failed
-        ? (FailureCategory ?? FeedFailureCategory.NetworkUnavailable)
-        : null;
+    public FeedSectionSnapshot(
+        FeedDataState State,
+        bool IsInitialized,
+        ImmutableArray<T> Items,
+        DateTimeOffset? LastSynchronized,
+        bool CanRetry,
+        FeedFailureCategory? FailureCategory = null)
+    {
+        var normalizedItems = Items.IsDefault ? ImmutableArray<T>.Empty : Items;
+
+        // 1. 未初始化状态守卫：IsInitialized == false 时不得与已加载/失败状态组合，且 Items 必须为空、不得包含同步时间或失败原因
+        if (!IsInitialized)
+        {
+            if (State != FeedDataState.Empty)
+            {
+                throw new ArgumentException("Uninitialized feed section cannot be in a loaded or failed state.", nameof(State));
+            }
+            if (!normalizedItems.IsEmpty)
+            {
+                throw new ArgumentException("Uninitialized feed section cannot contain items.", nameof(Items));
+            }
+            if (LastSynchronized.HasValue)
+            {
+                throw new ArgumentException("Uninitialized feed section cannot have a synchronization timestamp.", nameof(LastSynchronized));
+            }
+            if (FailureCategory.HasValue)
+            {
+                throw new ArgumentException("Uninitialized feed section cannot have a failure category.", nameof(FailureCategory));
+            }
+        }
+        else
+        {
+            // 2. 已初始化状态守卫
+            switch (State)
+            {
+                case FeedDataState.Failed:
+                    // Failed 必须有失败原因，且不应携带有效 Items
+                    if (!FailureCategory.HasValue)
+                    {
+                        throw new ArgumentException("Failed feed section must specify a failure category.", nameof(FailureCategory));
+                    }
+                    if (!normalizedItems.IsEmpty)
+                    {
+                        throw new ArgumentException("Failed feed section cannot contain items.", nameof(Items));
+                    }
+                    break;
+
+                case FeedDataState.LiveOnline:
+                case FeedDataState.CachedValid:
+                case FeedDataState.CachedStale:
+                    // LiveOnline、CachedValid、CachedStale 必须有非空 Items 与 LastSynchronized
+                    if (normalizedItems.IsEmpty)
+                    {
+                        throw new ArgumentException($"Feed state '{State}' must contain at least one item.", nameof(Items));
+                    }
+                    if (!LastSynchronized.HasValue)
+                    {
+                        throw new ArgumentException($"Feed state '{State}' must specify a LastSynchronized timestamp.", nameof(LastSynchronized));
+                    }
+                    if (FailureCategory.HasValue)
+                    {
+                        throw new ArgumentException($"Loaded feed state '{State}' cannot specify a failure category.", nameof(FailureCategory));
+                    }
+                    break;
+
+                case FeedDataState.Empty:
+                    // Empty 必须为空 Items，且不得包含失败原因
+                    if (!normalizedItems.IsEmpty)
+                    {
+                        throw new ArgumentException("Empty feed section cannot contain items.", nameof(Items));
+                    }
+                    if (FailureCategory.HasValue)
+                    {
+                        throw new ArgumentException("Empty feed section cannot specify a failure category.", nameof(FailureCategory));
+                    }
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(State), State, "Unknown feed data state.");
+            }
+        }
+
+        this.State = State;
+        this.IsInitialized = IsInitialized;
+        this.Items = normalizedItems;
+        this.LastSynchronized = LastSynchronized;
+        this.CanRetry = CanRetry;
+        this.FailureCategory = FailureCategory;
+    }
+
+    public void Deconstruct(
+        out FeedDataState state,
+        out bool isInitialized,
+        out ImmutableArray<T> items,
+        out DateTimeOffset? lastSynchronized,
+        out bool canRetry,
+        out FeedFailureCategory? failureCategory)
+    {
+        state = State;
+        isInitialized = IsInitialized;
+        items = Items;
+        lastSynchronized = LastSynchronized;
+        canRetry = CanRetry;
+        failureCategory = FailureCategory;
+    }
 
     /// <summary>
     /// 显式计算缓存年龄 (传入权威基准时间，遇时钟回拨自动截断至零，杜绝漂移与负值)

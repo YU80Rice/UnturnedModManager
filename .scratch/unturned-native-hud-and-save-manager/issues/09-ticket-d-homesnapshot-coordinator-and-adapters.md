@@ -66,5 +66,31 @@
    - `RefreshAsync_WhenSuperseded_InternalSupersedeDoesNotThrowToCaller`：验证内部代际覆盖（supersede）正常安全返回，不干扰调用者。
 3. **测试数字口径对齐**：
    - 独立审查阶段基线测试总数为 258 项；
-   - 包含 Ticket B (+6)、Ticket C (+2)、Ticket D (+10) 复核回归测试后，当前全量自动化测试实测为 **276 项**（Release 模式全绿通过，0 失败，0 跳过）。
+   - 包含 Ticket B (+6)、Ticket C (+2)、Ticket D (+11) 复核回归测试后，当前全量自动化测试实测为 **277 项**（Release 模式全绿通过，0 失败，0 跳过）。
+
+---
+
+### 二次复核缺陷整改记录 (Second Review Findings Resolution - 2026-09-11)
+
+针对独立复核审查提出的 2 项 P1 阻断项完成专项整改与契约强化：
+
+1. **[P1-1] Mascot 底部安全 Inset 提升为完整有效高度加安全边距**：
+   - 重构 `Domain/Home/MascotLayoutPolicy.cs`，彻底移除无布局占用凭据的 `effectiveHeight * 0.40` 经验系数；
+   - 计算公式升级为：
+     ```csharp
+     double effectiveHeight = measuredHeight * scaleMultiplier;
+     double safeBottomInset = Math.Round((effectiveHeight + safetyPadding) * scaleRatio, 1);
+     ```
+   - 确保小助理可见时，底部安全区完整涵盖挂件真实测量高度加上安全边距与 DPI 缩放比，彻底杜绝内容被挂件遮挡。
+   - 同步修正 `HomeSnapshotCoordinatorTests` 中对基线视口 (216.0)、高 DPI (324.0)、紧凑视口 (166.0) 以及测量驱动 (216.0 / 320.0 / 245.0) 的断言。
+
+2. **[P1-2] `FeedSectionSnapshot<T>` 强制构造期冻结不变量**：
+   - 重构 `Domain/Home/HomeSnapshotModels.cs` 中的 `FeedSectionSnapshot<T>` 构造器，杜绝软归一化导致的非法快照创建，在构造期显式检验并拒绝非法组合：
+     - `Failed`：必须指定 `FailureCategory`，且 `Items` 必须为空集合（传入非空即抛出 `ArgumentException`）；
+     - `LiveOnline`、`CachedValid`、`CachedStale`：`Items` 必须非空（至少包含 1 项）且必须提供 `LastSynchronized` 时间戳，严禁携带 `FailureCategory`；
+     - `Empty`：`Items` 必须为空集合，严禁携带 `FailureCategory`；
+     - `IsInitialized == false`：严格仅限 `State == FeedDataState.Empty`，`Items` 必须为空，不得包含时间戳或失败类别。
+   - 新增 `ModelInvariants_IllegalCombinations_ExplicitlyRejected` 单元测试，全面验证 11 种非法状态组合在构造期均被立即拦截抛出 `ArgumentException`；
+   - 新增 `ModelInvariants_FactoryMethods_ProduceValidInstances` 验证全套静态工厂方法产出合规快照。
+
 

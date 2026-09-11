@@ -72,9 +72,9 @@ public static class MascotLayoutPolicy
         double scaleMultiplier = (windowWidth < MinWindowWidth || windowHeight < MinWindowHeight) ? 0.75 : 1.0;
         double scaleFactor = Math.Round(scaleMultiplier * scaleRatio, 2);
 
-        // 安全底部垫片由实际测量的挂件高度乘缩放系数，加上安全留白边距计算驱动
+        // 安全底部垫片由实际测量的挂件完整有效高度乘 DPI 缩放比，加上安全留白边距计算驱动，确保 100% 动态避让挂件遮挡
         double effectiveHeight = measuredHeight * scaleMultiplier;
-        double safeBottomInset = Math.Round((effectiveHeight * 0.40 + safetyPadding) * scaleRatio, 1);
+        double safeBottomInset = Math.Round((effectiveHeight + safetyPadding) * scaleRatio, 1);
 
         return new MascotLayoutSpec(
             IsVisible: true,
