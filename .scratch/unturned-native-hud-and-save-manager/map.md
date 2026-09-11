@@ -20,7 +20,11 @@
 ## 已有决策
 
 - [01: SDK 角色与世界存档数据调用链调研](issues/01-research-u3-sdk-save-data-architecture.md) — 深入 U3-SDK 查明生存数据物理存储、Block/River 协议、Config.json 体系与 5 大安全防线，作为下一阶段数据中心地图的权威事实输入留档。
-- [02: Unturned 原生风格 UI Shell 空间结构与设计代币原型](issues/02-prototype-unturned-native-ui-shell-tokens.md) — (待人工视觉核准) 在 `.scratch/.../prototype/` 建立独立原型，验证 5 槽位药丸导航、Page+Frame 契约、滚轮隧道路由、吉祥物无缝折叠与 WCAG AAA (15.6:1) 对比度合规，产出自包含 review.html 与 160 项全绿测试。
+- [02: Unturned 原生风格 UI Shell 空间结构与设计代币原型](issues/02-prototype-unturned-native-ui-shell-tokens.md) — (已人工视觉核准·resolved) 2026-09-11 用户与 PM 完成最终视觉验收关单。在 `.scratch/.../prototype/` 建立独立原型沙盒，验证 5 槽位药丸导航、Page+Frame 契约、滚轮隧道路由、独立小助理展台、左下角中枢微卡片与 WCAG AAA (15.6:1) 对比度合规，产出 review.html 与 162 项全绿测试。明确为原型证据，真实生产 UI 尚未迁移。
+
+## 当前活跃 Frontier
+
+- [03: 兼容式 NavigationShell 契约与五槽位导航映射](issues/03-grilling-page-migration-and-navigation-mapping.md) — (已解除阻断·当前 Frontier) 围绕 NavigationShell 架构 Seam 展开盘问（Grilling），明确 5 槽位与现有 7 大业务页面的映射契约、浮动入口行为与页面无损包裹接口，确立接口边界与测试方案。
 
 ## 尚未明确
 

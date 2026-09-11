@@ -1,8 +1,8 @@
 # Ticket 03: 兼容式 NavigationShell 契约与五槽位导航映射 (NavigationShell Contract & 5-Slot Mapping)
 
-Status: open
+Status: ready-for-agent
 Type: grilling
-Blocked by: 02
+Blocked by: 
 
 ## 问题
 

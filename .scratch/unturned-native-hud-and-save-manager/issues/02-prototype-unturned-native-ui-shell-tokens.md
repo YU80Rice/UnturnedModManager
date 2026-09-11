@@ -1,6 +1,6 @@
 # Ticket 02: Unturned 原生风格 UI Shell 空间结构与设计代币原型 (Prototype Unturned Native UI Shell & Tokens)
 
-Status: ready-for-human
+Status: resolved
 Type: prototype
 Blocked by: 
 
@@ -100,6 +100,15 @@ Blocked by:
 5. **测试套件扩充与全绿**：
    - `UnturnedNativeShellPrototypeTests.cs` 新增代币、结构与代码后置契约测试用例，断言总数增至 **162/162 全通过**。
 
-### 2. 状态更新
-- Status: ready-for-human (所有代码、XAML 资产、HTML 模拟器与自动化测试已完全同步，可正式由人类审批关单)
+### 2. 状态更新与最终验收归档 (2026-09-11)
+- **Status: resolved**
+- **用户验收日期**：2026-09-11（PM 与用户复核通过，准予关单）
+- **核准评审基线**：
+  - 交互式模拟器：[review.html](prototype/review.html)（版本对应 Commit `872c7a0` / `76c6563`）
+  - 最终同步交付报告：[walkthrough.md](file:///C:/Users/The%20New%20Age/.gemini/antigravity/brain/3c0f2ce9-ae71-4315-840d-e53551e2266c/walkthrough.md)
+- **硬性边界声明**：
+  - 本工单交付的 HTML 评审模拟器与 WPF XAML 原型系统（`UnturnedNativeShellPrototype`、`PrototypePlayPage`、`PrototypeDataPage`、`UnturnedNativeTokens`）均为**视觉与交互沙盒原型证据**；
+  - 真实生产 `MainWindow.xaml` 与 7 大生产业务页面**尚未迁移**，生产代码 100% 零侵入；
+  - 最终 `NavigationShell` 接口契约留待 Ticket 03 严格开展。
+- **自动化测试指标**：`162/162` 单元测试全部通过（0 失败、0 跳过；运行环境产生 `NETSDK1057` preview SDK 提示，不视为零警告）。
 
