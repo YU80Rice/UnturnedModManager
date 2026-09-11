@@ -28,15 +28,21 @@
 
 ## 当前活跃 Frontier
 
-*(当前地图全部 5 张决策工单已全部决议闭环，进入实施工单交付阶段)*
+- **活跃就绪工单 (Ready for Agent)**：
+  - [Ticket B: Legacy NavigationFacade 兼容桥与无底层 UI 泄漏请求重构](issues/07-ticket-b-legacy-navigationfacade-adapter.md) — 已随 Ticket A 交付解除阻塞，可立即领取；
+  - [Ticket C: PluginWorkshopPage 模组工坊纯导航聚合外壳与上下文恢复](issues/08-ticket-c-plugin-workshop-aggregation.md) — 已随 Ticket A 交付解除阻塞，可并行领取；
+  - [Ticket D: HomeSnapshot Coordinator 响应式投影管道与多态离线降级](issues/09-ticket-d-homesnapshot-coordinator-and-adapters.md) — 已随 Ticket A 交付解除阻塞，可并行领取；
+- **后续阻塞工单**：
+  - [Ticket E: MainWindow 原生 Shell 生产挂载与现有 7 大业务页面平稳集成](issues/10-ticket-e-mainwindow-native-shell-mounting.md) — 严格保持阻塞，待 B、C、D 全部交付并通过双轴审查后解锁；
+  - [Ticket F: 全链路 0 回归门禁防线、无障碍与视口自适应综合验收](issues/11-ticket-f-zero-regression-and-accessibility-verification.md) — 阻塞于 Ticket E。
 
 ## 实施工单拓扑 (Implementation Tickets)
 
 - [Ticket A: NavigationShell 契约定义与逻辑宿主状态机](issues/06-ticket-a-navigationshell-contract-and-host.md) — `Status: resolved` (Blocked by: None)
-- [Ticket B: Legacy NavigationFacade 兼容桥与无底层 UI 泄漏请求重构](issues/07-ticket-b-legacy-navigationfacade-adapter.md) — `Status: ready-for-agent` (Blocked by: Ticket A)
-- [Ticket C: PluginWorkshopPage 模组工坊纯导航聚合外壳与上下文恢复](issues/08-ticket-c-plugin-workshop-aggregation.md) — `Status: ready-for-agent` (Blocked by: Ticket A)
-- [Ticket D: HomeSnapshot Coordinator 响应式投影管道与多态离线降级](issues/09-ticket-d-homesnapshot-coordinator-and-adapters.md) — `Status: ready-for-agent` (Blocked by: Ticket A)
-- [Ticket E: MainWindow 原生 Shell 生产挂载与现有 7 大业务页面平稳集成](issues/10-ticket-e-mainwindow-native-shell-mounting.md) — `Status: ready-for-agent` (Blocked by: Ticket A, B, C, D)
+- [Ticket B: Legacy NavigationFacade 兼容桥与无底层 UI 泄漏请求重构](issues/07-ticket-b-legacy-navigationfacade-adapter.md) — `Status: ready-for-agent` (Blocked by: None / Ticket A 已解除)
+- [Ticket C: PluginWorkshopPage 模组工坊纯导航聚合外壳与上下文恢复](issues/08-ticket-c-plugin-workshop-aggregation.md) — `Status: ready-for-agent` (Blocked by: None / Ticket A 已解除)
+- [Ticket D: HomeSnapshot Coordinator 响应式投影管道与多态离线降级](issues/09-ticket-d-homesnapshot-coordinator-and-adapters.md) — `Status: ready-for-agent` (Blocked by: None / Ticket A 已解除)
+- [Ticket E: MainWindow 原生 Shell 生产挂载与现有 7 大业务页面平稳集成](issues/10-ticket-e-mainwindow-native-shell-mounting.md) — `Status: ready-for-agent` (Blocked by: Ticket B, C, D)
 - [Ticket F: 全链路 0 回归门禁防线、无障碍与视口自适应综合验收](issues/11-ticket-f-zero-regression-and-accessibility-verification.md) — `Status: ready-for-agent` (Blocked by: Ticket E)
 
 ## 尚未明确
