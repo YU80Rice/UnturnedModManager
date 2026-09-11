@@ -80,6 +80,8 @@ public sealed class UnturnedNativeShellPrototypeTests
         Assert.Contains("UnturnedAccentGreenBrush", keys);
         Assert.Contains("UnturnedAccentRedColor", keys);
         Assert.Contains("UnturnedAccentRedBrush", keys);
+        Assert.Contains("UnturnedMascotOrangeColor", keys);
+        Assert.Contains("UnturnedMascotOrangeBrush", keys);
 
         // 药丸按钮状态代币
         Assert.Contains("UnturnedPillNormalColor", keys);
@@ -166,9 +168,13 @@ public sealed class UnturnedNativeShellPrototypeTests
         Assert.Contains("PreviewMouseWheel=\"Shell_PreviewMouseWheel\"", content);
 
         // 验证次级浮动入口
+        Assert.Contains("x:Name=\"SecondaryMascotBtn\"", content);
         Assert.Contains("x:Name=\"SecondaryTaskBtn\"", content);
         Assert.Contains("x:Name=\"SecondaryAccountBtn\"", content);
         Assert.Contains("x:Name=\"SecondaryAboutBtn\"", content);
+
+        // 验证左下角社区与本机环境中枢触发卡片
+        Assert.Contains("x:Name=\"NavHubTriggerBtn\"", content);
     }
 
     [Fact]
@@ -194,10 +200,14 @@ public sealed class UnturnedNativeShellPrototypeTests
         Assert.Contains("x:Name=\"DxvkGpuHintText\"", content);
         Assert.Contains("x:Name=\"ExportDiagnosticsBtn\"", content);
 
-        // 3. 验证吉祥物挂件折叠与开关
-        Assert.Contains("x:Name=\"MascotContainer\"", content);
-        Assert.Contains("x:Name=\"MascotToggleBtn\"", content);
-        Assert.Contains("MascotToggleBtn_Click", content);
+        // 3. 验证独立右下角小助理展台、高清立绘资产与点击对白互动
+        Assert.Contains("x:Name=\"MascotAssistantContainer\"", content);
+        Assert.Contains("Source=\"/Assets/umm-mascot-chibi-v2.png\"", content);
+        Assert.Contains("x:Name=\"MascotBubbleText\"", content);
+        Assert.Contains("MascotAssistant_Click", content);
+
+        // 验证更新公告卡片已纯净化 (不含旧的嵌于卡片内的挂件按钮)
+        Assert.DoesNotContain("x:Name=\"MascotToggleBtn\"", content);
 
         // 4. 验证精选插件与版本要点 (非 Workshop 命名)
         Assert.Contains("x:Name=\"FeaturedGrid\"", content);
@@ -231,4 +241,41 @@ public sealed class UnturnedNativeShellPrototypeTests
         Assert.DoesNotContain("写入存档", content);
         Assert.DoesNotContain("DeleteSave", content);
     }
+
+    [Fact]
+    public void PlayPage_CodeBehind_ImplementsMascotAndStatusContract()
+    {
+        var prototypeDir = GetPrototypeRootDirectory();
+        var codePath = Path.Combine(prototypeDir, "pages", "PrototypePlayPage.xaml.cs");
+        Assert.True(File.Exists(codePath), $"PlayPage code-behind does not exist: {codePath}");
+
+        var content = File.ReadAllText(codePath);
+
+        // 验证小助理状态属性与显隐契约方法
+        Assert.Contains("bool IsMascotVisible", content);
+        Assert.Contains("ToggleMascotVisible()", content);
+        Assert.Contains("SetMascotVisible(", content);
+        Assert.Contains("MascotAssistant_Click", content);
+        Assert.Contains("MascotQuotes", content);
+
+        // 验证环境状态联动事件
+        Assert.Contains("event Action<bool, bool>? EnvironmentStateChanged", content);
+        Assert.Contains("ApplyEnvironmentReactivity()", content);
+    }
+
+    [Fact]
+    public void ShellPrototype_CodeBehind_WiresMascotAndHubTriggers()
+    {
+        var prototypeDir = GetPrototypeRootDirectory();
+        var codePath = Path.Combine(prototypeDir, "UnturnedNativeShellPrototype.xaml.cs");
+        Assert.True(File.Exists(codePath), $"Shell code-behind does not exist: {codePath}");
+
+        var content = File.ReadAllText(codePath);
+
+        // 验证顶栏小助理联动与左下角中枢响应
+        Assert.Contains("SecondaryMascotBtn_Click", content);
+        Assert.Contains("NavHubTriggerBtn_Click", content);
+        Assert.Contains("UpdateGlobalStatus", content);
+    }
 }
+

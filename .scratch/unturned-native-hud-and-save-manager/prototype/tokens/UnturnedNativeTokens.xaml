@@ -43,6 +43,13 @@
     <Color x:Key="UnturnedAccentRedColor">#FFE53E3E</Color>
     <SolidColorBrush x:Key="UnturnedAccentRedBrush" Color="{StaticResource UnturnedAccentRedColor}" />
 
+    <!-- 小助理吉祥物暖橙代币 (Mascot Tokens) -->
+    <Color x:Key="UnturnedMascotOrangeColor">#FFFB923C</Color>
+    <SolidColorBrush x:Key="UnturnedMascotOrangeBrush" Color="{StaticResource UnturnedMascotOrangeColor}" />
+    <Color x:Key="UnturnedMascotOrangeDarkColor">#FFEA580C</Color>
+    <SolidColorBrush x:Key="UnturnedMascotOrangeDarkBrush" Color="{StaticResource UnturnedMascotOrangeDarkColor}" />
+    <SolidColorBrush x:Key="UnturnedMascotBadgeBrush" Color="#26FB923C" />
+
     <!-- 药丸按钮状态颜色 -->
     <Color x:Key="UnturnedPillNormalColor">#781A2128</Color>
     <SolidColorBrush x:Key="UnturnedPillNormalBrush" Color="{StaticResource UnturnedPillNormalColor}" />

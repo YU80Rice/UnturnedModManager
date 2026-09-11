@@ -1,12 +1,23 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace UnturnedModManager.Prototypes;
 
 public partial class PrototypePlayPage : Page
 {
+    private int _mascotQuoteIndex = 0;
+    private static readonly string[] MascotQuotes = new[]
+    {
+        "🐾 幸存者，今天也是充满模组的一天！",
+        "🛠️ BepInEx 与 12 个本地模组正在为您保驾护航！",
+        "🎮 DXVK Vulkan 帧率增强模式就绪，丝滑畅玩！",
+        "☕ 探险累了记得常回主页看看，安全第一~",
+        "🦊 嗷呜！今天也要元气满满地在 Unturned 里生存下去！"
+    };
+
     /// <summary>
     /// 当启动环境状态 (BepInEx / DXVK) 发生变化时通知 Shell 联动更新顶部全域药丸
     /// </summary>
@@ -14,24 +25,41 @@ public partial class PrototypePlayPage : Page
 
     public bool IsBepInExEnabled => BepInExToggle?.IsChecked == true;
     public bool IsDxvkEnabled => DxvkToggle?.IsChecked == true;
+    public bool IsMascotVisible => MascotAssistantContainer?.Visibility == Visibility.Visible;
 
     public PrototypePlayPage()
     {
         InitializeComponent();
     }
 
-    private void MascotToggleBtn_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// 切换小助理展台显隐 (由 Shell 顶栏 [🦊 助理] 按钮联动触发)
+    /// </summary>
+    public bool ToggleMascotVisible()
     {
-        if (MascotContainer.Visibility == Visibility.Visible)
-        {
-            MascotContainer.Visibility = Visibility.Collapsed;
-            MascotToggleBtn.Content = "🦊 挂件(已藏)";
-        }
-        else
-        {
-            MascotContainer.Visibility = Visibility.Visible;
-            MascotToggleBtn.Content = "🦊 挂件";
-        }
+        if (MascotAssistantContainer == null) return false;
+        bool newVisible = MascotAssistantContainer.Visibility != Visibility.Visible;
+        MascotAssistantContainer.Visibility = newVisible ? Visibility.Visible : Visibility.Collapsed;
+        return newVisible;
+    }
+
+    /// <summary>
+    /// 设置小助理展台显隐
+    /// </summary>
+    public void SetMascotVisible(bool isVisible)
+    {
+        if (MascotAssistantContainer == null) return;
+        MascotAssistantContainer.Visibility = isVisible ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>
+    /// 点击小助理展台触发趣味台词互动与彩蛋
+    /// </summary>
+    private void MascotAssistant_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (MascotBubbleText == null) return;
+        _mascotQuoteIndex = (_mascotQuoteIndex + 1) % MascotQuotes.Length;
+        MascotBubbleText.Text = MascotQuotes[_mascotQuoteIndex];
     }
 
     private void BepInExToggle_Checked(object sender, RoutedEventArgs e)

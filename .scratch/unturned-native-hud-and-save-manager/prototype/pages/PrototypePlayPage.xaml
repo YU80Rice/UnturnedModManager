@@ -4,11 +4,12 @@
       Title="PrototypePlayPage"
       Background="Transparent">
 
-    <ScrollViewer x:Name="PlayRootScrollViewer"
-                  VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled"
-                  Focusable="False">
-        <StackPanel Margin="0,0,16,24">
+    <Grid>
+        <ScrollViewer x:Name="PlayRootScrollViewer"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Focusable="False">
+            <StackPanel Margin="0,0,16,24">
 
             <!-- 1. 关键状态横幅 (Critical Status Banner) - 联动模组/原版状态 -->
             <Border x:Name="StatusBanner"
@@ -257,51 +258,63 @@
                     </StackPanel>
                 </Border>
 
-                <!-- 更新公告 (Patch Notes Card) - 吉祥物挂件位于更新公告栏右下角 -->
+                <!-- 更新公告 (Patch Notes Card) - 纯净全宽文本排版 -->
                 <Border Grid.Column="1"
                         Style="{DynamicResource UnturnedHudCardStyle}">
-                    <Grid>
-                        <StackPanel>
-                            <Grid Margin="0,0,0,8">
-                                <TextBlock Text="v2.2.1 Patch Notes"
-                                           FontSize="13"
-                                           FontWeight="SemiBold"
-                                           Foreground="#FFFFFFFF"
-                                           VerticalAlignment="Center" />
-                                <!-- 吉祥物显隐控制按钮 (位于更新公告栏头部右侧) -->
-                                <Button x:Name="MascotToggleBtn"
-                                        HorizontalAlignment="Right"
-                                        Background="#301A2026"
-                                        BorderBrush="#FF4A5568"
-                                        BorderThickness="1"
-                                        CornerRadius="4"
-                                        Padding="8,3"
-                                        Content="🦊 挂件"
-                                        Foreground="#FFCBD5E0"
-                                        FontSize="10"
-                                        Cursor="Hand"
-                                        Click="MascotToggleBtn_Click" />
-                            </Grid>
-                            <TextBlock Text="• 新增玩家自定义全屏壁纸与毛玻璃模糊。" FontSize="11" Foreground="#FFCBD5E0" Margin="0,0,0,4" />
-                            <TextBlock Text="• 接入 PreviewMouseWheel 隧道路由，修复滚轮卡滞。" FontSize="11" Foreground="#FFCBD5E0" Margin="0,0,0,4" />
-                            <TextBlock Text="• 补齐首页环境与诊断卡片，打通启动前状态联动闭环。" FontSize="11" Foreground="{DynamicResource UnturnedAccentGoldBrush}" />
-                        </StackPanel>
-
-                        <!-- 吉祥物挂件 (位于更新公告栏右下角，支持平滑折叠) -->
-                        <Border x:Name="MascotContainer"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Bottom"
-                                Margin="0,0,-4,-12"
-                                Width="54"
-                                Height="54"
-                                IsHitTestVisible="False"
-                                Visibility="Visible">
-                            <TextBlock Text="🦊" FontSize="38" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.9" />
-                        </Border>
-                    </Grid>
+                    <StackPanel>
+                        <TextBlock Text="v2.2.1 Patch Notes"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="#FFFFFFFF"
+                                   Margin="0,0,0,8" />
+                        <TextBlock Text="• 新增玩家自定义全屏壁纸与毛玻璃模糊。" FontSize="11" Foreground="#FFCBD5E0" Margin="0,0,0,4" />
+                        <TextBlock Text="• 接入 PreviewMouseWheel 隧道路由，修复滚轮卡滞。" FontSize="11" Foreground="#FFCBD5E0" Margin="0,0,0,4" />
+                        <TextBlock Text="• 补齐首页环境与诊断卡片，打通启动前状态联动闭环。" FontSize="11" Foreground="{DynamicResource UnturnedAccentGoldBrush}" Margin="0,0,0,4" />
+                        <TextBlock Text="• 右下角小助理展台独立悬浮，带来沉浸式伴侣互动。" FontSize="11" Foreground="#FFFB923C" />
+                    </StackPanel>
                 </Border>
             </Grid>
 
         </StackPanel>
     </ScrollViewer>
+
+    <!-- 独立悬浮右下角小助理展台 (Mascot Assistant) - 与顶栏 [🦊 助理] 开关联动 -->
+    <Border x:Name="MascotAssistantContainer"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Margin="0,0,24,12"
+            Cursor="Hand"
+            MouseLeftButtonUp="MascotAssistant_Click"
+            ToolTip="点击小助理互动 ✨">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+            <!-- 伴侣互动对白气泡 -->
+            <Border x:Name="MascotBubbleBorder"
+                    Background="#E014191F"
+                    BorderBrush="{DynamicResource UnturnedMascotOrangeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="10,7"
+                    Margin="0,0,8,22"
+                    VerticalAlignment="Bottom">
+                <StackPanel>
+                    <TextBlock x:Name="MascotBubbleText"
+                               Text="🐾 幸存者，今天也是充满模组的一天！"
+                               FontSize="11"
+                               Foreground="#FFFFFFFF" />
+                    <TextBlock Text="点击我互动 ✨"
+                               FontSize="9"
+                               Foreground="{DynamicResource UnturnedAccentGoldBrush}"
+                               Margin="0,2,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- 小助理 Q 版立绘图片 (高清 Assets 资源) -->
+            <Image Source="/Assets/umm-mascot-chibi-v2.png"
+                   Width="84"
+                   Height="112"
+                   Stretch="Uniform"
+                   RenderOptions.BitmapScalingMode="HighQuality" />
+        </StackPanel>
+    </Border>
+</Grid>
 </Page>

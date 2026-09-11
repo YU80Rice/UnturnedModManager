@@ -129,6 +129,38 @@ public partial class UnturnedNativeShellPrototype : UserControl
     }
 
     /// <summary>
+    /// 小助理次级入口 (联动控制主页小助理展台显隐)
+    /// </summary>
+    private void SecondaryMascotBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (_playPage != null)
+        {
+            bool isVisible = _playPage.ToggleMascotVisible();
+            SecondaryMascotBtnText.Text = isVisible ? "助理" : "助理 (已藏)";
+        }
+        else
+        {
+            MessageBox.Show("【原型验证】小助理挂件在「游戏启动」主页就绪。", "Unturned Native Shell 原型");
+        }
+    }
+
+    /// <summary>
+    /// 本机环境与社区中枢触发卡片响应
+    /// </summary>
+    private void NavHubTriggerBtn_Click(object sender, RoutedEventArgs e)
+    {
+        MessageBox.Show(
+            "【本机环境与社区中枢】\n\n" +
+            "👤 社区账户: YU80Rice [认证创作者]\n" +
+            "🎮 Steam 环境: 🟢 运行中 (免绑定本地进程安全探测)\n" +
+            "🎨 外观偏好: 跟随系统 (支持天体滑动切换 白天 / 跟随 / 黑夜)\n\n" +
+            "在生产中点击将向上平滑展开中枢面板，实现外观偏好与 unmod.online 账户管理联动。",
+            "本机环境与社区中枢",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+    }
+
+    /// <summary>
     /// 任务中心次级入口
     /// </summary>
     private void SecondaryTaskBtn_Click(object sender, RoutedEventArgs e)
