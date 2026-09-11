@@ -10,7 +10,8 @@ namespace UnturnedModManager.Pages;
 
 public partial class CommunityPage : Page
 {
-    private readonly CommunityViewModel _viewModel = App.Services.CreateCommunityViewModel();
+    private readonly CommunityViewModel _viewModel = App.Services?.CreateCommunityViewModel() ?? new CommunityViewModel();
+    public CommunityViewModel ViewModel => _viewModel;
     public CommunityPage()
     {
         InitializeComponent(); DataContext = _viewModel;

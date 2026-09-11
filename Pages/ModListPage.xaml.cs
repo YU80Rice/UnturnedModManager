@@ -13,7 +13,9 @@ namespace UnturnedModManager.Pages;
 
 public partial class ModListPage : Page
 {
-    private readonly LocalModsViewModel _viewModel = App.Services.CreateLocalModsViewModel();
+    private readonly LocalModsViewModel _viewModel = App.Services?.CreateLocalModsViewModel() ?? new LocalModsViewModel();
+
+    public LocalModsViewModel ViewModel => _viewModel;
 
     public ModListPage()
     {
@@ -33,7 +35,7 @@ public partial class ModListPage : Page
 
 
     private void OnNoticeRaised(UserNotice notice)
-        => App.Services.Notifications.Publish(notice);
+        => App.Services?.Notifications?.Publish(notice);
 
     private void ModsList_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {

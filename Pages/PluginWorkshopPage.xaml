@@ -1,0 +1,95 @@
+<Page x:Class="UnturnedModManager.Pages.PluginWorkshopPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:controls="clr-namespace:UnturnedModManager.Controls"
+      Title="模组工坊"
+      Background="Transparent"
+      Focusable="True"
+      PreviewMouseWheel="Page_PreviewMouseWheel">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Row 0: 顶部聚合导航切换栏 (进入详情时隐藏以聚焦详情内容) -->
+            <RowDefinition Height="Auto" />
+            <!-- Row 1: 单一容器内容宿主 (常驻子页面实例，通过 Visibility 互斥切换) -->
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ========================================================= -->
+        <!-- 1. 顶部工坊双子域切换导航栏 (Dual SubDomain Tab Bar)         -->
+        <!-- ========================================================= -->
+        <Grid x:Name="HeaderArea" Grid.Row="0" Margin="28,20,28,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 标题与副标题 -->
+            <controls:PageHeader Grid.Column="0"
+                                 Title="模组工坊"
+                                 Subtitle="聚合本地插件管理与 unmod.online 社区在线发现 · 独立状态隔离 · 沉浸拟真体验"
+                                 VerticalAlignment="Center" />
+
+            <!-- 双子域分段式药丸切换器 -->
+            <Border Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Padding="4"
+                    CornerRadius="10"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1">
+                <StackPanel Orientation="Horizontal">
+                    <ui:Button x:Name="SubDomainLocalBtn"
+                               Content="本地插件"
+                               Icon="{ui:SymbolIcon Box24}"
+                               Appearance="Primary"
+                               Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
+                               Height="36"
+                               Padding="14,0"
+                               Margin="0,0,4,0"
+                               Click="SubDomainLocalBtn_Click"
+                               ToolTip="切换至本地已安装插件管理 (Local Installed)" />
+
+                    <ui:Button x:Name="SubDomainCommunityBtn"
+                               Content="社区发现"
+                               Icon="{ui:SymbolIcon StoreMicrosoft24}"
+                               Appearance="Secondary"
+                               Height="36"
+                               Padding="14,0"
+                               Click="SubDomainCommunityBtn_Click"
+                               ToolTip="切换至社区模组在线发现 (Community Discovery)" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ========================================================= -->
+        <!-- 2. 单一容器内容宿主 (Single Container Content Host)          -->
+        <!-- ========================================================= -->
+        <Grid x:Name="ViewsContainer" Grid.Row="1">
+            <!-- 子视图 1: 本地插件管理页面宿主 (默认激活) -->
+            <Frame x:Name="LocalHost"
+                   NavigationUIVisibility="Hidden"
+                   JournalOwnership="OwnsJournal"
+                   Focusable="False"
+                   Background="Transparent"
+                   Visibility="Visible" />
+
+            <!-- 子视图 2: 社区模组发现页面宿主 (默认隐藏隔离) -->
+            <Frame x:Name="CommunityHost"
+                   NavigationUIVisibility="Hidden"
+                   JournalOwnership="OwnsJournal"
+                   Focusable="False"
+                   Background="Transparent"
+                   Visibility="Collapsed" />
+
+            <!-- 子视图 3: 社区插件详情自治宿主 (默认隐藏) -->
+            <Frame x:Name="DetailHost"
+                   NavigationUIVisibility="Hidden"
+                   JournalOwnership="OwnsJournal"
+                   Focusable="False"
+                   Background="Transparent"
+                   Visibility="Collapsed" />
+        </Grid>
+    </Grid>
+</Page>

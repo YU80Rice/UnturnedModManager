@@ -19,6 +19,7 @@ public sealed class PageScrollWheelBehaviorTests
     [InlineData("Pages/CommunityPage.xaml")]
     [InlineData("Pages/CommunityDetailPage.xaml")]
     [InlineData("Pages/TaskCenterPage.xaml")]
+    [InlineData("Pages/PluginWorkshopPage.xaml")]
     public void Page_WithScrollViewer_MustWirePreviewMouseWheel(string relativePagePath)
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);

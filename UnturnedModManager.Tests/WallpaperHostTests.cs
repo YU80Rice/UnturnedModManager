@@ -46,6 +46,7 @@ public sealed class WallpaperHostTests
     [InlineData("Pages/AboutPage.xaml")]
     [InlineData("Pages/CommunityPage.xaml")]
     [InlineData("Pages/CommunityDetailPage.xaml")]
+    [InlineData("Pages/PluginWorkshopPage.xaml")]
     public void SecondaryPages_RootBackgroundMustBeTransparent(string relativePagePath)
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);
