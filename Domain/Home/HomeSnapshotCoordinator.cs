@@ -157,6 +157,8 @@ public sealed class HomeSnapshotCoordinator : IHomeSnapshotCoordinator
 
     private async Task ExecuteRefreshCycleAsync(CancellationToken callerToken)
     {
+        callerToken.ThrowIfCancellationRequested();
+
         CancellationTokenSource linkedCts;
         long generation;
 
@@ -184,6 +186,11 @@ public sealed class HomeSnapshotCoordinator : IHomeSnapshotCoordinator
 
             await Task.WhenAll(launchTask, envTask, diagTask).ConfigureAwait(false);
 
+            if (callerToken.IsCancellationRequested)
+            {
+                callerToken.ThrowIfCancellationRequested();
+            }
+
             if (token.IsCancellationRequested || Volatile.Read(ref _refreshGeneration) != generation)
             {
                 return; // 代际已过期或已被新任务 supersede，放弃发布
@@ -196,6 +203,11 @@ public sealed class HomeSnapshotCoordinator : IHomeSnapshotCoordinator
             HomeSnapshot phase1Snapshot;
             lock (_stateLock)
             {
+                if (callerToken.IsCancellationRequested)
+                {
+                    callerToken.ThrowIfCancellationRequested();
+                }
+
                 if (_disposed || token.IsCancellationRequested || Volatile.Read(ref _refreshGeneration) != generation)
                     return;
 
@@ -225,6 +237,11 @@ public sealed class HomeSnapshotCoordinator : IHomeSnapshotCoordinator
 
             await Task.WhenAll(featuredTask, announcementsTask).ConfigureAwait(false);
 
+            if (callerToken.IsCancellationRequested)
+            {
+                callerToken.ThrowIfCancellationRequested();
+            }
+
             if (token.IsCancellationRequested || Volatile.Read(ref _refreshGeneration) != generation)
             {
                 return; // 代际已过期，放弃发布慢速分区
@@ -236,6 +253,11 @@ public sealed class HomeSnapshotCoordinator : IHomeSnapshotCoordinator
             HomeSnapshot phase2Snapshot;
             lock (_stateLock)
             {
+                if (callerToken.IsCancellationRequested)
+                {
+                    callerToken.ThrowIfCancellationRequested();
+                }
+
                 if (_disposed || token.IsCancellationRequested || Volatile.Read(ref _refreshGeneration) != generation)
                     return;
 
@@ -257,7 +279,19 @@ public sealed class HomeSnapshotCoordinator : IHomeSnapshotCoordinator
         }
         catch (OperationCanceledException)
         {
-            // 正常的代际 supersede 或 Coordinator 释放取消，安全吞吐
+            // Ticket 04 冻结契约：调用者主动传入的取消，必须严格继续传播，不能静默转换为 RanToCompletion
+            if (callerToken.IsCancellationRequested)
+            {
+                throw;
+            }
+
+            // 仅吞掉明确属于内部代际 supersede 或 Coordinator 释放的取消
+            if (_disposed || _lifetimeCts.IsCancellationRequested || Volatile.Read(ref _refreshGeneration) != generation)
+            {
+                return;
+            }
+
+            throw;
         }
         catch (Exception ex)
         {

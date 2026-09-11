@@ -597,6 +597,83 @@ public sealed class HomeSnapshotCoordinatorTests
         Assert.Equal(110.0, specSmall.SafeBottomInset);
     }
 
+    [Fact]
+    public async Task RefreshAsync_WhenCallerTokenPreCanceled_ThrowsOperationCanceledException()
+    {
+        using var coordinator = CreateTestCoordinator();
+        using var cts = new System.Threading.CancellationTokenSource();
+        cts.Cancel();
+
+        // 契约断言：调用方主动传入已取消的令牌时，必须抛出 OperationCanceledException，严禁静默 RanToCompletion
+        var task = coordinator.RefreshAsync(cts.Token);
+        var ex = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => task);
+        Assert.Equal(cts.Token, ex.CancellationToken);
+        Assert.True(task.IsCanceled);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_WhenCallerTokenCanceledDuringExecution_PropagatesOperationCanceledException()
+    {
+        var startedTcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
+        var slowAdapter = new StubCommunityAdapter
+        {
+            Handler = async token =>
+            {
+                startedTcs.TrySetResult(true);
+                await System.Threading.Tasks.Task.Delay(5000, token);
+                return FeedSectionSnapshot<FeaturedPluginItem>.Empty();
+            }
+        };
+
+        using var coordinator = CreateTestCoordinator(communityAdapter: slowAdapter);
+        using var cts = new System.Threading.CancellationTokenSource();
+
+        var refreshTask = coordinator.RefreshAsync(cts.Token);
+        await startedTcs.Task; // 确保进入慢速 Phase 2
+
+        cts.Cancel(); // 调用者主动取消
+
+        // 契约断言：调用者取消令牌必须如实向外传播 OperationCanceledException 并使 Task 呈现 Canceled 状态
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => refreshTask);
+        Assert.True(refreshTask.IsCanceled);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_WhenSuperseded_InternalSupersedeDoesNotThrowToCaller()
+    {
+        var secondStartedTcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
+        int adapterInvocations = 0;
+        var adapter = new StubCommunityAdapter
+        {
+            Handler = async token =>
+            {
+                int inv = System.Threading.Interlocked.Increment(ref adapterInvocations);
+                if (inv == 1)
+                {
+                    await System.Threading.Tasks.Task.Delay(500, token);
+                }
+                else
+                {
+                    secondStartedTcs.TrySetResult(true);
+                }
+                return FeedSectionSnapshot<FeaturedPluginItem>.Empty();
+            }
+        };
+
+        using var coordinator = CreateTestCoordinator(communityAdapter: adapter);
+
+        // 启动第一轮刷新，并立即被第二轮覆盖 (superseded)
+        var firstTask = coordinator.RefreshAsync();
+        var secondTask = coordinator.RefreshAsync();
+
+        await secondTask;
+
+        // 契约断言：内部代际覆盖 (supersede) 属于正常生命周期调度，第一轮安全吞吐不向调用者抛出未处理异常
+        await firstTask; // 不抛出 OperationCanceledException
+        Assert.True(firstTask.IsCompletedSuccessfully);
+        Assert.True(secondTask.IsCompletedSuccessfully);
+    }
+
     private static HomeSnapshotCoordinator CreateTestCoordinator(
         ILaunchStateAdapter? launchAdapter = null,
         IEnvironmentStateAdapter? envAdapter = null,
