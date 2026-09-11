@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,7 +13,7 @@ namespace UnturnedModManager.Pages;
 
 /// <summary>
 /// 模组工坊纯导航聚合宿主 (Ticket C 规范)
-/// 作为 Slot 3 的纯导航外壳，在单一容器 ViewsContainer 内挂载 ModListPage 与 CommunityPage。
+/// 作为 Slot 3 的纯导航外壳，在单一容器 WorkshopContentHost 内挂载 ModListPage 与 CommunityPage。
 /// 通过 Visibility（Visible vs Collapsed）互斥切换保持单活跃视图，隔离焦点命中与可访问性树；
 /// 自治消化社区插件详情展示与返回，精准保全和恢复搜索词、筛选条件与列表滚动位置。
 /// </summary>
@@ -43,8 +44,13 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
         _coordinator.DetailStateChanged += OnDetailStateChanged;
         _coordinator.CommunitySearchQueryApplied += OnCommunitySearchQueryApplied;
 
-        _localPage.ViewModel.OpenCommunityRequested += OnLocalOpenCommunityRequested;
-        _communityPage.ViewModel.OpenModRequested += OnCommunityOpenModRequested;
+        // 接管子页面的详情导航委托，由 Slot 3 外壳自治消化，消除双重导航事件与重复订阅
+        _localPage.CustomOpenDetailAction = id => ShowDetail(id, WorkshopSubDomain.LocalInstalled);
+        _communityPage.CustomOpenDetailAction = id => ShowDetail(id, WorkshopSubDomain.CommunityDiscovery);
+
+        // 挂载两个子页面实例到单一容器内的 ContentControl 宿主中 (消除多 Frame Journal 结构)
+        LocalHost.Content = _localPage;
+        CommunityHost.Content = _communityPage;
 
         Loaded += OnLoaded;
     }
@@ -74,15 +80,14 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        // 挂载两个子页面实例到各自的 Frame 容器中
         if (LocalHost.Content is null)
         {
-            LocalHost.Navigate(_localPage);
+            LocalHost.Content = _localPage;
         }
 
         if (CommunityHost.Content is null)
         {
-            CommunityHost.Navigate(_communityPage);
+            CommunityHost.Content = _communityPage;
         }
 
         UpdateViewVisibility();
@@ -149,7 +154,7 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
             sourceContext);
 
         _detailPage = new CommunityDetailPage(modId, origin, () => CloseDetail());
-        DetailHost.Navigate(_detailPage);
+        DetailHost.Content = _detailPage;
 
         // 3. 切换视图状态为详情激活
         UpdateViewVisibility();
@@ -170,7 +175,7 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
             return false;
         }
 
-        // 卸载详情页内容
+        // 卸载详情页内容 (清除受控挂载引用)
         DetailHost.Content = null;
         _detailPage = null;
 
@@ -257,7 +262,7 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
 
     #endregion
 
-    #region 上下文快照保全与恢复实现
+    #region 上下文快照保全与精准恢复实现
 
     private void CaptureCurrentViewSnapshot()
     {
@@ -269,7 +274,8 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
         if (_coordinator.CurrentSubDomain == WorkshopSubDomain.LocalInstalled)
         {
             var offset = GetScrollViewerOffset(LocalHost);
-            _coordinator.CaptureLocalSnapshot(offset);
+            var selectedProfileId = _localPage.ViewModel.SelectedProfile?.Id;
+            _coordinator.CaptureLocalSnapshot(offset, selectedProfileId);
         }
         else
         {
@@ -285,9 +291,22 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
     {
         if (target == WorkshopSubDomain.LocalInstalled)
         {
-            if (_coordinator.LocalSnapshot is { } localSnap && localSnap.ScrollOffset > 0)
+            if (_coordinator.LocalSnapshot is { } localSnap)
             {
-                ApplyScrollOffset(LocalHost, localSnap.ScrollOffset);
+                if (localSnap.SelectedProfileId is not null)
+                {
+                    var matchedProfile = _localPage.ViewModel.PluginProfiles
+                        .FirstOrDefault(p => p.Id == localSnap.SelectedProfileId);
+                    if (matchedProfile is not null && _localPage.ViewModel.SelectedProfile != matchedProfile)
+                    {
+                        _localPage.ViewModel.SelectedProfile = matchedProfile;
+                    }
+                }
+
+                if (localSnap.ScrollOffset > 0)
+                {
+                    ApplyScrollOffset(LocalHost, localSnap.ScrollOffset);
+                }
             }
         }
         else
@@ -297,6 +316,21 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
                 if (commSnap.SearchQuery is not null && _communityPage.ViewModel.SearchText != commSnap.SearchQuery)
                 {
                     _communityPage.ViewModel.SearchText = commSnap.SearchQuery;
+                }
+
+                if (commSnap.CategoryKey is not null)
+                {
+                    var matchedCategory = _communityPage.ViewModel.Categories
+                        .FirstOrDefault(c => c.Key == commSnap.CategoryKey);
+                    if (matchedCategory is not null && _communityPage.ViewModel.SelectedCategory != matchedCategory)
+                    {
+                        _communityPage.ViewModel.SelectedCategory = matchedCategory;
+                    }
+                }
+
+                if (commSnap.Sort is not null && _communityPage.ViewModel.Sort != commSnap.Sort)
+                {
+                    _communityPage.ViewModel.Sort = commSnap.Sort;
                 }
 
                 if (commSnap.ScrollOffset > 0)
@@ -349,16 +383,6 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
     #endregion
 
     #region 事件转发与回调处理
-
-    private void OnLocalOpenCommunityRequested(int id)
-    {
-        ShowDetail(id, WorkshopSubDomain.LocalInstalled);
-    }
-
-    private void OnCommunityOpenModRequested(int id)
-    {
-        ShowDetail(id, WorkshopSubDomain.CommunityDiscovery);
-    }
 
     private void OnSubDomainChanged(object? sender, WorkshopSubDomain subDomain)
     {

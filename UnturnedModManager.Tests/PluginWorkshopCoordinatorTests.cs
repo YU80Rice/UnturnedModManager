@@ -249,10 +249,11 @@ public sealed class PluginWorkshopCoordinatorTests
     {
         var coordinator = new PluginWorkshopCoordinator();
 
-        // 1. 捕获本地列表滚动位移
-        coordinator.CaptureLocalSnapshot(142.5);
+        // 1. 捕获本地列表滚动位移与配置方案 ID
+        coordinator.CaptureLocalSnapshot(142.5, "profile-alpha");
         Assert.NotNull(coordinator.LocalSnapshot);
         Assert.Equal(142.5, coordinator.LocalSnapshot.ScrollOffset);
+        Assert.Equal("profile-alpha", coordinator.LocalSnapshot.SelectedProfileId);
 
         // 2. 捕获社区列表状态（搜索词、分类、排序、滚动位移）
         coordinator.CaptureCommunitySnapshot("Rocket", "mechanics", "downloads", 320.0);
@@ -265,6 +266,7 @@ public sealed class PluginWorkshopCoordinatorTests
         // 3. 验证两者隔离：修改社区快照不影响本地快照
         coordinator.CaptureCommunitySnapshot("Economy", null, "newest", 0.0);
         Assert.Equal(142.5, coordinator.LocalSnapshot.ScrollOffset);
+        Assert.Equal("profile-alpha", coordinator.LocalSnapshot.SelectedProfileId);
         Assert.Equal("Economy", coordinator.CommunitySnapshot.SearchQuery);
 
         // 4. 清理快照

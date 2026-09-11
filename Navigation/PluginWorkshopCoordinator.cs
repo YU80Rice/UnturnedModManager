@@ -10,6 +10,7 @@ public sealed record WorkshopContextSnapshot(
     string? SearchQuery = null,
     string? CategoryKey = null,
     string? Sort = null,
+    string? SelectedProfileId = null,
     double ScrollOffset = 0.0,
     DateTime CapturedAt = default);
 
@@ -305,11 +306,12 @@ public sealed class PluginWorkshopCoordinator : IPluginWorkshopNavigation
 
     #region 上下文快照暂存与精准恢复
 
-    public void CaptureLocalSnapshot(double scrollOffset)
+    public void CaptureLocalSnapshot(double scrollOffset, string? selectedProfileId = null)
     {
         lock (_syncLock)
         {
             _localSnapshot = new WorkshopContextSnapshot(
+                SelectedProfileId: selectedProfileId,
                 ScrollOffset: Math.Max(0.0, scrollOffset),
                 CapturedAt: DateTime.UtcNow);
         }

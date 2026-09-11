@@ -216,6 +216,48 @@ public sealed class PluginWorkshopPageTests
     }
 
     [Fact]
+    public void Page_ContentHostStructure_UsesContentControlWithoutFrames()
+    {
+        RunOnSta(() =>
+        {
+            var page = new PluginWorkshopPage();
+
+            // 契约断言 [P1]：消除多 Frame 嵌套历史栈与 Journal 结构，使用纯净 ContentControl 承载
+            Assert.IsType<ContentControl>(page.LocalHost);
+            Assert.False(page.LocalHost is Frame, "LocalHost must not be a WPF Frame");
+
+            Assert.IsType<ContentControl>(page.CommunityHost);
+            Assert.False(page.CommunityHost is Frame, "CommunityHost must not be a WPF Frame");
+
+            Assert.IsType<ContentControl>(page.DetailHost);
+            Assert.False(page.DetailHost is Frame, "DetailHost must not be a WPF Frame");
+        });
+    }
+
+    [Fact]
+    public void Page_SubPagesCustomOpenDetailAction_WiredDirectlyToSingleOwnerShowDetail()
+    {
+        RunOnSta(() =>
+        {
+            var page = new PluginWorkshopPage();
+
+            // 契约断言 [P1]：子页面 CustomOpenDetailAction 必须由外壳单向接管，杜绝外部多重监听与双重导航
+            Assert.NotNull(page.LocalPage.CustomOpenDetailAction);
+            Assert.NotNull(page.CommunityPage.CustomOpenDetailAction);
+
+            // 模拟触发子页面的详情导航委托
+            page.CommunityPage.CustomOpenDetailAction!(456);
+
+            Assert.True(page.IsDetailActive);
+            Assert.Equal(456, page.ActiveDetailModId);
+            Assert.Equal(WorkshopActiveView.Detail, page.ActiveView);
+            Assert.Equal(WorkshopSubDomain.CommunityDiscovery, page.Coordinator.DetailSourceSubDomain);
+            Assert.Equal(Visibility.Visible, page.DetailHost.Visibility);
+            Assert.Equal(Visibility.Collapsed, page.CommunityHost.Visibility);
+        });
+    }
+
+    [Fact]
     public void Page_HandleNavigationRequest_RejectsNonModsSlot()
     {
         RunOnSta(() =>
@@ -229,3 +271,4 @@ public sealed class PluginWorkshopPageTests
         });
     }
 }
+

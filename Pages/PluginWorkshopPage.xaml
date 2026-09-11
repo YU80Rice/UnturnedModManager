@@ -65,31 +65,26 @@
 
         <!-- ========================================================= -->
         <!-- 2. 单一容器内容宿主 (Single Container Content Host)          -->
+        <!-- 消除多 Frame Journal 结构，双视图驻留由 Visibility 互斥控制 -->
         <!-- ========================================================= -->
-        <Grid x:Name="ViewsContainer" Grid.Row="1">
+        <Grid x:Name="WorkshopContentHost" Grid.Row="1">
             <!-- 子视图 1: 本地插件管理页面宿主 (默认激活) -->
-            <Frame x:Name="LocalHost"
-                   NavigationUIVisibility="Hidden"
-                   JournalOwnership="OwnsJournal"
-                   Focusable="False"
-                   Background="Transparent"
-                   Visibility="Visible" />
+            <ContentControl x:Name="LocalHost"
+                            Focusable="False"
+                            Background="Transparent"
+                            Visibility="Visible" />
 
             <!-- 子视图 2: 社区模组发现页面宿主 (默认隐藏隔离) -->
-            <Frame x:Name="CommunityHost"
-                   NavigationUIVisibility="Hidden"
-                   JournalOwnership="OwnsJournal"
-                   Focusable="False"
-                   Background="Transparent"
-                   Visibility="Collapsed" />
+            <ContentControl x:Name="CommunityHost"
+                            Focusable="False"
+                            Background="Transparent"
+                            Visibility="Collapsed" />
 
-            <!-- 子视图 3: 社区插件详情自治宿主 (默认隐藏) -->
-            <Frame x:Name="DetailHost"
-                   NavigationUIVisibility="Hidden"
-                   JournalOwnership="OwnsJournal"
-                   Focusable="False"
-                   Background="Transparent"
-                   Visibility="Collapsed" />
+            <!-- 详情视图宿主: 由 Slot 3 自治适配器挂载展示 (默认隐藏) -->
+            <ContentControl x:Name="DetailHost"
+                            Focusable="False"
+                            Background="Transparent"
+                            Visibility="Collapsed" />
         </Grid>
     </Grid>
 </Page>

@@ -17,6 +17,11 @@ public partial class ModListPage : Page
 
     public LocalModsViewModel ViewModel => _viewModel;
 
+    /// <summary>
+    /// 自定义详情打开委托 (当挂载入工坊聚合外壳时由外壳接管，消除双重导航事件)
+    /// </summary>
+    public Action<int>? CustomOpenDetailAction { get; set; }
+
     public ModListPage()
     {
         InitializeComponent();
@@ -30,8 +35,16 @@ public partial class ModListPage : Page
     private async void OnLoaded(object sender, RoutedEventArgs e) => await _viewModel.ActivateAsync();
     private void OnUnloaded(object sender, RoutedEventArgs e) => _viewModel.Deactivate();
 
-    private void OnOpenCommunityRequested(int id) =>
+    private void OnOpenCommunityRequested(int id)
+    {
+        if (CustomOpenDetailAction is not null)
+        {
+            CustomOpenDetailAction.Invoke(id);
+            return;
+        }
+
         AppNavigationService.Current.OpenCommunityDetail(new CommunityDetailRequest(id, WorkshopSubDomain.LocalInstalled));
+    }
 
 
     private void OnNoticeRaised(UserNotice notice)
