@@ -25,7 +25,7 @@
 
 ## 当前活跃 Frontier
 
-- [04: HomeSnapshot 响应式不可变快照投影与代际防覆盖降级模型](issues/04-grilling-homesnapshot-projection-and-degradation.md) — (待用户指令开启·Next Frontier) 严格锁定首页只读不可变快照投影、多源适配器协调、代际防覆写与多态离线降级模型，严禁超范围扩大至真实数据或生产代码。
+- [04: HomeSnapshot 响应式不可变快照投影与代际防覆盖降级模型](issues/04-grilling-homesnapshot-projection-and-degradation.md) — (当前活跃 Frontier·claimed) 在 Ticket 03 契约冻结后正式开启；严格锁定首页只读不可变快照投影、多源适配器协调、代际防覆写与多态离线降级模型，严禁超范围扩大至真实数据或生产代码。
 
 ## 尚未明确
 
