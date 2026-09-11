@@ -125,6 +125,54 @@ public sealed class HomeSnapshotCoordinatorTests
     }
 
     [Fact]
+    public void ModelInvariants_PropertiesAreGetterOnly_BlockingWithExpressionMutation()
+    {
+        // 验证 State, Items, LastSynchronized, IsInitialized, FailureCategory, CanRetry 均为仅 get
+        // 彻底杜绝调用方使用 'with { State = ... }' 语法绕过构造函数强校验制造非法快照
+        var propertiesToVerify = new[]
+        {
+            nameof(FeedSectionSnapshot<FeaturedPluginItem>.State),
+            nameof(FeedSectionSnapshot<FeaturedPluginItem>.IsInitialized),
+            nameof(FeedSectionSnapshot<FeaturedPluginItem>.Items),
+            nameof(FeedSectionSnapshot<FeaturedPluginItem>.LastSynchronized),
+            nameof(FeedSectionSnapshot<FeaturedPluginItem>.FailureCategory),
+            nameof(FeedSectionSnapshot<FeaturedPluginItem>.CanRetry)
+        };
+
+        var snapshotType = typeof(FeedSectionSnapshot<FeaturedPluginItem>);
+
+        foreach (var propName in propertiesToVerify)
+        {
+            var prop = snapshotType.GetProperty(
+                propName,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+
+            Assert.NotNull(prop);
+            Assert.True(prop.CanRead, $"属性 {propName} 必须具备 getter");
+            Assert.False(prop.CanWrite, $"属性 {propName} 必须为纯 getter-only，严禁暴露 set/init 访问器以防 with 语法绕过不变量");
+            Assert.Null(prop.SetMethod);
+        }
+    }
+
+    [Fact]
+    public void ModelInvariants_RecordWithClone_PreservesIdenticalValidSnapshot()
+    {
+        var item = new FeaturedPluginItem("1", "插件", "描述", "分类", "1.0");
+        var now = DateTimeOffset.UtcNow;
+        var original = FeedSectionSnapshot<FeaturedPluginItem>.LiveOnline(ImmutableArray.Create(item), now);
+
+        // 纯克隆 (with { }) 必须维持完全一致且合法的快照，无法改写状态属性
+        var cloned = original with { };
+
+        Assert.Equal(original, cloned);
+        Assert.Equal(original.State, cloned.State);
+        Assert.Equal(original.Items, cloned.Items);
+        Assert.Equal(original.LastSynchronized, cloned.LastSynchronized);
+        Assert.Equal(original.IsInitialized, cloned.IsInitialized);
+        Assert.Equal(original.FailureCategory, cloned.FailureCategory);
+    }
+
+    [Fact]
     public void PureFunction_GetCacheAge_TruncatesNegativeClockRollback()
     {
         var syncTime = new DateTimeOffset(2026, 9, 11, 12, 0, 0, TimeSpan.Zero);

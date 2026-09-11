@@ -85,12 +85,12 @@ public enum FeedFailureCategory
 /// </summary>
 public sealed record FeedSectionSnapshot<T>
 {
-    public FeedDataState State { get; init; }
-    public bool IsInitialized { get; init; }
-    public ImmutableArray<T> Items { get; init; }
-    public DateTimeOffset? LastSynchronized { get; init; }
-    public bool CanRetry { get; init; }
-    public FeedFailureCategory? FailureCategory { get; init; }
+    public FeedDataState State { get; }
+    public bool IsInitialized { get; }
+    public ImmutableArray<T> Items { get; }
+    public DateTimeOffset? LastSynchronized { get; }
+    public bool CanRetry { get; }
+    public FeedFailureCategory? FailureCategory { get; }
 
     public FeedSectionSnapshot(
         FeedDataState State,

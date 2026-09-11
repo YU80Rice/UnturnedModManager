@@ -93,4 +93,9 @@
    - 新增 `ModelInvariants_IllegalCombinations_ExplicitlyRejected` 单元测试，全面验证 11 种非法状态组合在构造期均被立即拦截抛出 `ArgumentException`；
    - 新增 `ModelInvariants_FactoryMethods_ProduceValidInstances` 验证全套静态工厂方法产出合规快照。
 
-
+3. **[P1-3] 封闭 `with` 表达式绕过路径，将快照状态属性收紧为纯 getter-only**：
+   - 彻底将 `FeedSectionSnapshot<T>` 的所有状态属性（`State`、`IsInitialized`、`Items`、`LastSynchronized`、`CanRetry`、`FailureCategory`）由 `init` 改为纯 `get`；
+   - 彻底从 C# 语言编译期切断外部使用 `valid with { State = ... }` 绕过构造器检验制造非法状态的途径；
+   - 新增 `ModelInvariants_PropertiesAreGetterOnly_BlockingWithExpressionMutation` 反射测试，断言 6 大状态属性均为纯只读且 `SetMethod == null`；
+   - 新增 `ModelInvariants_RecordWithClone_PreservesIdenticalValidSnapshot` 测试，断言无参数的纯克隆 `valid with { }` 安全维持完全合法的快照内容；
+   - 全量自动化测试实测增至 **279 项**（Release 模式全绿通过，0 失败，0 跳过，Release 模式 0 警告、0 错误）。
