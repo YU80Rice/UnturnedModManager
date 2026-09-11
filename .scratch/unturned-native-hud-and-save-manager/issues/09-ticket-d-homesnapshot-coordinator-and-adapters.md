@@ -66,7 +66,7 @@
    - `RefreshAsync_WhenSuperseded_InternalSupersedeDoesNotThrowToCaller`：验证内部代际覆盖（supersede）正常安全返回，不干扰调用者。
 3. **测试数字口径对齐**：
    - 独立审查阶段基线测试总数为 258 项；
-   - 包含 Ticket B (+6)、Ticket C (+2)、Ticket D (+11) 复核回归测试后，当前全量自动化测试实测为 **277 项**（Release 模式全绿通过，0 失败，0 跳过）。
+   - 包含 Ticket B (+6)、Ticket C (+2)、Ticket D (+13) 复核回归测试后，当前全量自动化测试实测为 **279 项**（Release 模式全绿通过，0 失败，0 跳过）。
 
 ---
 

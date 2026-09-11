@@ -31,18 +31,18 @@
 - **活跃就绪工单 (Ready for Agent)**：
   - [Ticket B: Legacy NavigationFacade 兼容桥与无底层 UI 泄漏请求重构](issues/07-ticket-b-legacy-navigationfacade-adapter.md) — `Status: ready-for-human`（P1 隐式状态机与竞态修复完成，IDisposable 释放补齐，待复审确认）；
   - [Ticket C: PluginWorkshopPage 模组工坊纯导航聚合外壳与上下文恢复](issues/08-ticket-c-plugin-workshop-aggregation.md) — `Status: ready-for-human`（P1 单一内容宿主与自治接管修复完成，32 项契约测试全绿，待复审确认）；
-  - [Ticket D: HomeSnapshot Coordinator 响应式投影管道与多态离线降级](issues/09-ticket-d-homesnapshot-coordinator-and-adapters.md) — `Status: ready-for-human`（P1 构造期不变量、with绕过路径封闭与Mascot完整避让均修复，29 项纯逻辑与契约测试全绿，全量 279 项测试通过，Release 零警告，待复审确认）；
-- **后续阻塞工单**：
-  - [Ticket E: MainWindow 原生 Shell 生产挂载与现有 7 大业务页面平稳集成](issues/10-ticket-e-mainwindow-native-shell-mounting.md) — 严格保持阻塞，待 B、C、D 全部交付并通过双轴审查后解锁；
+  - [Ticket D: HomeSnapshot Coordinator 响应式投影管道与多态离线降级](issues/09-ticket-d-homesnapshot-coordinator-and-adapters.md) — `Status: ready-for-human`（复核审查已通过 PASS，P1 不变量与 with 路径封闭均闭环，29 项纯逻辑契约测试全绿，全量 279 项测试通过，Release 零警告，待人工验收）；
+- **后续就绪/阻塞工单**：
+  - [Ticket E: MainWindow 原生 Shell 生产挂载与现有 7 大业务页面平稳集成](issues/10-ticket-e-mainwindow-native-shell-mounting.md) — `Status: ready-for-agent`（前置 Ticket B、C、D 审查均已通过 PASS，阻塞正式解除，可领取消耗）；
   - [Ticket F: 全链路 0 回归门禁防线、无障碍与视口自适应综合验收](issues/11-ticket-f-zero-regression-and-accessibility-verification.md) — 阻塞于 Ticket E。
 
 ## 实施工单拓扑 (Implementation Tickets)
 
 - [Ticket A: NavigationShell 契约定义与逻辑宿主状态机](issues/06-ticket-a-navigationshell-contract-and-host.md) — `Status: resolved` (Blocked by: None)
-- [Ticket B: Legacy NavigationFacade 兼容桥与无底层 UI 泄漏请求重构](issues/07-ticket-b-legacy-navigationfacade-adapter.md) — `Status: ready-for-human` (Blocked by: None / P1修复完毕待复核)
-- [Ticket C: PluginWorkshopPage 模组工坊纯导航聚合外壳与上下文恢复](issues/08-ticket-c-plugin-workshop-aggregation.md) — `Status: ready-for-human` (Blocked by: None / P1修复完毕待复核)
-- [Ticket D: HomeSnapshot Coordinator 响应式投影管道与多态离线降级](issues/09-ticket-d-homesnapshot-coordinator-and-adapters.md) — `Status: ready-for-human` (Blocked by: None / P1修复完毕待复核)
-- [Ticket E: MainWindow 原生 Shell 生产挂载与现有 7 大业务页面平稳集成](issues/10-ticket-e-mainwindow-native-shell-mounting.md) — `Status: ready-for-agent` (Blocked by: Ticket B, C, D)
+- [Ticket B: Legacy NavigationFacade 兼容桥与无底层 UI 泄漏请求重构](issues/07-ticket-b-legacy-navigationfacade-adapter.md) — `Status: ready-for-human` (Blocked by: None / 审查复核通过)
+- [Ticket C: PluginWorkshopPage 模组工坊纯导航聚合外壳与上下文恢复](issues/08-ticket-c-plugin-workshop-aggregation.md) — `Status: ready-for-human` (Blocked by: None / 审查复核通过)
+- [Ticket D: HomeSnapshot Coordinator 响应式投影管道与多态离线降级](issues/09-ticket-d-homesnapshot-coordinator-and-adapters.md) — `Status: ready-for-human` (Blocked by: None / 审查复核通过 PASS)
+- [Ticket E: MainWindow 原生 Shell 生产挂载与现有 7 大业务页面平稳集成](issues/10-ticket-e-mainwindow-native-shell-mounting.md) — `Status: ready-for-agent` (Blocked by: None / 前置 B、C、D 全部复核通过)
 - [Ticket F: 全链路 0 回归门禁防线、无障碍与视口自适应综合验收](issues/11-ticket-f-zero-regression-and-accessibility-verification.md) — `Status: ready-for-agent` (Blocked by: Ticket E)
 
 ## 尚未明确
