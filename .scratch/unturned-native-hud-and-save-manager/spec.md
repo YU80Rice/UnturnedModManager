@@ -69,9 +69,9 @@ status: ready-for-agent
     {
         PrimarySlot ActiveSlot { get; }
         SecondaryNavigationTarget? ActiveSecondary { get; }
-        void NavigateTo(PageNavigationRequest request);
+        NavigationResult NavigateTo(PageNavigationRequest request);
         bool CanNavigateBack { get; }
-        void NavigateBack();
+        NavigationResult NavigateBack();
     }
     ```
 - **强类型不可变 NavigationCacheKey 与状态托管解耦 (来自 Ticket 05 裁定)**：
@@ -82,14 +82,15 @@ status: ready-for-agent
         WorkshopSubDomain? SubDomain,
         NavigationContext? Context);
     ```
+  - **组合合法性约束（不变量保证）**：`NavigationCacheKey` 必须由目标槽位 Adapter 严格校验其合法组合（例如 `PrimarySlot.Play` 或 `Settings` 搭配 `CommunitySearchContext` / `PluginDetailContext` 属于非法组合；`PrimarySlot.Mods` 搭配 `CommunitySearchContext` 属于合法组合）；非法组合不得进入缓存，亦不得作为有效导航执行（由 `NavigateTo` 返回指示无效目标或拒绝的 `NavigationResult`）；
   - 键内部禁止包含 Page、ViewModel、委托引用或任何可变集合；
   - 状态所有权解耦：ModListPage 与 CommunityPage 及其现有 ViewModel / Adapter 继续独立托管插件业务状态与数据源，本系统绝不引入任何未经证明的全局“聚合数据服务”；PluginWorkshopPage 仅负责子视图挂载、子域切换与上下文恢复；后台任务状态归现有任务中心独立托管。
 - **只读响应式快照 HomeSnapshot 树与五态降级模型 (来自 Ticket 04 裁定)**：
   - HomeSnapshot 采用纯只读不可变 Record 树，集合统一采用 ImmutableArray<T>（禁止向 UI 派发 default 数组）；
-  - 确立五态离线降级模型与独立的 IsInitialized 初始语义，使用强类型 FeedFailureCategory 枚举（Failed 状态下必有值，非 Failed 状态下严格为 null）：
+  - 确立五态离线降级模型与独立的 IsInitialized 初始语义，使用 Ticket 04 权威冻结的强类型 FeedFailureCategory 枚举（Failed 状态下必有值，非 Failed 状态下严格为 null）：
     ```csharp
     public enum FeedDataState { LiveOnline, CachedValid, CachedStale, Empty, Failed }
-    public enum FeedFailureCategory { NetworkTimeout, ServerUnavailable, DeserializationError, OfflineNoCache }
+    public enum FeedFailureCategory { NetworkUnavailable, ServerUnavailable, Timeout, DataCorrupted }
 
     public sealed record FeedSectionSnapshot<T>(
         FeedDataState State,
