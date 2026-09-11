@@ -40,12 +40,20 @@
 4. **事件派生生命周期与宿主身份隔离防守（P2 审查项修复）**：
    - 修复 `AppNavigationService.OnHostStateChanged` 事件中继：在 `lock (_syncLock)` 下严格验证 `_host is not null && ReferenceEquals(sender, _host)`；
    - 彻底拦截解绑旧宿主的延迟残留事件与伪造 sender 事件，确保只有当前活动宿主发出的事件被安全中继。
-5. **既有页面平滑迁移适配与复用优化**：
+5. **次级来源完整上下文保存与恢复（P1 审查项修复）**：
+   - 在 `LegacyNavigationViewHostAdapter` 中完整维护 `_currentSubDomain` 与 `_currentContext`；
+   - 次级激活时生成完整单根来源锚点：`ReturnContext(_activeSlot, _currentSubDomain, _currentContext)`；
+   - 返回时优先恢复完整单根来源锚点（即便底层 Frame journal 不可用也能精准恢复对应子域、搜索词或模组详情上下文与返回面包屑），彻底消解来源丢失问题。
+6. **Data 槽位明确受控语义杜绝假成功（P1 审查项修复）**：
+   - 针对过渡期 `LegacyNavigationViewHostAdapter` 暂无数据中心承载页面的事实，导航至 `PrimarySlot.Data` 时显式返回 `NavigationResult.PendingInitialization`；
+   - 保持槽位状态不变更、不触发假 `StateChanged`、视口不空转，杜绝空操作伪装 `Success`。
+7. **既有页面平滑迁移适配与复用优化**：
    - 同步迁移 `ModListPage`、`CommunityPage`、`CommunityDetailPage`、`TaskCenterPage` 以及 `MainWindow` 的导航调用点至 `CommunityDetailRequest` 与 `NavigationOrigin`；
    - `MainWindow.xaml.cs` 复用 `OpenCommunityDetail(modId)` 便捷重载，消解重复构造。
-6. **适配器契约测试与 0 回归门禁**：
-   - 编写 `UnturnedModManager.Tests/LegacyNavigationFacadeAdapterTests.cs`，涵盖：默认无宿主置空与未挂载异常、未挂载时受控拒绝与零历史创建、宿主 Attach/Detach 生命周期与置空语义、双向单一事实源同步、结构化模组详情请求转发、防御性参数校验、来源恢复、便捷导航方法、事件重绑、宿主解绑后延迟事件隔离（`StateChanged_DelayedEventFromDetachedHost_IsNotRelayed`）以及并发 Attach/Detach/Navigate 竞态一致性测试；
-   - 210 项测试（Release 模式）100% 绿灯通过；Debug 与 Release 模式全量编译通过，0 警告、0 错误。
+8. **适配器契约测试与 0 回归门禁**：
+   - 编写并扩充 `UnturnedModManager.Tests/LegacyNavigationFacadeAdapterTests.cs`，涵盖：默认无宿主置空与未挂载异常、未挂载时受控拒绝与零历史创建、宿主 Attach/Detach 生命周期与置空语义、双向单一事实源同步、结构化模组详情请求转发、防御性参数校验、来源恢复、便捷导航方法、事件重绑、宿主解绑后延迟事件隔离（`StateChanged_DelayedEventFromDetachedHost_IsNotRelayed`）、并发 Attach/Detach/Navigate 竞态一致性、Data 槽位 `PendingInitialization` 拒绝假成功、次级来源完整上下文保存，以及 Journal 不可用时精准恢复子域与搜索/详情上下文等 6 项新增测试；
+   - 271 项测试（Release 模式）100% 绿灯通过；Debug 与 Release 模式全量编译通过，0 警告、0 错误。
+
 
 
 

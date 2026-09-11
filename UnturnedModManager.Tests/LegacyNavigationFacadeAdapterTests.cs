@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnturnedModManager.Navigation;
+using UnturnedModManager.Pages;
 using UnturnedModManager.Services;
 using Xunit;
 
@@ -468,5 +469,197 @@ public sealed class LegacyNavigationFacadeAdapterTests : IDisposable
         public NavigationResult NavigateToSecondary(SecondaryNavigationTarget target) => NavigationResult.Success;
         public NavigationResult NavigateBack() => NavigationResult.Success;
     }
+
+    [Fact]
+    public void LegacyHostAdapter_DataSlot_ReturnsPendingInitializationAndDoesNotChangeState()
+    {
+        var target = new FakeLegacyNavigationTarget();
+        var adapter = new LegacyNavigationViewHostAdapter(target);
+        var stateChangedFired = false;
+        adapter.StateChanged += (_, _) => stateChangedFired = true;
+
+        Assert.Equal(PrimarySlot.Play, adapter.ActiveSlot);
+
+        var result = adapter.NavigateTo(new PageNavigationRequest(PrimarySlot.Data));
+
+        Assert.Equal(NavigationResult.PendingInitialization, result);
+        Assert.Equal(PrimarySlot.Play, adapter.ActiveSlot);
+        Assert.False(stateChangedFired);
+        Assert.Null(target.LastNavigatedType);
+    }
+
+    [Fact]
+    public void LegacyHostAdapter_SecondaryNavigation_CapturesFullReturnContext()
+    {
+        var target = new FakeLegacyNavigationTarget();
+        var adapter = new LegacyNavigationViewHostAdapter(target);
+
+        var searchContext = new CommunitySearchContext("nuclear");
+        var navResult = adapter.NavigateTo(new PageNavigationRequest(
+            PrimarySlot.Mods,
+            WorkshopSubDomain.CommunityDiscovery,
+            searchContext));
+
+        Assert.Equal(NavigationResult.Success, navResult);
+        Assert.Equal(PrimarySlot.Mods, adapter.ActiveSlot);
+        Assert.Equal(WorkshopSubDomain.CommunityDiscovery, adapter.CurrentSubDomain);
+        Assert.Same(searchContext, adapter.CurrentContext);
+        Assert.Equal(typeof(CommunityPage), target.LastNavigatedType);
+        Assert.Equal("nuclear", target.LastCommunitySearchQuery);
+
+        // 导航至次级目标 (TaskCenter)
+        var secResult = adapter.NavigateToSecondary(SecondaryNavigationTarget.TaskCenter);
+
+        Assert.Equal(NavigationResult.Success, secResult);
+        Assert.Equal(SecondaryNavigationTarget.TaskCenter, adapter.ActiveSecondary);
+        Assert.NotNull(adapter.RootReturnContext);
+        Assert.Equal(PrimarySlot.Mods, adapter.RootReturnContext.SourceSlot);
+        Assert.Equal(WorkshopSubDomain.CommunityDiscovery, adapter.RootReturnContext.SourceSubDomain);
+        Assert.Same(searchContext, adapter.RootReturnContext.SourceContext);
+        Assert.Equal(typeof(TaskCenterPage), target.LastNavigatedType);
+    }
+
+    [Fact]
+    public void LegacyHostAdapter_NavigateBack_WhenJournalUnavailable_RestoresSubDomainAndSearchContext()
+    {
+        var target = new FakeLegacyNavigationTarget { CanGoBack = false };
+        var adapter = new LegacyNavigationViewHostAdapter(target);
+
+        var searchContext = new CommunitySearchContext("zombie");
+        adapter.NavigateTo(new PageNavigationRequest(
+            PrimarySlot.Mods,
+            WorkshopSubDomain.CommunityDiscovery,
+            searchContext));
+
+        adapter.NavigateToSecondary(SecondaryNavigationTarget.TaskCenter);
+        target.LastNavigatedType = null;
+        target.LastCommunitySearchQuery = null;
+
+        // Journal 明确不可用，触发 NavigateBack
+        var backResult = adapter.NavigateBack();
+
+        Assert.Equal(NavigationResult.Success, backResult);
+        Assert.Null(adapter.ActiveSecondary);
+        Assert.Null(adapter.RootReturnContext);
+        Assert.Equal(PrimarySlot.Mods, adapter.ActiveSlot);
+        Assert.Equal(WorkshopSubDomain.CommunityDiscovery, adapter.CurrentSubDomain);
+        Assert.Same(searchContext, adapter.CurrentContext);
+        Assert.Equal(typeof(CommunityPage), target.LastNavigatedType);
+        Assert.Equal("zombie", target.LastCommunitySearchQuery);
+    }
+
+    [Fact]
+    public void LegacyHostAdapter_NavigateBack_WhenJournalUnavailable_RestoresLocalInstalledSubDomain()
+    {
+        var target = new FakeLegacyNavigationTarget { CanGoBack = false };
+        var adapter = new LegacyNavigationViewHostAdapter(target);
+
+        adapter.NavigateTo(new PageNavigationRequest(
+            PrimarySlot.Mods,
+            WorkshopSubDomain.LocalInstalled));
+
+        adapter.NavigateToSecondary(SecondaryNavigationTarget.About);
+        target.LastNavigatedType = null;
+
+        var backResult = adapter.NavigateBack();
+
+        Assert.Equal(NavigationResult.Success, backResult);
+        Assert.Null(adapter.ActiveSecondary);
+        Assert.Null(adapter.RootReturnContext);
+        Assert.Equal(PrimarySlot.Mods, adapter.ActiveSlot);
+        Assert.Equal(WorkshopSubDomain.LocalInstalled, adapter.CurrentSubDomain);
+        Assert.Equal(typeof(ModListPage), target.LastNavigatedType);
+    }
+
+    [Fact]
+    public void LegacyHostAdapter_NavigateBack_WhenJournalUnavailable_RestoresDetailContextWithOrigin()
+    {
+        var target = new FakeLegacyNavigationTarget { CanGoBack = false };
+        var adapter = new LegacyNavigationViewHostAdapter(target);
+
+        var detailContext = new PluginDetailContext("2048");
+        adapter.NavigateTo(new PageNavigationRequest(
+            PrimarySlot.Mods,
+            WorkshopSubDomain.LocalInstalled,
+            detailContext));
+
+        Assert.Equal(2048, target.LastDetailModId);
+        Assert.NotNull(target.LastDetailOrigin);
+
+        adapter.NavigateToSecondary(SecondaryNavigationTarget.TaskCenter);
+        target.LastDetailModId = null;
+        target.LastDetailOrigin = null;
+
+        var backResult = adapter.NavigateBack();
+
+        Assert.Equal(NavigationResult.Success, backResult);
+        Assert.Null(adapter.ActiveSecondary);
+        Assert.Null(adapter.RootReturnContext);
+        Assert.Equal(PrimarySlot.Mods, adapter.ActiveSlot);
+        Assert.Equal(WorkshopSubDomain.LocalInstalled, adapter.CurrentSubDomain);
+        Assert.Same(detailContext, adapter.CurrentContext);
+        Assert.Equal(2048, target.LastDetailModId);
+        Assert.Equal(PrimarySlot.Mods, target.LastDetailOrigin?.SourceSlot);
+        Assert.Equal(WorkshopSubDomain.LocalInstalled, target.LastDetailOrigin?.SourceSubDomain);
+    }
+
+    [Fact]
+    public void LegacyHostAdapter_NavigateBack_PrimarySlotJournal_DelegatesToGoBack()
+    {
+        var target = new FakeLegacyNavigationTarget { CanGoBack = true, GoBackResult = true };
+        var adapter = new LegacyNavigationViewHostAdapter(target);
+
+        // 次级为空，仅主槽位页面内部有 journal
+        Assert.True(adapter.CanNavigateBack);
+
+        var backResult = adapter.NavigateBack();
+
+        Assert.Equal(NavigationResult.Success, backResult);
+        Assert.True(target.GoBackCalled);
+    }
+
+    private sealed class FakeLegacyNavigationTarget : ILegacyNavigationTarget
+    {
+        public System.Windows.Controls.Page? CurrentPage { get; set; }
+        public bool CanGoBack { get; set; }
+        public bool GoBackResult { get; set; } = true;
+        public bool GoBackCalled { get; private set; }
+        public Type? LastNavigatedType { get; set; }
+        public bool WasClosed { get; set; }
+        public int? LastDetailModId { get; set; }
+        public NavigationOrigin? LastDetailOrigin { get; set; }
+        public string? LastCommunitySearchQuery { get; set; }
+
+        public bool Navigate(Type pageType)
+        {
+            LastNavigatedType = pageType;
+            return true;
+        }
+
+        public bool GoBack()
+        {
+            GoBackCalled = true;
+            return GoBackResult;
+        }
+
+        public void Close()
+        {
+            WasClosed = true;
+        }
+
+        public void InvokeOnDispatcher(Action action) => action();
+
+        public void NavigateToDetail(int modId, NavigationOrigin origin)
+        {
+            LastDetailModId = modId;
+            LastDetailOrigin = origin;
+        }
+
+        public void ApplyCommunitySearch(string query)
+        {
+            LastCommunitySearchQuery = query;
+        }
+    }
 }
+
 
