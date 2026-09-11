@@ -24,6 +24,7 @@
 - [03: 兼容式 NavigationShell 契约与五槽位导航映射](issues/03-grilling-page-migration-and-navigation-mapping.md) — (架构契约终审冻结·resolved) 2026-09-11 PM 终审冻结契约。收紧 IPluginWorkshopNavigation 细分状态枚举与失败防变保护；确立 SecondaryNavigationState 单根来源快照与失效回退；彻底移除弱类型字典，确立强类型 NavigationContext 派生体系；落实 Slot 2 只读可观察状态与延迟 Seam 原则；修正 NavHub 外部点击由遮罩消费、焦点闭环与三大独立 Facet 注入契约。本次关单仅代表契约冻结，不启动生产实现，保持 100% 行为不回归。
 - [04: HomeSnapshot 响应式不可变快照投影与代际防覆盖降级模型](issues/04-grilling-homesnapshot-projection-and-degradation.md) — (架构契约终审冻结·resolved) 2026-09-11 PM 终审冻结契约。确立纯只读不可变 HomeSnapshot 树与 ImmutableArray 集合防线；确立五态降级模型与 IsInitialized 初始化区分，CacheAge 纯函数化消除时钟漂移；确立 Coordinator 双代际（RefreshGeneration vs PublishedRevision）流转、分批局部发布与最大超时防饿死保证；确立每个窗口宿主独立 Scope 与先订阅后读取单调消费协议；落实 Mascot 动态安全 Insets 与极端小视口可验证防御验收。
 - [05: 现有 7 大业务页面平稳迁入与 0 回归验证方案](issues/05-grilling-zero-regression-page-migration.md) — (架构契约终审冻结·resolved) 2026-09-11 PM 终审冻结契约。确立 7 大现有页面在单一内容宿主下的兼容挂载，消解双重历史栈；门面适配器彻底消除底层 Page 泄漏，改用强类型请求；确立不可变强类型 NavigationCacheKey 消除裸字符串；严格解耦状态所有权，现有页面独立托管业务状态，严禁引入未批准聚合数据服务；限定 INavigationShell 为当前活动宿主范围内唯一状态机与事实源；锁定 5 阶段交付里程碑与单一可执行文件红线；162 项基线 100% 绿灯守卫与 0 编译错误、0 新增代码警告质量门禁。
+- [06: Ticket A: NavigationShell 契约定义与逻辑宿主状态机](issues/06-ticket-a-navigationshell-contract-and-host.md) — (已交付验收·resolved) 2026-09-11 完成 NavigationShell 最小核心契约与单一逻辑宿主状态机交付。落地 5 槽位调度、次级覆盖、单根来源锚点记忆、来源失效降级回退至 Play、显式子域防隐式猜测、构造输入安全规范化保底与 ImmutableHashSet 封装保护，产出 27 项新增测试与全量 189 项全绿通过。
 
 ## 当前活跃 Frontier
 
@@ -31,7 +32,7 @@
 
 ## 实施工单拓扑 (Implementation Tickets)
 
-- [Ticket A: NavigationShell 契约定义与逻辑宿主状态机](issues/06-ticket-a-navigationshell-contract-and-host.md) — `Status: ready-for-agent` (Blocked by: None)
+- [Ticket A: NavigationShell 契约定义与逻辑宿主状态机](issues/06-ticket-a-navigationshell-contract-and-host.md) — `Status: resolved` (Blocked by: None)
 - [Ticket B: Legacy NavigationFacade 兼容桥与无底层 UI 泄漏请求重构](issues/07-ticket-b-legacy-navigationfacade-adapter.md) — `Status: ready-for-agent` (Blocked by: Ticket A)
 - [Ticket C: PluginWorkshopPage 模组工坊纯导航聚合外壳与上下文恢复](issues/08-ticket-c-plugin-workshop-aggregation.md) — `Status: ready-for-agent` (Blocked by: Ticket A)
 - [Ticket D: HomeSnapshot Coordinator 响应式投影管道与多态离线降级](issues/09-ticket-d-homesnapshot-coordinator-and-adapters.md) — `Status: ready-for-agent` (Blocked by: Ticket A)
