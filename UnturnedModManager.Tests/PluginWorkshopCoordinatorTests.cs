@@ -199,9 +199,14 @@ public sealed class PluginWorkshopCoordinatorTests
     }
 
     [Fact]
-    public void NavigateTo_WithPluginDetailContext_OpensDetailAutonomously()
+    public void NavigateTo_WithPluginDetailContext_OpensDetailAutonomouslyAndFiresEvents()
     {
         var coordinator = new PluginWorkshopCoordinator(WorkshopSubDomain.LocalInstalled);
+        bool? detailState = null;
+        WorkshopSubDomain? changedSubDomain = null;
+
+        coordinator.DetailStateChanged += (_, state) => detailState = state;
+        coordinator.SubDomainChanged += (_, sub) => changedSubDomain = sub;
 
         var result = coordinator.NavigateTo(
             WorkshopSubDomain.CommunityDiscovery,
@@ -212,6 +217,8 @@ public sealed class PluginWorkshopCoordinatorTests
         Assert.Equal(88, coordinator.ActiveDetailModId);
         Assert.Equal(WorkshopActiveView.Detail, coordinator.ActiveView);
         Assert.Equal(WorkshopSubDomain.CommunityDiscovery, coordinator.CurrentSubDomain);
+        Assert.True(detailState);
+        Assert.Equal(WorkshopSubDomain.CommunityDiscovery, changedSubDomain);
     }
 
     [Fact]

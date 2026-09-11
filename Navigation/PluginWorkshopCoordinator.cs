@@ -159,6 +159,7 @@ public sealed class PluginWorkshopCoordinator : IPluginWorkshopNavigation
 
         bool subDomainChanged = false;
         bool detailClosed = false;
+        bool detailOpened = false;
 
         lock (_syncLock)
         {
@@ -167,15 +168,27 @@ public sealed class PluginWorkshopCoordinator : IPluginWorkshopNavigation
             {
                 if (int.TryParse(detail.ModId, out var modId) && modId > 0)
                 {
-                    _currentSubDomain = target;
-                    ShowDetailInternal(modId, target, context);
-                    return NavigationChangeResult.Changed;
-                }
+                    if (_currentSubDomain != target)
+                    {
+                        _currentSubDomain = target;
+                        subDomainChanged = true;
+                    }
 
-                return NavigationChangeResult.Rejected;
+                    detailOpened = ShowDetailInternal(modId, target, context);
+                }
+                else
+                {
+                    return NavigationChangeResult.Rejected;
+                }
             }
 
-            // 2. 如果携带搜索上下文，更新暂存搜索词并准备应用
+            if (detailOpened)
+            {
+                // 退出锁后统一派发通知
+            }
+            else
+            {
+                // 2. 如果携带搜索上下文，更新暂存搜索词并准备应用
             if (context is CommunitySearchContext search)
             {
                 _communitySnapshot = (_communitySnapshot ?? new WorkshopContextSnapshot()) with
@@ -220,6 +233,17 @@ public sealed class PluginWorkshopCoordinator : IPluginWorkshopNavigation
                 ? WorkshopActiveView.LocalInstalled
                 : WorkshopActiveView.CommunityDiscovery;
             subDomainChanged = true;
+            }
+        }
+
+        if (detailOpened)
+        {
+            if (subDomainChanged)
+            {
+                SubDomainChanged?.Invoke(this, target);
+            }
+            DetailStateChanged?.Invoke(this, true);
+            return NavigationChangeResult.Changed;
         }
 
         NotifyStateChanges(subDomainChanged, detailClosed, context);
