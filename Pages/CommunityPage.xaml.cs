@@ -2,6 +2,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using UnturnedModManager.Helpers;
 using UnturnedModManager.Models;
+using UnturnedModManager.Navigation;
 using UnturnedModManager.Services;
 using UnturnedModManager.ViewModels;
 
@@ -13,7 +14,7 @@ public partial class CommunityPage : Page
     public CommunityPage()
     {
         InitializeComponent(); DataContext = _viewModel;
-        _viewModel.OpenModRequested += id => AppNavigationService.Current.OpenCommunityDetail(this, id);
+        _viewModel.OpenModRequested += id => AppNavigationService.Current.OpenCommunityDetail(new CommunityDetailRequest(id, WorkshopSubDomain.CommunityDiscovery));
         Loaded += async (_, _) => await _viewModel.InitializeAsync();
     }
     private void ModsList_SelectionChanged(object sender, SelectionChangedEventArgs e)

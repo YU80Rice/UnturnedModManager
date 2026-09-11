@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using UnturnedModManager.Helpers;
 using UnturnedModManager.Models;
+using UnturnedModManager.Navigation;
 using UnturnedModManager.Services;
 using UnturnedModManager.ViewModels;
 using Wpf.Ui.Controls;
@@ -28,7 +29,8 @@ public partial class ModListPage : Page
     private void OnUnloaded(object sender, RoutedEventArgs e) => _viewModel.Deactivate();
 
     private void OnOpenCommunityRequested(int id) =>
-        AppNavigationService.Current.OpenCommunityDetail(this, id);
+        AppNavigationService.Current.OpenCommunityDetail(new CommunityDetailRequest(id, WorkshopSubDomain.LocalInstalled));
+
 
     private void OnNoticeRaised(UserNotice notice)
         => App.Services.Notifications.Publish(notice);

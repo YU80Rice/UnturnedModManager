@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using UnturnedModManager.Helpers;
+using UnturnedModManager.Navigation;
 using UnturnedModManager.Services;
 using UnturnedModManager.ViewModels;
 
@@ -10,8 +11,8 @@ namespace UnturnedModManager.Pages;
 public partial class CommunityDetailPage : Page
 {
     private readonly CommunityDetailViewModel _viewModel;
-    private readonly PageNavigationOrigin? _origin;
-    public CommunityDetailPage(int id, PageNavigationOrigin? origin = null)
+    private readonly NavigationOrigin? _origin;
+    public CommunityDetailPage(int id, NavigationOrigin? origin = null)
     {
         InitializeComponent();
         _origin = origin;
@@ -31,7 +32,7 @@ public partial class CommunityDetailPage : Page
     }
 
     private void OpenDependency(int id) =>
-        AppNavigationService.Current.OpenCommunityDetail(this, id);
+        AppNavigationService.Current.OpenCommunityDetail(new CommunityDetailRequest(id, WorkshopSubDomain.CommunityDiscovery));
     private void OpenImagePreview(string imageUrl)
     {
         if (!Uri.TryCreate(imageUrl, UriKind.Absolute, out var uri)
@@ -44,7 +45,7 @@ public partial class CommunityDetailPage : Page
         => App.Services.Notifications.Publish(notice);
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
-        AppNavigationService.Current.ReturnToOrigin(this, _origin);
+        AppNavigationService.Current.ReturnToOrigin(_origin);
     }
     private void Page_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e) { if (e.Key == Key.Escape) { BackButton_Click(sender, e); e.Handled = true; } }
     private void Page_PreviewMouseWheel(object sender, MouseWheelEventArgs e)

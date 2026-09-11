@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Collections.ObjectModel;
 using Wpf.Ui.Controls;
+using UnturnedModManager.Navigation;
 using UnturnedModManager.Services;
 using UnturnedModManager.ViewModels;
 
@@ -18,6 +19,10 @@ public partial class MainWindow : FluentWindow
     private readonly SemaphoreSlim _dropImportGate = new(1, 1);
     private Page? _currentPage;
     private int? _pendingCommunityDetailId;
+    private LegacyNavigationViewHostAdapter? _navigationHost;
+
+    public Page? CurrentPage => _currentPage;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -31,10 +36,18 @@ public partial class MainWindow : FluentWindow
         {
             _authService.SessionChanged -= UpdateAccountVisual;
             _notifications.NoticePublished -= OnNoticePublished;
+            if (_navigationHost is not null)
+            {
+                AppNavigationService.Current.DetachHost(_navigationHost);
+                _navigationHost = null;
+            }
         };
     }
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        _navigationHost = new LegacyNavigationViewHostAdapter(this, NavigationView);
+        AppNavigationService.Current.AttachHost(_navigationHost);
+
         RestoreWindowBounds();
         _themeService.Initialize(AppSettings.CommunityThemeMode);
         UpdateThemeButton(_themeService.AppliedTheme);
@@ -293,28 +306,7 @@ public partial class MainWindow : FluentWindow
             return;
         }
 
-        if (_currentPage is Pages.CommunityPage currentCommunity)
-        {
-            AppNavigationService.Current.OpenCommunityDetail(currentCommunity, modId);
-            return;
-        }
-
-        void OpenWhenCommunityIsReady(object? _, NavigatedEventArgs args)
-        {
-            if (args.Page is not Pages.CommunityPage community)
-                return;
-
-            NavigationView.Navigated -= OpenWhenCommunityIsReady;
-            _currentPage = community;
-            AppNavigationService.Current.OpenCommunityDetail(community, modId);
-        }
-
-        NavigationView.Navigated += OpenWhenCommunityIsReady;
-        if (!NavigationView.Navigate(typeof(Pages.CommunityPage)))
-        {
-            NavigationView.Navigated -= OpenWhenCommunityIsReady;
-            _pendingCommunityDetailId = modId;
-        }
+        AppNavigationService.Current.OpenCommunityDetail(modId);
     }
 
     private void ConsumePendingCommunityDetail()

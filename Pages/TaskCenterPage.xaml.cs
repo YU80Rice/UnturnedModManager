@@ -1,6 +1,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using UnturnedModManager.Helpers;
+using UnturnedModManager.Navigation;
 using UnturnedModManager.Services;
 using UnturnedModManager.ViewModels;
 
@@ -17,7 +18,7 @@ public partial class TaskCenterPage : Page
         _viewModel.OpenPluginRequested += OpenPlugin;
     }
 
-    private void OpenPlugin(int id) => AppNavigationService.Current.OpenCommunityDetail(this, id);
+    private void OpenPlugin(int id) => AppNavigationService.Current.OpenCommunityDetail(new CommunityDetailRequest(id, WorkshopSubDomain.CommunityDiscovery));
 
     private void Page_PreviewMouseWheel(object sender, MouseWheelEventArgs e) =>
         ScrollWheelRouter.RouteToNearestScrollViewer(sender, e);
