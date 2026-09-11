@@ -1,8 +1,8 @@
 # Ticket 04: HomeSnapshot 响应式不可变快照投影与代际防覆盖降级模型 (HomeSnapshot Projection & Degradation Model)
 
-Status: ready-for-agent
+Status: open
 Type: grilling
-Blocked by:
+Blocked by: 
 
 ## 问题
 

@@ -21,11 +21,11 @@
 
 - [01: SDK 角色与世界存档数据调用链调研](issues/01-research-u3-sdk-save-data-architecture.md) — 深入 U3-SDK 查明生存数据物理存储、Block/River 协议、Config.json 体系与 5 大安全防线，作为下一阶段数据中心地图的权威事实输入留档。
 - [02: Unturned 原生风格 UI Shell 空间结构与设计代币原型](issues/02-prototype-unturned-native-ui-shell-tokens.md) — (已人工视觉核准·resolved) 2026-09-11 用户与 PM 完成最终视觉验收关单。在 `.scratch/.../prototype/` 建立独立原型沙盒，验证 5 槽位药丸导航、Page+Frame 契约、滚轮隧道路由、独立小助理展台、左下角中枢微卡片与 WCAG AAA (15.6:1) 对比度合规，产出 review.html 与 162 项全绿测试。明确为原型证据，真实生产 UI 尚未迁移。
-- [03: 兼容式 NavigationShell 契约与五槽位导航映射](issues/03-grilling-page-migration-and-navigation-mapping.md) — (架构契约已冻结·resolved) 2026-09-11 PM 终审冻结契约。确立 `INavigationShell` 强类型意图（`NavigationIntent`/`ReturnContext`）与单一状态机驱动契约；确立模组工坊双子域单活跃视图隔离 Seam；确立次级单根来源恢复规约；确立 Slot 2 只读结构预览占位版（步骤 5~6 另行立项真实数据接口）；确立 NavHub In-Tree Overlay 与三大独立 Facet 组合契约。
+- [03: 兼容式 NavigationShell 契约与五槽位导航映射](issues/03-grilling-page-migration-and-navigation-mapping.md) — (架构契约终审冻结·resolved) 2026-09-11 PM 终审冻结契约。收紧 IPluginWorkshopNavigation 细分状态枚举与失败防变保护；确立 SecondaryNavigationState 单根来源快照与失效回退；彻底移除弱类型字典，确立强类型 NavigationContext 派生体系；落实 Slot 2 只读可观察状态与延迟 Seam 原则；修正 NavHub 外部点击由遮罩消费、焦点闭环与三大独立 Facet 注入契约。本次关单仅代表契约冻结，不启动生产实现，保持 100% 行为不回归。
 
 ## 当前活跃 Frontier
 
-- [04: HomeSnapshot 响应式不可变快照投影与代际防覆盖降级模型](issues/04-grilling-homesnapshot-projection-and-degradation.md) — (已解除阻断·当前 Frontier) 围绕首页只读投影管道展开 Grilling 架构盘问，确立多源 Adapter 与 Coordinator 契约、Revision 代际防覆盖机制、离线多态降级与小助理展台排版无缝闭合。
+- [04: HomeSnapshot 响应式不可变快照投影与代际防覆盖降级模型](issues/04-grilling-homesnapshot-projection-and-degradation.md) — (待用户指令开启·Next Frontier) 严格锁定首页只读不可变快照投影、多源适配器协调、代际防覆写与多态离线降级模型，严禁超范围扩大至真实数据或生产代码。
 
 ## 尚未明确
 

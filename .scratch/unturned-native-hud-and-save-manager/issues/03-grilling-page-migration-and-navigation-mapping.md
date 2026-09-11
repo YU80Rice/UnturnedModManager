@@ -13,50 +13,48 @@ Blocked by:
    - `[👥] 角色与数据 (Data)`：映射独立的数据中心占位主页，展示数据总览卡片（当前槽位、最近世界、快照概况与下阶段数据地图预告），严禁直接在此阶段实现任何写入；
    - `[🧩] 模组工坊 (Mods)`：作为导航层的聚合入口，内部由 `LocalModsAdapter` 与 `CommunityModsAdapter` 分别挂接现有本地与社区页面，保持底层业务实现互不混淆；
    - `[⚙] 启动器设置 (Settings)`：映射 `SettingsPage`（壁纸、主题、路径、文件关联、启动偏好）；
-   - `[◀] 退出游戏 (Exit)`：左下角固定退出按钮（带确认交互）。
-2. **次级与浮动入口设计**：
-   - 任务中心：降级为顶部或右上角的浮动状态药丸/通知抽屉，有活动任务时动态呼吸闪烁；
-   - 账户面板与关于信息：收拢为头像菜单或底部次级入口，不挤占主导航槽位。
-3. **架构 Seam 边界规约**：
-   - 确立 `NavigationShell` 的接口边界——只负责导航状态、选中态、返回行为和视觉布局；不拥有启动、下载、诊断业务逻辑。现有 Page 保持继承结构与业务行为不变，仅做最小导航注册适配。
+   - `[🚪] 退出程序 (Exit)`：执行优雅退出流程。
+2. **任务中心与关于降级为次级状态与快捷入口**：
+   - 取消它们作为左侧主槽位的一级地位，收敛为统一的全局浮动入口/药丸徽标；
+   - 点击时以主视口呈现，左侧主槽位保持不失焦或明确指示当前处于次级覆盖状态；
+   - 提供明确的“返回”语义恢复先前的页面。
+3. **兼容式包裹 NavigationShell 的边界契约与无损迁入**：
+   - 确立 `INavigationShell` 最小暴露接口，既满足统一的路由分发，又严禁侵入现有 7 大页面的内部状态；
+   - 制定跨槽位切换时的页面状态保持（如搜索输入、滚动位置、已加载数据）规范，杜绝页面重建抖动与行为回归；
+   - 明确测试策略：设计契约测试，验证 5 大槽位导航状态机与历史记录堆栈。
 
 ---
 
 ## Round 1 架构裁定决策记录 (2026-09-11 PM 终审生效)
 
-> **刚性边界准则**：本 Ticket 处于 Grilling 阶段，只冻结接口、导航语义与 Seam，**暂不修改生产代码，暂不迁移真实数据功能，暂不引入新的业务服务或依赖**。
+> **核心原则**：Ticket 03 仅冻结架构接口、导航语义与 Seam 契约，**严禁修改生产代码、严禁直接接入真实存档数据、严禁提前实现具体动画与缓存方案**。
 
-### 1. 插件工坊聚合架构 (Q1)
-- **裁定结论**：接受方案 A（加限制）。
-- **职责边界**：`PluginWorkshopPage` 仅作为 Slot 3 的纯导航聚合 module，非插件业务 module。它只提供子域选择 Tab 与 adapter seam，`ModListPage` 与 `CommunityPage` 保持独立生命周期、ViewModel、过滤器、网络状态与详情导航；
-- **状态与隔离契约**：
-  - 优先使用明确的内容宿主（单一 ContentControl 或无独立 Journal 的轻量宿主），严禁叠加多个拥有独立 journal 的 `Frame`；
-  - 本地插件与社区发现互相切换时，严禁重置对应子域的状态；
-  - 从详情页返回时，必须精准返回对应子域，而不是整个模组工坊首页；
-  - 社区网络请求失败严禁阻塞本地插件加载，反之亦然。
+### 1. 模组工坊聚合架构 (Q1)
+- **裁定结论**：接受方案 A（聚合外壳）。
+- **职责边界**：
+  - `PluginWorkshopPage` 仅作为纯导航聚合外壳，负责当前子域选择、标题、计数和返回语义；
+  - `ModListPage` 与 `CommunityPage` 保持为两个独立 module，ViewModel、过滤器、网络状态与详情导航互不合并；
+  - 采用单一宿主内容区域，挂载两个子视图实例，通过 `Visibility` 切换保持单活跃视图；未激活视图从可访问性与输入树中隐藏。
 
-### 2. 次级导航语义与上下文保留 (Q2)
-- **裁定结论**：接受方案 A，暂不重构 Drawer/Dialog，补充次级导航语义契约。
-- **语义模型 (`SecondaryNavigationTarget`)**：
-  - `AboutPage`：直接通过主内容宿主导航，记录进入前的主槽位，支持显式返回；点击左侧五槽位可直接离开；
-  - `TaskCenterPage`：由顶栏入口打开，必须保存进入前的“主槽位 + 子页面”完整上下文；页面内返回时精准还原来源现场；
-  - 任务监听生命周期由现有 ViewModel/adapter 自主维系，严禁由 Shell 越俎代庖。
+### 2. 次级导航与来源恢复机制 (Q2)
+- **裁定结论**：接受方案 A（状态机集中派生）。
+- **交互与派生**：
+  - 任务中心与关于使用主视口全量呈现，左侧五槽位取消高亮，由 `NavigationShell` 统一派生；
+  - 引入单根来源锚点（`RootReturnContext`），记录进入前的主槽位与子路由；
+  - 返回时一键恢复原主槽位，点击左侧主槽位直接重定向并清空次级上下文；
+  - `TaskCenter ↔ About` 之间平级切换不连续压栈。
 
-### 3. 页面生命周期与分层状态保持契约 (Q3)
-- **裁定结论**：不批准将 `Dictionary<Type, Page>` 裸字典冻结为终态契约；
-- **分层保持契约**：
-  - **视图状态**：保留搜索词、筛选项、选中 Tab、滚动条位置；
-  - **已加载数据**：在生命周期允许时复用，不因主槽位切换强制清空；
-  - **进行中任务**：继续由原有 ViewModel/adapter 自主管理，不因视图切换取消；
-  - **临时草稿**：由页面自行声明是否保留，Shell 不擅自承诺；
-  - **过期网络数据**：允许显示缓存并支持后台静默刷新；
-  - **失败状态**：保留错误上下文与重试机会。
-- **实现隔离**：缓存机制属于 implementation，若后续确需手工缓存，采用带上下文的 `NavigationTargetKey = 主槽位 + 子域 + 上下文标识`；不提前做“零抖动、零数据丢失”的前置断言。
+### 3. NavigationShell 最小公开接口与强类型意图 (Q3)
+- **裁定结论**：接受方案 A（分级转交模型，拒绝弱类型字典与动态对象）。
+- **层级转交**：
+  - Shell 仅负责激活顶级 `PrimarySlot`，并将 `NavigationIntent`（子路由与强类型 `NavigationContext`）移交给对应槽位 Adapter；
+  - 槽位内部（如插件详情）由各页面自治管理，Shell 严禁注册三级页面、严禁理解业务标识；
+  - 跨槽位切换保持视图状态（搜索词、筛选项、滚动位置）与进行中任务。
 
-### 4. 角色与存档槽位结构预览占位 (Q4)
-- **裁定结论**：接受方案 A 的“结构预览占位版”，严禁暗示真实数据已接入。
-- **范围红线**：
-  - 严禁接入 `Life.dat`、`Inventory.dat` 等二进制解析器与读模型；
+### 4. 角色与存档只读结构预览定位 (Q4)
+- **裁定结论**：接受方案 A（只读结构预览，遵循 Deletion Test）。
+- **边界底线**：
+  - Slot 2 正常可进，展示 4 大子域结构框架；
   - 严禁实现备份、恢复、导出或写入，严禁模拟假数据；
   - 仅展示 4 大只读子域形状与功能说明；
 - **标准文案规约**：
@@ -67,10 +65,10 @@ Blocked by:
 - **裁定结论**：接受方案 A 的单入口 Popup，但拆分为 3 个独立 Facet/Adapter，删除未经证明的承诺。
 - **Facet 拓扑**：
   - `Account facet` → 绑定 `CommunityAuthService`
-  - `Environment facet` → 现有 Steam 运行探测与状态投影
-  - `Appearance facet` → 绑定 `ThemeService`（外观模式切换入口，不承诺未实现的连续值昼夜滑动条）
-- **承诺收敛**：删除“Steam 免密”等未经安全审计的业务承诺；
-- **交互语义**：冻结 `Esc` 关闭、点击外部关闭、关闭后焦点回到触发器、与模态窗口无冲突四大交互规约。
+  - `Environment facet` → 现有运行环境探测与状态投影
+  - `Appearance facet` → 绑定 `ThemeService`（外观模式切换入口，不承诺未实现的连续值调节）
+- **承诺收敛**：删除未经审计的业务承诺；
+- **交互语义**：冻结 `Esc` 关闭、外部点击由遮罩消费、关闭后焦点回到触发器、与模态窗口无冲突四大交互规约。
 
 ---
 
@@ -78,12 +76,12 @@ Blocked by:
 
 > **刚性边界准则**：本轮依然只冻结 Seam 接口与交互约束，**不修改生产代码、不新增业务 module、不接入真实存档数据、不提前实现具体动画或缓存方案**。
 
-### 1. 插件工坊单活跃视图与状态驻留约束 (Q1)
-- **裁定结论**：接受方案 A（双子视图同一内容宿主驻留，`Visibility` 切换状态）。
-- **生命周期与无障碍约束**：
-  - 同一时刻**仅且仅有一个子视图**可交互、可获得键盘焦点；
-  - `Collapsed` 状态的视图**严禁**参与 Tab 键盘导航、自动化可访问性树（Automation Tree）或鼠标命中测试；
-  - 聚合外壳严禁重置对应子域的 ViewModel 状态，本地与社区的刷新、错误和重试状态完全隔离；
+### 1. 插件工坊单活跃视图与故障隔离 (Q1)
+- **裁定结论**：接受方案 A。
+- **并发与可见性规约**：
+  - 两个视图实例（本地插件 vs 社区发现）常驻同一容器，采用 `Visibility.Visible` 与 `Visibility.Collapsed` 切换；
+  - 同一时刻仅有一个子视图处于活跃交互态；`Collapsed` 视图严禁参与 Tab 导航、自动化可访问性树和焦点命中；
+  - 两个子域的刷新、错误和重试状态完全隔离；
   - 插件详情页返回必须精准恢复原子域及其上下文。
 
 ### 2. 次级页面高亮派生与结构化来源恢复 (Q2)
@@ -98,13 +96,13 @@ Blocked by:
 - **职责划分**：
   - `NavigationShell` 仅负责校验并激活主槽位，再将 `NavigationIntent`（子路由与上下文）原样转交给对应 slot adapter；
   - `PluginWorkshopPage` 或其 adapter 负责切换对应子域并解析详情上下文；
-  - **严禁清单**：Shell 严禁注册三级详情页面、严禁理解 `modId` 业务含义、严禁使用全局万能静态路由、严禁让外部事件直接穿透修改内部控件。
+  - **严禁清单**：Shell 严禁注册三级详情页面、严禁理解业务标识、严禁使用全局万能静态路由、严禁让外部事件直接穿透修改内部控件。
 
 ### 4. In-Tree Overlay 弹窗与渲染拓扑约束 (Q4)
 - **裁定结论**：接受方案 A（Shell 根 Grid 内 In-Tree Overlay）。
 - **交互与遮罩契约**：
   - 透明遮罩仅在打开时参与命中测试，关闭时必须从输入树中彻底注销；
-  - 点击外部关闭，但严禁吞掉关闭前发出的正常业务点击；
+  - 外部点击关闭，并由遮罩消费该次点击，不穿透到底层主视口；
   - `Esc` 关闭并把焦点还给 `NavHubTriggerBtn`；Popup 内部焦点循环，禁止键盘逃逸；
   - 打开模态登录等外层流程时，Overlay 必须暂时让出焦点管理。
 
@@ -112,7 +110,7 @@ Blocked by:
 
 ## Answer: 最终冻结架构契约与 Seam 规约 (NavigationShell Specification)
 
-经过两轮 PM 严格审查与 Grilling 盘问，Ticket 03 的所有架构 Seam、导航契约与接口定义全部冻结。**本阶段坚守边界，不修改生产代码、不接入真实存档数据、不新增业务模块**。
+经过三轮 PM 严格审查与 Grilling 盘问，Ticket 03 的所有架构 Seam、导航契约与接口定义全部终审冻结。**本阶段坚守边界，不修改生产代码、不接入真实存档数据、不新增业务模块**。
 
 ### 1. 核心导航接口与强类型意图模型
 
@@ -125,7 +123,7 @@ namespace UnturnedModManager.Navigation;
 public enum PrimarySlot
 {
     Play,       // Slot 1: 游戏启动
-    Data,       // Slot 2: 角色与存档 (结构预览占位)
+    Data,       // Slot 2: 角色与存档 (只读结构预览占位)
     Mods,       // Slot 3: 插件工坊 (聚合入口)
     Settings,   // Slot 4: 启动器设置
     Exit        // Slot 5: 退出程序
@@ -161,6 +159,21 @@ public enum DataSubDomain
 }
 
 /// <summary>
+/// 强类型导航上下文抽象基类 (彻底杜绝弱类型字典与字符串路由)
+/// </summary>
+public abstract record NavigationContext;
+
+/// <summary>
+/// 插件详情上下文
+/// </summary>
+public sealed record PluginDetailContext(string ModId) : NavigationContext;
+
+/// <summary>
+/// 社区搜索上下文
+/// </summary>
+public sealed record CommunitySearchContext(string Query) : NavigationContext;
+
+/// <summary>
 /// 强类型导航意图 (只读不可变)
 /// </summary>
 public sealed record NavigationIntent(
@@ -176,6 +189,14 @@ public sealed record ReturnContext(
     PrimarySlot SourceSlot,
     WorkshopSubDomain? SourceSubDomain = null,
     NavigationContext? SourceContext = null
+);
+
+/// <summary>
+/// 次级导航会话状态 (单一次级目标 + 单根来源快照)
+/// </summary>
+public sealed record SecondaryNavigationState(
+    SecondaryNavigationTarget ActiveTarget,
+    ReturnContext? RootReturnContext
 );
 
 /// <summary>
@@ -212,6 +233,7 @@ public interface INavigationShell
     ReturnContext? CurrentReturnContext { get; }
 
     NavigationResult Navigate(NavigationIntent intent);
+    NavigationResult NavigateToSecondary(SecondaryNavigationTarget secondaryTarget);
     NavigationResult ReturnToSource();
 
     event EventHandler<NavigationStateChangedEventArgs>? StateChanged;
@@ -223,9 +245,11 @@ public interface INavigationShell
 ```csharp
 public enum NavigationChangeResult
 {
-    Success,
-    Failed,
-    AlreadyActive
+    Changed,
+    AlreadyActive,
+    InvalidTarget,
+    Rejected,
+    Unavailable
 }
 
 public interface IPluginWorkshopNavigation
@@ -235,17 +259,21 @@ public interface IPluginWorkshopNavigation
 }
 ```
 
-- **单活跃视图约束**：同一宿主常驻两个子页面实例，通过 `Visibility` 切换。同一时刻仅一个子视图接收输入和焦点；`Collapsed` 视图严禁参与 Tab 导航、自动化可访问性树和命中测试；
+- **单活跃视图约束**：同一宿主常驻两个子页面实例，通过 `Visibility` 切换。同一时刻仅一个子视图可交互与接收焦点；`Collapsed` 视图严禁参与 Tab 导航、自动化可访问性树和命中测试；
+- **幂等性与失败不变**：重复导航至当前激活子域必须是幂等的（返回 `AlreadyActive`）；子域切换失败时，当前已激活子域保持不变；
+- **职责隔离**：聚合页只管理当前子域选择、内容挂载、返回上下文与故障隔离，不拥有搜索、下载、安装、删除等具体业务逻辑；
 - **状态与故障隔离**：本地与社区各自的 ViewModel、搜索词、过滤条件、网络状态与重试逻辑 100% 独立，互不阻塞，互不覆盖。
 
 ### 3. 次级导航与来源恢复规约
 
-- **单根来源锚定**：
-  - 玩家从主槽位首次进入次级体系时建立 `RootReturnContext`；
-  - `TaskCenter ↔ About` 之间跳转不产生多层堆叠历史，始终保留最初的根来源；
-  - 页面内的“◀ 返回”按键通过 `ReturnContext` 恢复原主槽位和子路由；
-  - 点击左侧任意主槽位直接重定向并清空次级上下文；
-  - 面包屑仅作视觉提示，不承担实际路由职责。
+- **单根来源锚定快照**：
+  - 用户从主槽位首次进入次级体系时建立 `RootReturnContext` 快照；
+  - 若从应用初始状态直接打开任务中心（无来源页面），`RootReturnContext` 允许为 `null`；
+  - 再次点击当前已激活的次级页面项保持幂等，不重建来源锚点；
+  - `TaskCenter ↔ About` 之间横向切换不压栈、不改写 `RootReturnContext`；
+  - 来源页面已失效或不可用时，返回操作应安全回退至默认主槽位（`PrimarySlot.Play`），严禁抛出异常或陷入空白页；
+  - 点击左侧任意主槽位直接重定向并彻底清空次级状态；
+  - 面包屑仅作为只读层次提示，不承担实际路由职责。
 
 ### 4. 分层状态保持规约
 
@@ -261,8 +289,17 @@ public interface IPluginWorkshopNavigation
 ### 5. 角色与存档占位规约
 
 - Slot 2 作为只读结构预览入口，正常响应切换，呈现 4 大子域视觉框架；
-- **严格红线**：严禁接入真实二进制解析器、严禁读模型、严禁备份恢复、严禁写入能力、严禁模拟假数据；
-- 真实数据能力留待步骤 5～6 独立地图立项，届时基于实际实现设计 `IDataCenter` 深度接口（满足 Deletion Test）。
+- **可观察状态契约**：
+  - `CurrentSubDomain`: 当前选中的数据子域（Characters / Worlds / ServerConfig / Backups）；
+  - `IsReadOnly = true`: 明确标记只读；
+  - `IsDataEngineConnected = false`: 页面明确标记底层数据引擎尚未接入；
+  - `Notice`: 规范说明文本；
+- **严格红线**：
+  - 页面不提供保存、写入、删除、恢复、导出命令；
+  - 不读取真实存档文件；
+  - 不使用模拟假数据伪装成玩家真实数据；
+  - 四个子域只表达未来结构，不声称已经具备数据能力；
+  - 暂不创建 `IDataCenterPlaceholderSeam`，遵循 Deletion Test，真实接口延迟到步骤 5～6 独立立项。
 - **标准文案**：
   > 角色与存档中心  
   > 当前为只读结构预览。真实本地存档浏览将在后续数据引擎阶段接入；本页面暂不读取或修改存档文件。
@@ -270,13 +307,14 @@ public interface IPluginWorkshopNavigation
 ### 6. 左下角中枢 Facet 拓扑规约
 
 - 单入口 `NavHubTriggerBtn` + In-Tree Overlay 浮层（处于 Shell 根 Grid 内，保持壁纸与模糊同一视觉树）；
-- 内部拆分为 3 个独立 Facet/Adapter，状态投影与操作意图解耦：
+- **三大独立 Facet/Adapter 依赖注入**：
   - `IAccountFacet`：登录状态投影 + 打开登录/管理流程意图（绑定 `CommunityAuthService`）；
-  - `IEnvironmentFacet`：Steam 进程与运行环境状态投影；
+  - `IEnvironmentFacet`：运行环境状态探测与投影；
   - `IAppearanceFacet`：外观模式投影 + 切换主题意图（绑定 `ThemeService`，仅模式切换，不承诺连续值滑动条与免密）；
-- 交互规约：点击外部关闭（不吞有效业务点击）、`Esc` 关闭、焦点循环与安全恢复触发器、模态流程让出焦点；
-- 严禁使用静态 `App.Services` locator，底层服务保持独立依赖注入。
-
-
-
-
+  - 三者由独立服务注入，严禁使用静态 `App.Services` locator；Facet 只暴露状态投影与受控意图，不暴露 WPF 控件或窗口对象；
+- **交互与遮罩命中测试契约**：
+  - **外部点击关闭且遮罩消费**：点击 Popup 外部区域时关闭 Popup；**该次点击默认由遮罩消费，不继续触发底层主视口业务命令**（防止误点启动、删除或导航）；用户再次点击主视口时执行正常业务操作；
+  - **键盘焦点闭环**：Popup 打开期间，键盘焦点限制在 Popup 内，禁止 Tab 逃逸；
+  - **Esc 与焦点安全归还**：按 `Esc` 键关闭 Popup；关闭后焦点精确安全归还给触发器 `NavHubTriggerBtn`；
+  - **模态流程交接**：打开模态登录等外层流程时，Popup 先关闭或让出焦点控制权；
+  - **遮罩命中生命周期**：透明遮罩仅在 Popup 打开时参与命中测试，关闭后必须从输入树中彻底注销。
