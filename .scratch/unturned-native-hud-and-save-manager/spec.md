@@ -58,12 +58,8 @@ status: ready-for-agent
 - **单一事实源导航宿主与去 UI 泄漏请求契约 (来自 Ticket 03 & 05 裁定)**：
   - INavigationShell 明确界定为当前活动 NavigationShell 宿主范围内唯一的导航状态机与事实源，不作为全局跨窗口单例；
   - AppNavigationService.Current 仅作为兼容门面适配器，统一将旧调用转交至当前宿主 Shell，彻底消解双重历史栈；
-  - 彻底移除 Page source 这类将底层 WPF 页面类型泄漏给上层的参数，全面采用强类型的不可变结构化请求对象：
+  - 彻底移除 Page source 这类将底层 WPF 页面类型泄漏给上层的参数，顶级宿主仅暴露通用导航意图；插件详情请求由 Slot 3 模组工坊适配器或门面内部消化，顶级宿主不直接暴露三级详情方法，保持清晰的分层路由深度：
     ```csharp
-    public sealed record CommunityDetailRequest(
-        int ModId,
-        NavigationContext? SourceContext = null);
-
     public sealed record PageNavigationRequest(
         PrimarySlot TargetSlot,
         WorkshopSubDomain? SubDomain = null,
@@ -72,9 +68,8 @@ status: ready-for-agent
     public interface INavigationShellHost
     {
         PrimarySlot ActiveSlot { get; }
-        SecondaryTarget? ActiveSecondary { get; }
+        SecondaryNavigationTarget? ActiveSecondary { get; }
         void NavigateTo(PageNavigationRequest request);
-        void OpenCommunityDetail(CommunityDetailRequest request);
         bool CanNavigateBack { get; }
         void NavigateBack();
     }
@@ -91,16 +86,17 @@ status: ready-for-agent
   - 状态所有权解耦：ModListPage 与 CommunityPage 及其现有 ViewModel / Adapter 继续独立托管插件业务状态与数据源，本系统绝不引入任何未经证明的全局“聚合数据服务”；PluginWorkshopPage 仅负责子视图挂载、子域切换与上下文恢复；后台任务状态归现有任务中心独立托管。
 - **只读响应式快照 HomeSnapshot 树与五态降级模型 (来自 Ticket 04 裁定)**：
   - HomeSnapshot 采用纯只读不可变 Record 树，集合统一采用 ImmutableArray<T>（禁止向 UI 派发 default 数组）；
-  - 确立五态离线降级模型与独立的 IsInitialized 初始语义：
+  - 确立五态离线降级模型与独立的 IsInitialized 初始语义，使用强类型 FeedFailureCategory 枚举（Failed 状态下必有值，非 Failed 状态下严格为 null）：
     ```csharp
     public enum FeedDataState { LiveOnline, CachedValid, CachedStale, Empty, Failed }
+    public enum FeedFailureCategory { NetworkTimeout, ServerUnavailable, DeserializationError, OfflineNoCache }
 
     public sealed record FeedSectionSnapshot<T>(
         FeedDataState State,
         bool IsInitialized,
         ImmutableArray<T> Items,
         DateTimeOffset? LastSynchronized,
-        string? FailureCategory)
+        FeedFailureCategory? FailureCategory)
     {
         public TimeSpan? GetCacheAge(DateTimeOffset nowUtc) =>
             LastSynchronized.HasValue
@@ -135,7 +131,7 @@ status: ready-for-agent
   - 测试 AppNavigationService 兼容门面：断言调用门面转发到宿主 Shell 时行为一致，历史堆栈不重复压入；
   - 测试设计代币与视觉对比度：断言 13 套调色板在深色 HUD 表面上的文字对比度均高于 WCAG AA 标准（大文本 ≥ 3:1，正文 ≥ 4.5:1）。
 - **测试先例**：
-  - 继承 UnturnedNativeTokensTests.cs、ModelBehaviorTests.cs 与 ShellAssociationTests.cs 的高速、确定性、内存化单元测试惯例。
+  - 继承 UnturnedNativeShellPrototypeTests.cs、ModelBehaviorTests.cs 与 ShellAssociationTests.cs 的高速、确定性、内存化单元测试惯例。
 - **质量准入度量口径**：
   - 现存全部 **162 项**测试保持 100% 绿灯（0 失败、0 错误）；
   - **0 编译错误，0 新增代码警告**；
