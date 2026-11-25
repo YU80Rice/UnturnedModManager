@@ -12,6 +12,38 @@
                   ResizeMode="CanResize"
                   WindowStartupLocation="CenterScreen"
                   WindowBackdropType="None">
+    <ui:FluentWindow.Resources>
+        <Style x:Key="ThemeModeSegment" TargetType="RadioButton">
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Segment" Padding="{TemplateBinding Padding}" CornerRadius="12"
+                                Background="Transparent" BorderBrush="Transparent" BorderThickness="1">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Segment" Property="Background" Value="{DynamicResource AppCardBackgroundBrush2}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Segment" Property="Background" Value="{DynamicResource AppAccentSoftBrush}" />
+                                <Setter TargetName="Segment" Property="BorderBrush" Value="{DynamicResource AppAccentBorderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Segment" Property="BorderBrush" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </ui:FluentWindow.Resources>
     <Grid Margin="18">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -71,23 +103,18 @@
             <StackPanel Visibility="{Binding IsThemeStep, Converter={StaticResource BoolToVisibility}}">
                 <TextBlock Text="2 · 选择明暗模式和强调色" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
                 <TextBlock Text="拖动圆环选择强调色，点击中心展开完整色彩调节。" Margin="0,5,0,9" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                <WrapPanel AutomationProperties.Name="明暗模式">
-                    <ui:Button Content="浅色" Margin="0,0,8,0" Command="{Binding ChangeThemeCommand}" CommandParameter="Light">
-                        <ui:Button.Style><Style TargetType="ui:Button"><Style.Triggers>
-                            <DataTrigger Binding="{Binding IsLightSelected}" Value="True"><Setter Property="Appearance" Value="Primary" /></DataTrigger>
-                        </Style.Triggers></Style></ui:Button.Style>
-                    </ui:Button>
-                    <ui:Button Content="深色" Margin="0,0,8,0" Command="{Binding ChangeThemeCommand}" CommandParameter="Dark">
-                        <ui:Button.Style><Style TargetType="ui:Button"><Style.Triggers>
-                            <DataTrigger Binding="{Binding IsDarkSelected}" Value="True"><Setter Property="Appearance" Value="Primary" /></DataTrigger>
-                        </Style.Triggers></Style></ui:Button.Style>
-                    </ui:Button>
-                    <ui:Button Content="跟随系统" Margin="0,0,8,0" Command="{Binding ChangeThemeCommand}" CommandParameter="System">
-                        <ui:Button.Style><Style TargetType="ui:Button"><Style.Triggers>
-                            <DataTrigger Binding="{Binding IsSystemSelected}" Value="True"><Setter Property="Appearance" Value="Primary" /></DataTrigger>
-                        </Style.Triggers></Style></ui:Button.Style>
-                    </ui:Button>
-                </WrapPanel>
+                <Border HorizontalAlignment="Left" CornerRadius="15" Padding="3"
+                        Background="{DynamicResource AppPillBackgroundBrush}" BorderBrush="{DynamicResource AppPillBorderBrush}" BorderThickness="1"
+                        AutomationProperties.Name="明暗模式">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Style="{StaticResource ThemeModeSegment}" GroupName="OnboardingThemeMode" Content="浅色"
+                                     IsChecked="{Binding IsLightSelected, Mode=OneWay}" Command="{Binding ChangeThemeCommand}" CommandParameter="Light" />
+                        <RadioButton Style="{StaticResource ThemeModeSegment}" GroupName="OnboardingThemeMode" Content="深色"
+                                     IsChecked="{Binding IsDarkSelected, Mode=OneWay}" Command="{Binding ChangeThemeCommand}" CommandParameter="Dark" />
+                        <RadioButton Style="{StaticResource ThemeModeSegment}" GroupName="OnboardingThemeMode" Content="跟随系统"
+                                     IsChecked="{Binding IsSystemSelected, Mode=OneWay}" Command="{Binding ChangeThemeCommand}" CommandParameter="System" />
+                    </StackPanel>
+                </Border>
                 <Border Margin="0,10,0,8" Padding="12" CornerRadius="10" Background="{DynamicResource AppCardBackgroundBrush2}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                     <controls:ColorWheelControl RingSize="176" AccentColor="{Binding AccentColor, Mode=TwoWay}" SurfaceTint="{Binding SurfaceTint, Mode=TwoWay}" IsDarkTheme="{Binding IsDarkTheme}" />
                 </Border>
