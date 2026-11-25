@@ -29,6 +29,57 @@
             <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
+        <!-- A single active template prevents both welcome states from sharing the visual tree. -->
+        <ControlTemplate x:Key="WelcomeExpandedTemplate" TargetType="ContentControl">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="0.64*" MaxWidth="170"/></Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <WrapPanel>
+                        <Border Style="{StaticResource Chip}" Margin="0,0,8,0">
+                            <TextBlock Text="UMM 欢迎区 · v3.0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                        </Border>
+                        <TextBlock Style="{StaticResource Caption}" VerticalAlignment="Center" Text="{Binding WelcomeGreeting}"/>
+                    </WrapPanel>
+                    <TextBlock Text="让插件管理更轻松一点" FontSize="19" FontWeight="Bold" Margin="0,10,0,6" TextWrapping="Wrap"/>
+                    <ItemsControl ItemsSource="{Binding HomeAnnouncementHighlights}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,2">
+                                    <Ellipse Width="5" Height="5" Margin="0,6,7,0" VerticalAlignment="Top" Fill="{DynamicResource AccentFillColorDefaultBrush}"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="{Binding}"/>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <WrapPanel Margin="0,10,0,0">
+                        <ui:Button Content="完整更新日志" Click="ShowChangeLog_Click" Margin="0,0,6,4"/>
+                        <ui:Button Content="收起欢迎区" Command="{Binding HideHomeWelcomeCommand}" Margin="0,0,6,4"/>
+                        <ui:Button Content="知道了" Command="{Binding AcknowledgeAnnouncementCommand}" Margin="0,0,0,4"
+                                   Visibility="{Binding HasNewReleaseAnnouncement, Converter={StaticResource BoolToVisibility}}"/>
+                    </WrapPanel>
+                    <StackPanel Margin="0,6,0,0" Visibility="{Binding HasAvailableLauncherUpdate, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Style="{StaticResource Caption}" Text="{Binding LauncherUpdateDetail}"/>
+                        <ui:Button Content="{Binding UpdateDownloadButtonText}" Appearance="Primary" Command="{Binding DownloadLauncherUpdateCommand}" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+                        <StackPanel Visibility="{Binding IsDownloadingLauncherUpdate, Converter={StaticResource BoolToVisibility}}">
+                            <ProgressBar Height="4" Margin="0,7,0,0" Maximum="100" Value="{Binding LauncherUpdatePercentage, Mode=OneWay}"/>
+                            <TextBlock Style="{StaticResource Caption}" Text="{Binding LauncherUpdateText}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+                <Grid Grid.Column="1" Height="170" Margin="12,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                    <Ellipse Width="138" Height="138" Fill="{DynamicResource AppMascotGlowBrush}" Stroke="{DynamicResource AppAccentBorderBrush}"/>
+                    <Image Source="/Assets/umm-mascot-chibi-v2.png" Stretch="Uniform" VerticalAlignment="Stretch" AutomationProperties.Name="UMM 吉祥物"/>
+                </Grid>
+            </Grid>
+        </ControlTemplate>
+        <ControlTemplate x:Key="WelcomeCollapsedTemplate" TargetType="ContentControl">
+            <StackPanel VerticalAlignment="Center">
+                <Border Style="{StaticResource Chip}" HorizontalAlignment="Left"><TextBlock Text="欢迎区已收起" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/></Border>
+                <TextBlock Text="保持专注的启动工作台" FontSize="19" FontWeight="SemiBold" Margin="0,10,0,5"/>
+                <TextBlock Style="{StaticResource Caption}" Text="欢迎公告可随时恢复，也可从「游戏设置」重新开启。"/>
+                <ui:Button Content="重新显示欢迎区" Command="{Binding ShowHomeWelcomeCommand}" Margin="0,10,0,0" HorizontalAlignment="Left"/>
+            </StackPanel>
+        </ControlTemplate>
     </Page.Resources>
     <ScrollViewer x:Name="RootScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                   PanningMode="VerticalOnly" PreviewMouseWheel="CardPanel_PreviewMouseWheel">
@@ -104,54 +155,18 @@
                 </Border>
 
                 <Border x:Name="WelcomeCard" Grid.Column="1" Style="{StaticResource BentoCard}" Margin="0,0,0,14" ClipToBounds="True">
-                    <Grid>
-                        <Grid Visibility="{Binding IsHomeWelcomeEnabled, Converter={StaticResource BoolToVisibility}}">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="0.64*" MaxWidth="170"/></Grid.ColumnDefinitions>
-                            <StackPanel VerticalAlignment="Center">
-                                <WrapPanel>
-                                    <Border Style="{StaticResource Chip}" Margin="0,0,8,0">
-                                        <TextBlock Text="UMM 欢迎区 · v3.0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
-                                    </Border>
-                                    <TextBlock Style="{StaticResource Caption}" VerticalAlignment="Center" Text="{Binding WelcomeGreeting}"/>
-                                </WrapPanel>
-                                <TextBlock Text="让插件管理更轻松一点" FontSize="19" FontWeight="Bold" Margin="0,10,0,6" TextWrapping="Wrap"/>
-                                <ItemsControl ItemsSource="{Binding HomeAnnouncementHighlights}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <DockPanel Margin="0,2">
-                                                <Ellipse Width="5" Height="5" Margin="0,6,7,0" VerticalAlignment="Top" Fill="{DynamicResource AccentFillColorDefaultBrush}"/>
-                                                <TextBlock Style="{StaticResource Caption}" Text="{Binding}"/>
-                                            </DockPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                                <WrapPanel Margin="0,10,0,0">
-                                    <ui:Button Content="完整更新日志" Click="ShowChangeLog_Click" Margin="0,0,6,4"/>
-                                    <ui:Button Content="收起欢迎区" Command="{Binding HideHomeWelcomeCommand}" Margin="0,0,6,4"/>
-                                    <ui:Button Content="知道了" Command="{Binding AcknowledgeAnnouncementCommand}" Margin="0,0,0,4"
-                                               Visibility="{Binding HasNewReleaseAnnouncement, Converter={StaticResource BoolToVisibility}}"/>
-                                </WrapPanel>
-                                <StackPanel Margin="0,6,0,0" Visibility="{Binding HasAvailableLauncherUpdate, Converter={StaticResource BoolToVisibility}}">
-                                    <TextBlock Style="{StaticResource Caption}" Text="{Binding LauncherUpdateDetail}"/>
-                                    <ui:Button Content="{Binding UpdateDownloadButtonText}" Appearance="Primary" Command="{Binding DownloadLauncherUpdateCommand}" HorizontalAlignment="Left" Margin="0,5,0,0"/>
-                                    <StackPanel Visibility="{Binding IsDownloadingLauncherUpdate, Converter={StaticResource BoolToVisibility}}">
-                                        <ProgressBar Height="4" Margin="0,7,0,0" Maximum="100" Value="{Binding LauncherUpdatePercentage, Mode=OneWay}"/>
-                                        <TextBlock Style="{StaticResource Caption}" Text="{Binding LauncherUpdateText}" Margin="0,4,0,0"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </StackPanel>
-                            <Grid Grid.Column="1" Height="170" Margin="12,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
-                                <Ellipse Width="138" Height="138" Fill="{DynamicResource AppMascotGlowBrush}" Stroke="{DynamicResource AppAccentBorderBrush}"/>
-                                <Image Source="/Assets/umm-mascot-chibi-v2.png" Stretch="Uniform" VerticalAlignment="Stretch" AutomationProperties.Name="UMM 吉祥物"/>
-                            </Grid>
-                        </Grid>
-                        <StackPanel VerticalAlignment="Center" Visibility="{Binding IsHomeWelcomeEnabled, Converter={StaticResource InverseBoolToVisibility}}">
-                            <Border Style="{StaticResource Chip}" HorizontalAlignment="Left"><TextBlock Text="欢迎区已收起" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/></Border>
-                            <TextBlock Text="保持专注的启动工作台" FontSize="19" FontWeight="SemiBold" Margin="0,10,0,5"/>
-                            <TextBlock Style="{StaticResource Caption}" Text="欢迎公告可随时恢复，也可从「游戏设置」重新开启。"/>
-                            <ui:Button Content="重新显示欢迎区" Command="{Binding ShowHomeWelcomeCommand}" Margin="0,10,0,0" HorizontalAlignment="Left"/>
-                        </StackPanel>
-                    </Grid>
+                    <ContentControl x:Name="WelcomeContent">
+                        <ContentControl.Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="Template" Value="{StaticResource WelcomeExpandedTemplate}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsHomeWelcomeEnabled}" Value="False">
+                                        <Setter Property="Template" Value="{StaticResource WelcomeCollapsedTemplate}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                    </ContentControl>
                 </Border>
 
                 <Border x:Name="EnvironmentCard" Grid.Row="1" Style="{StaticResource BentoCard}" Margin="0,0,14,0">

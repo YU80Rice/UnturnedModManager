@@ -16,6 +16,7 @@
             <Setter Property="BorderThickness" Value="1" />
         </Style>
         <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
             <Setter Property="FontSize" Value="16" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="TextWrapping" Value="Wrap" />
@@ -48,6 +49,36 @@
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ThemeModeSegment" TargetType="RadioButton">
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Segment" Padding="{TemplateBinding Padding}" CornerRadius="12"
+                                Background="Transparent" BorderBrush="Transparent" BorderThickness="1">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" RecognizesAccessKey="True" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Segment" Property="Background" Value="{DynamicResource AppCardBackgroundBrush2}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Segment" Property="Background" Value="{DynamicResource AppAccentSoftBrush}" />
+                                <Setter TargetName="Segment" Property="BorderBrush" Value="{DynamicResource AppAccentBorderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Segment" Property="BorderBrush" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -120,29 +151,28 @@
 
             <Border Style="{StaticResource SettingsCard}">
                 <StackPanel>
-                    <DockPanel>
-                        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Top" Margin="10,0,0,0">
-                            <ui:Button Content="浅色" Command="{Binding ChangeThemeCommand}" CommandParameter="Light">
-                                <ui:Button.Style><Style TargetType="ui:Button"><Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsLightSelected}" Value="True"><Setter Property="Appearance" Value="Primary" /></DataTrigger>
-                                </Style.Triggers></Style></ui:Button.Style>
-                            </ui:Button>
-                            <ui:Button Content="深色" Margin="5,0" Command="{Binding ChangeThemeCommand}" CommandParameter="Dark">
-                                <ui:Button.Style><Style TargetType="ui:Button"><Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsDarkSelected}" Value="True"><Setter Property="Appearance" Value="Primary" /></DataTrigger>
-                                </Style.Triggers></Style></ui:Button.Style>
-                            </ui:Button>
-                            <ui:Button Content="跟随系统" Command="{Binding ChangeThemeCommand}" CommandParameter="System">
-                                <ui:Button.Style><Style TargetType="ui:Button"><Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsSystemSelected}" Value="True"><Setter Property="Appearance" Value="Primary" /></DataTrigger>
-                                </Style.Triggers></Style></ui:Button.Style>
-                            </ui:Button>
-                        </WrapPanel>
-                        <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,12,0">
                             <TextBlock Style="{StaticResource SectionTitle}" Text="主题模式与自由调色环" />
                             <TextBlock Style="{StaticResource SectionHint}" Text="拖动圆环选色；展开后可微调色相、饱和度、明度与氛围染色。" />
                         </StackPanel>
-                    </DockPanel>
+                        <Border Grid.Column="1" VerticalAlignment="Top" CornerRadius="15" Padding="3"
+                                Background="{DynamicResource AppPillBackgroundBrush}" BorderBrush="{DynamicResource AppPillBorderBrush}" BorderThickness="1"
+                                AutomationProperties.Name="主题模式">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Style="{StaticResource ThemeModeSegment}" GroupName="SettingsThemeMode" Content="浅色"
+                                             IsChecked="{Binding IsLightSelected, Mode=OneWay}" Command="{Binding ChangeThemeCommand}" CommandParameter="Light" />
+                                <RadioButton Style="{StaticResource ThemeModeSegment}" GroupName="SettingsThemeMode" Content="深色"
+                                             IsChecked="{Binding IsDarkSelected, Mode=OneWay}" Command="{Binding ChangeThemeCommand}" CommandParameter="Dark" />
+                                <RadioButton Style="{StaticResource ThemeModeSegment}" GroupName="SettingsThemeMode" Content="跟随系统"
+                                             IsChecked="{Binding IsSystemSelected, Mode=OneWay}" Command="{Binding ChangeThemeCommand}" CommandParameter="System" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                     <Border Background="{DynamicResource AppCardBackgroundBrush2}" CornerRadius="10" Padding="14" Margin="0,14,0,0">
                         <controls:ColorWheelControl RingSize="216" AccentColor="{Binding AccentColor, Mode=TwoWay}"
                                                     SurfaceTint="{Binding SurfaceTint, Mode=TwoWay}"
@@ -158,24 +188,27 @@
                                   DisplayMemberPath="Name" Width="166" Margin="0,0,8,7" AutomationProperties.Name="已安装主题" ToolTip="选择已安装主题" />
                         <ui:Button Content="导入主题包" Margin="0,0,8,7" Command="{Binding ImportThemeCommand}" />
                         <ui:Button Content="导出当前主题" Margin="0,0,8,7" Command="{Binding ExportThemeCommand}" />
-                        <ui:Button Content="恢复默认 (#0078D4)" Margin="0,0,0,7" Command="{Binding ResetThemeCommand}" />
                     </WrapPanel>
                 </StackPanel>
             </Border>
 
             <Border Style="{StaticResource SettingsCard}">
                 <StackPanel>
-                    <DockPanel>
-                        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Top" Margin="10,0,0,0">
-                            <ui:Button x:Name="SelectWallpaperButton" Content="选择本地图片…" Appearance="Primary"
-                                       Margin="0,0,6,0" Click="SelectWallpaperButton_Click" />
-                            <ui:Button x:Name="ClearWallpaperButton" Content="清除壁纸" Click="ClearWallpaperButton_Click" />
-                        </WrapPanel>
-                        <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,12,0">
                             <TextBlock Style="{StaticResource SectionTitle}" Text="三层壁纸与高斯模糊" />
                             <TextBlock Style="{StaticResource SectionHint}" Text="纯色底层 → 模糊壁纸 → 自适应对比度遮罩。" />
                         </StackPanel>
-                    </DockPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                            <ui:Button x:Name="SelectWallpaperButton" Content="选择本地图片…" Appearance="Primary"
+                                       Margin="0,0,6,0" Click="SelectWallpaperButton_Click" />
+                            <ui:Button x:Name="ClearWallpaperButton" Content="清除壁纸" Click="ClearWallpaperButton_Click" />
+                        </StackPanel>
+                    </Grid>
                     <ListBox ItemsSource="{Binding WallpaperPresets}" SelectedItem="{Binding SelectedWallpaperPreset}"
                              Background="Transparent" BorderThickness="0" Margin="-3,10,-3,0"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled"

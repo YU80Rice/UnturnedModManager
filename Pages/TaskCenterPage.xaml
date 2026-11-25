@@ -13,15 +13,18 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <DockPanel Margin="0,0,0,14">
-            <ui:Button DockPanel.Dock="Right" Content="清除已完成历史"
+        <Grid Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <controls:PageHeader Margin="0,0,16,0" Title="任务中心" Subtitle="追踪社区插件操作进度、SHA-256 校验阶段与失败重试。" />
+            <ui:Button Grid.Column="1" Content="清除已完成历史"
                        Icon="{ui:SymbolIcon Delete24}"
                        Appearance="Secondary"
                        Command="{Binding ClearHistoryCommand}"
-                       HorizontalAlignment="Right"
-                       VerticalAlignment="Center" />
-            <controls:PageHeader Title="任务中心" Subtitle="追踪社区插件操作进度、SHA-256 校验阶段与失败重试。" />
-        </DockPanel>
+                       VerticalAlignment="Top" />
+        </Grid>
 
         <Border Grid.Row="1"
                 Padding="14,11"
