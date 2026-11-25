@@ -144,7 +144,7 @@
                 <ListView x:Name="EntriesListView"
                           BorderThickness="0"
                           Background="Transparent"
-                          Padding="4">
+                          Padding="4" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Grid Margin="0,3">
@@ -160,7 +160,7 @@
                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
 
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="{Binding RelativePath}"
+                                    <TextBlock Text="{Binding RelativePath}" TextWrapping="Wrap"
                                                FontFamily="Consolas, monospace"
                                                FontSize="12"
                                                FontWeight="SemiBold"
@@ -178,13 +178,13 @@
                                         <Style TargetType="Border">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding ConflictType}" Value="New">
-                                                    <Setter Property="Background" Value="#26107C41" />
+                                                    <Setter Property="Background" Value="{DynamicResource AppSuccessSurfaceBrush}" />
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding ConflictType}" Value="ConflictDll">
-                                                    <Setter Property="Background" Value="#33FFB900" />
+                                                    <Setter Property="Background" Value="{DynamicResource AppWarningSurfaceBrush}" />
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding ConflictType}" Value="ConflictConfig">
-                                                    <Setter Property="Background" Value="#260078D4" />
+                                                    <Setter Property="Background" Value="{DynamicResource AppAccentSoftBrush}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -195,15 +195,15 @@
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding ConflictType}" Value="New">
                                                         <Setter Property="Text" Value="全新文件" />
-                                                        <Setter Property="Foreground" Value="#107C41" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource AppSuccessTextBrush}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ConflictType}" Value="ConflictDll">
                                                         <Setter Property="Text" Value="版本覆盖 (.bak备份)" />
-                                                        <Setter Property="Foreground" Value="#D83B01" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource AppWarningTextBrush}" />
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding ConflictType}" Value="ConflictConfig">
-                                                        <Setter Property="Text" Value="保留本地配置" />
-                                                        <Setter Property="Foreground" Value="#0078D4" />
+                                                        <Setter Property="Text" Value="配置冲突 · 按上方选项处理" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>

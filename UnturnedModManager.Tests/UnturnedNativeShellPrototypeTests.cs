@@ -45,6 +45,26 @@ public sealed class UnturnedNativeShellPrototypeTests
     }
 
     [Fact]
+    public void MainWindow_MountsFiveCapsules_OneLaunchAction_AndTransparentPageHost()
+    {
+        string? path = null;
+        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null && path is null; dir = dir.Parent)
+            path = new[] { Path.Combine(dir.FullName, "MainWindow.xaml"),
+                Path.Combine(dir.FullName, "UnturnedModManager", "MainWindow.xaml") }.FirstOrDefault(File.Exists);
+        Assert.NotNull(path);
+        var nodes = XDocument.Load(path).Descendants().ToArray();
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+        Assert.Equal(new[] { "Play", "Mods", "TaskCenter", "Settings", "About" }, nodes
+            .Where(node => node.Name.LocalName == "RadioButton" && (string?)node.Attribute("GroupName") == "ShellSlots")
+            .Select(node => (string?)node.Attribute("Tag")).ToArray());
+        Assert.DoesNotContain(nodes, node => node.Name.LocalName == "NavigationView");
+        var frame = Assert.Single(nodes, node => (string?)node.Attribute(x + "Name") == "PageHost");
+        Assert.Equal("Transparent", (string?)frame.Attribute("Background"));
+        Assert.Equal("Hidden", (string?)frame.Attribute("NavigationUIVisibility"));
+        Assert.Single(nodes, node => (string?)node.Attribute("Click") == "LaunchButton_Click");
+    }
+
+    [Fact]
     public void DesignTokens_XmlStructure_ContainsAllRequiredKeys()
     {
         var prototypeDir = GetPrototypeRootDirectory();

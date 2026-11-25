@@ -3,30 +3,31 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:controls="clr-namespace:UnturnedModManager.Controls"
+      xmlns:models="clr-namespace:UnturnedModManager.Models"
       Title="任务中心"
       Background="Transparent">
-    <Grid Margin="28,22,28,28" PreviewMouseWheel="Page_PreviewMouseWheel">
+    <Grid Margin="28,20,28,22" PreviewMouseWheel="Page_PreviewMouseWheel">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid Margin="0,0,0,18">
-            <controls:PageHeader Title="任务中心" Subtitle="查看社区插件安装、更新和卸载的实时进度、失败原因与操作历史。" />
-            <ui:Button Content="清除已完成历史"
+        <DockPanel Margin="0,0,0,14">
+            <ui:Button DockPanel.Dock="Right" Content="清除已完成历史"
                        Icon="{ui:SymbolIcon Delete24}"
                        Appearance="Secondary"
                        Command="{Binding ClearHistoryCommand}"
                        HorizontalAlignment="Right"
                        VerticalAlignment="Center" />
-        </Grid>
+            <controls:PageHeader Title="任务中心" Subtitle="追踪社区插件操作进度、SHA-256 校验阶段与失败重试。" />
+        </DockPanel>
 
         <Border Grid.Row="1"
                 Padding="14,11"
                 Margin="0,0,0,14"
                 CornerRadius="10"
-                Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                Background="{DynamicResource AppCardBackgroundBrush2}"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 BorderThickness="1">
             <TextBlock Text="{Binding SummaryText}"
@@ -34,34 +35,30 @@
                        Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
         </Border>
 
-        <Border Grid.Row="2"
-                CornerRadius="10"
-                Background="{DynamicResource ControlFillColorDefaultBrush}"
-                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                BorderThickness="1">
-            <Grid>
+        <Grid Grid.Row="2">
                 <ListView ItemsSource="{Binding Tasks}"
                           BorderThickness="0"
                           Background="Transparent"
                           HorizontalContentAlignment="Stretch"
+                          Padding="0"
                           ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Border Padding="18,14"
-                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                                    BorderThickness="0,0,0,1">
+                            <Border Padding="18,14" Margin="0,0,0,9" CornerRadius="12"
+                                    Background="{DynamicResource ControlFillColorDefaultBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <StackPanel Orientation="Horizontal">
+                                        <WrapPanel>
                                             <Border Padding="8,3" CornerRadius="6" Background="{DynamicResource ControlFillColorSecondaryBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                                                 <TextBlock Text="{Binding KindText}" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
                                             </Border>
                                             <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" Margin="10,0,0,0" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                                        </StackPanel>
+                                        </WrapPanel>
                                         <TextBlock Text="{Binding Stage}" Margin="0,8,0,0" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                         <ProgressBar Value="{Binding Progress}" Maximum="100" Height="5" Margin="0,10,0,0" Visibility="{Binding IsRunning, Converter={StaticResource BoolToVisibility}}" />
                                         <Border Background="{DynamicResource DangerSurfaceBrush}" Padding="10,7" CornerRadius="6" Margin="0,10,0,0" Visibility="{Binding HasFailureReason, Converter={StaticResource BoolToVisibility}}">
@@ -70,7 +67,30 @@
                                         <TextBlock Text="{Binding AttemptText}" Margin="0,8,0,0" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Right">
-                                        <TextBlock Text="{Binding StatusText}" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        <Border HorizontalAlignment="Right" Padding="8,3" CornerRadius="10">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="{DynamicResource AppCardBackgroundBrush3}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:OperationTaskStatus.Running}"><Setter Property="Background" Value="{DynamicResource AppAccentSoftBrush}"/></DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:OperationTaskStatus.Succeeded}"><Setter Property="Background" Value="{DynamicResource AppSuccessSurfaceBrush}"/></DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="{x:Static models:OperationTaskStatus.Failed}"><Setter Property="Background" Value="{DynamicResource DangerSurfaceBrush}"/></DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold" FontSize="11">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="{x:Static models:OperationTaskStatus.Running}"><Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}"/></DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="{x:Static models:OperationTaskStatus.Succeeded}"><Setter Property="Foreground" Value="{DynamicResource AppSuccessTextBrush}"/></DataTrigger>
+                                                            <DataTrigger Binding="{Binding Status}" Value="{x:Static models:OperationTaskStatus.Failed}"><Setter Property="Foreground" Value="{DynamicResource DangerTextBrush}"/></DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
                                         <TextBlock Text="{Binding ProgressText}" HorizontalAlignment="Right" Margin="0,3,0,0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                         <TextBlock Text="{Binding TimeText}" HorizontalAlignment="Right" Margin="0,3,0,8" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
                                         <ui:Button Content="重试" Icon="{ui:SymbolIcon ArrowSync24}" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Command="{Binding DataContext.RetryCommand, RelativeSource={RelativeSource AncestorType={x:Type Page}}}" CommandParameter="{Binding}" Visibility="{Binding IsRetryAvailable, Converter={StaticResource BoolToVisibility}}" />
@@ -81,12 +101,15 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding HasTasks, Converter={StaticResource InverseBoolToVisibility}}">
+            <Border VerticalAlignment="Top" Padding="20,36" CornerRadius="12"
+                    Background="{DynamicResource ControlFillColorDefaultBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
+                    Visibility="{Binding HasTasks, Converter={StaticResource InverseBoolToVisibility}}">
+                <StackPanel HorizontalAlignment="Center">
                     <ui:SymbolIcon Symbol="ArrowDownload24" FontSize="38" HorizontalAlignment="Center" />
-                    <TextBlock Text="暂无任务" Margin="0,12,0,0" FontSize="16" HorizontalAlignment="Center" />
+                    <TextBlock Text="暂无任务记录" Margin="0,12,0,0" FontSize="16" HorizontalAlignment="Center" />
                     <TextBlock Text="从插件详情安装、更新或卸载后，进度和操作记录会出现在这里。" Margin="0,5,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center" />
                 </StackPanel>
-            </Grid>
-        </Border>
+            </Border>
+        </Grid>
     </Grid>
 </Page>

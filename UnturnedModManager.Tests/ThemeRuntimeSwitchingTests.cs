@@ -70,21 +70,22 @@ public sealed class ThemeRuntimeSwitchingTests
             Assert.Equal("DualSwitchTest", themeService.CurrentCustomTheme.Name);
             Assert.Equal(ThemePreference.Light, themeService.AppliedTheme);
 
-            // App resources should now have the light background and card colors
             var app = System.Windows.Application.Current;
             Assert.NotNull(app);
-            var bgBrush = app.Resources["ApplicationBackgroundBrush"] as SolidColorBrush;
-            Assert.NotNull(bgBrush);
-            Assert.Equal(System.Windows.Media.ColorConverter.ConvertFromString("#FFF5F8"), bgBrush.Color);
+            var accent = (Color)System.Windows.Media.ColorConverter.ConvertFromString(theme.AccentColor)!;
+            var light = ThemeService.DeriveColors(accent, false, themeService.CurrentSurfaceTint);
+            Assert.Equal(light["ApplicationBackgroundBrush"], Assert.IsType<SolidColorBrush>(app.Resources["ApplicationBackgroundBrush"]).Color);
+            Assert.Equal(light["ControlFillColorDefaultBrush"], Assert.IsType<SolidColorBrush>(app.Resources["ControlFillColorDefaultBrush"]).Color);
 
             // Act 3: User switches back to Dark
             themeService.Apply(ThemePreference.Dark);
             Assert.NotNull(themeService.CurrentCustomTheme);
             Assert.Equal(ThemePreference.Dark, themeService.AppliedTheme);
 
-            var darkBgBrush = app.Resources["ApplicationBackgroundBrush"] as SolidColorBrush;
-            Assert.NotNull(darkBgBrush);
-            Assert.Equal(System.Windows.Media.ColorConverter.ConvertFromString("#1D161A"), darkBgBrush.Color);
+            var dark = ThemeService.DeriveColors(accent, true, themeService.CurrentSurfaceTint);
+            Assert.NotEqual(light["ApplicationBackgroundBrush"], dark["ApplicationBackgroundBrush"]);
+            Assert.Equal(dark["ApplicationBackgroundBrush"], Assert.IsType<SolidColorBrush>(app.Resources["ApplicationBackgroundBrush"]).Color);
+            Assert.Equal(dark["ControlFillColorDefaultBrush"], Assert.IsType<SolidColorBrush>(app.Resources["ControlFillColorDefaultBrush"]).Color);
         });
     }
 

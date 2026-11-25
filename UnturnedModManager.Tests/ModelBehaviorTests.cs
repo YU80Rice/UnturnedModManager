@@ -246,46 +246,51 @@ public sealed class ModelBehaviorTests
     [Theory]
     [InlineData(ThemePreference.Light)]
     [InlineData(ThemePreference.Dark)]
-    public void ThemeService_AllPublishedPalettesKeepTextReadableOnPageSurfaces(ThemePreference theme)
+    public void ThemeService_MigratedAccentsDeriveReadablePageSurfaces(ThemePreference theme)
     {
-        foreach (var palette in Enum.GetValues<ThemePalette>())
+        (ThemePalette Palette, string Hex)[] migrations =
+        [
+            (ThemePalette.Fluent, "#0078D4"),
+            (ThemePalette.WarmPaper, "#C8A26A"),
+            (ThemePalette.MascotOrange, "#E8722C"),
+            (ThemePalette.MistyForest, "#4E7A63"),
+            (ThemePalette.OceanDusk, "#3E6E93"),
+            (ThemePalette.KleinBlue, "#002FA7"),
+            (ThemePalette.Lavender, "#8B7FB8")
+        ];
+
+        foreach (var (palette, hex) in migrations)
         {
-            var colors = ThemeService.GetPaletteColors(palette, theme)
-                .ToDictionary(item => item.Key, item => item.Color, StringComparer.Ordinal);
+            var accent = ParseColor(hex);
+            var dark = theme == ThemePreference.Dark;
+            var colors = ThemeService.DeriveColors(accent, dark, AppSettings.DefaultSurfaceTint);
+            var compatible = ThemeService.GetPaletteColors(palette, theme)
+                .ToDictionary(item => item.Key, item => (Color)ColorConverter.ConvertFromString(item.Color)!);
+            Assert.Equal(accent, compatible["AccentFillColorDefaultBrush"]);
+            Assert.Equal(colors.Count, compatible.Count);
+            foreach (var (key, color) in colors)
+                Assert.Equal(color, compatible[key]);
 
-            Assert.True(ContrastRatio(colors["TextFillColorPrimaryBrush"], colors["ApplicationBackgroundBrush"]) >= 7,
-                $"{palette}/{theme} primary text lacks contrast on the page background.");
-            Assert.True(ContrastRatio(colors["TextFillColorPrimaryBrush"], colors["ControlFillColorDefaultBrush"]) >= 7,
-                $"{palette}/{theme} primary text lacks contrast on the control surface.");
-            Assert.True(ContrastRatio(colors["TextFillColorSecondaryBrush"], colors["ControlFillColorDefaultBrush"]) >= 4.5,
-                $"{palette}/{theme} secondary text lacks contrast on the control surface.");
-            Assert.True(ContrastRatio(colors["TextFillColorTertiaryBrush"], colors["ControlFillColorDefaultBrush"]) >= 3,
-                $"{palette}/{theme} tertiary text lacks contrast on the control surface.");
-            Assert.True(ContrastRatio(colors["AccentTextFillColorPrimaryBrush"], colors["ControlFillColorDefaultBrush"]) >= 4.5,
-                $"{palette}/{theme} accent text lacks contrast on the control surface.");
+            var background = colors["ApplicationBackgroundBrush"];
+            var translucentCard = colors["ControlFillColorDefaultBrush"];
+            var card = Blend(background, translucentCard, translucentCard.A / 255d);
+            var primary = colors["TextFillColorPrimaryBrush"];
+            Assert.True(ContrastRatio(primary, background) >= 7, $"{hex}/{theme} page text lacks contrast.");
+            Assert.True(ContrastRatio(primary, card) >= 7, $"{hex}/{theme} card text lacks contrast.");
+            Assert.True(ContrastRatio(colors["TextFillColorSecondaryBrush"], card) >= 4.5, $"{hex}/{theme} secondary text lacks contrast.");
+            Assert.True(ContrastRatio(colors["TextFillColorTertiaryBrush"], card) >= 3, $"{hex}/{theme} tertiary text lacks contrast.");
+            Assert.True(ContrastRatio(colors["AccentTextFillColorPrimaryBrush"], card) >= 4.5, $"{hex}/{theme} accent text lacks contrast.");
+            Assert.True(ContrastRatio(colors["TextOnAccentFillColorPrimaryBrush"], accent) >= 4.5, $"{hex}/{theme} accent fill lacks contrast.");
 
-            foreach (var accentKey in new[] { "AccentFillColorDefaultBrush", "AccentFillColorSecondaryBrush", "AccentFillColorTertiaryBrush" })
+            foreach (var key in new[] { "AccentFillColorSecondaryBrush", "AccentFillColorTertiaryBrush" })
             {
-                var accent = ParseColor(colors[accentKey]);
-                var foreground = ThemeService.GetContrastingForeground(accent);
-                Assert.True(ContrastRatio(foreground, accent) >= 4.5,
-                    $"{palette}/{theme} {accentKey} lacks a readable interactive foreground.");
-                if (theme == ThemePreference.Dark)
-                {
-                    Assert.True(foreground == Colors.White, $"{palette}/{accentKey} must use white text in dark mode.");
-                    var hover = Blend(accent, Colors.Black, 0.10);
-                    var pressed = Blend(accent, Colors.Black, 0.18);
-                    Assert.True(ContrastRatio(Colors.White, hover) >= 4.5, $"{palette}/{accentKey} hover state lacks white-text contrast.");
-                    Assert.True(ContrastRatio(Colors.White, pressed) >= 4.5, $"{palette}/{accentKey} pressed state lacks white-text contrast.");
-                }
+                var fill = colors[key];
+                Assert.True(ContrastRatio(ThemeService.GetContrastingForeground(fill), fill) >= 4.5,
+                    $"{hex}/{theme} {key} lacks a readable interactive foreground.");
             }
 
-            var selectedBackground = Blend(
-                ParseColor(colors["ControlFillColorDefaultBrush"]),
-                ParseColor(colors["AccentFillColorDefaultBrush"]),
-                theme == ThemePreference.Dark ? 82d / 255d : 48d / 255d);
-            Assert.True(ContrastRatio(ParseColor(colors["TextFillColorPrimaryBrush"]), selectedBackground) >= 4.5,
-                $"{palette}/{theme} selected navigation text lacks contrast.");
+            var selected = Blend(card, accent, dark ? 82d / 255d : 48d / 255d);
+            Assert.True(ContrastRatio(primary, selected) >= 4.5, $"{hex}/{theme} selected navigation text lacks contrast.");
         }
     }
 
@@ -1691,8 +1696,6 @@ public sealed class ModelBehaviorTests
             if (Directory.Exists(gameRoot)) Directory.Delete(gameRoot, true);
         }
     }
-
-    private static double ContrastRatio(string first, string second) => ContrastRatio(ParseColor(first), ParseColor(second));
 
     private static double ContrastRatio(Color first, Color second)
     {

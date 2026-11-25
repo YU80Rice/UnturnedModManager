@@ -22,6 +22,8 @@ public sealed class AppServices : IDisposable
     public BepInExService BepInEx { get; }
     public DxvkService Dxvk { get; }
     public GameLaunchService GameLauncher { get; }
+    public LaunchEnvironmentState LaunchEnvironment { get; }
+    public GameLaunchCoordinator Launch { get; }
     public DiagnosticService Diagnostics { get; } = new();
     public LocalModService LocalMods { get; }
     public PluginProfileService PluginProfiles { get; }
@@ -38,6 +40,8 @@ public sealed class AppServices : IDisposable
         BepInEx = new BepInExService(Downloads);
         Dxvk = new DxvkService(Downloads);
         GameLauncher = new GameLaunchService(BepInEx, Dxvk);
+        LaunchEnvironment = new LaunchEnvironmentState(BepInEx, Dxvk, PluginProfiles, LocalMods);
+        Launch = new GameLaunchCoordinator(GamePaths, BepInEx, GameLauncher, LaunchEnvironment, Dialogs, Notifications);
     }
 
     public LocalModsViewModel CreateLocalModsViewModel() => new(

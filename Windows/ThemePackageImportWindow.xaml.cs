@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using MediaColor = System.Windows.Media.Color;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
 
@@ -49,12 +50,19 @@ public partial class ThemePackageImportWindow : Window
         var theme = _preview.Theme;
         theme.EnsureDualMode();
 
-        SetSwatch(AccentSwatch, AccentHexText, theme.AccentColor, "#0078D4");
+        var fallbackAccent = ThemeService.ParseColor(AppSettings.DefaultAccentHex);
+        var accent = ReadSwatchColor(theme.AccentColor, fallbackAccent);
+        var derived = ThemeService.DeriveColors(accent, !isLight, _themeService.CurrentSurfaceTint);
+        SetSwatch(AccentSwatch, AccentHexText, accent);
+        SetSwatch(BgSwatch, BgHexText, ReadSwatchColor(
+            isLight ? theme.LightBackgroundColor : theme.BackgroundColor, derived["AppSemanticWindowBackgroundBrush"]));
+        SetSwatch(CardSwatch, CardHexText, ReadSwatchColor(
+            isLight ? theme.LightCardBackgroundColor : theme.CardBackgroundColor, derived["AppSemanticCardSurfaceBrush"]));
 
         if (isLight)
         {
-            SetSwatch(BgSwatch, BgHexText, theme.LightBackgroundColor, "#FFF5F8");
-            SetSwatch(CardSwatch, CardHexText, theme.LightCardBackgroundColor, "#FFEBF2");
+
+
             var opacity = theme.LightCardOpacity ?? theme.CardOpacity;
             var radius = theme.LightCardBorderRadius ?? theme.CardBorderRadius;
             CardOpacityText.Text = $"卡片不透明度: {Math.Round(opacity * 100)}%";
@@ -63,8 +71,8 @@ public partial class ThemePackageImportWindow : Window
         }
         else
         {
-            SetSwatch(BgSwatch, BgHexText, theme.BackgroundColor, "#1E1E1E");
-            SetSwatch(CardSwatch, CardHexText, theme.CardBackgroundColor, "#2D2D2D");
+
+
             CardOpacityText.Text = $"卡片不透明度: {Math.Round(theme.CardOpacity * 100)}%";
             CardRadiusText.Text = $"卡片圆角: {theme.CardBorderRadius} px";
             UpdateWallpaperPreview(_preview.WallpaperDarkBytes ?? _preview.WallpaperLightBytes);
@@ -107,20 +115,18 @@ public partial class ThemePackageImportWindow : Window
         }
     }
 
-    private static void SetSwatch(System.Windows.Controls.Border swatch, System.Windows.Controls.TextBlock label, string? hex, string fallback)
+    private static MediaColor ReadSwatchColor(string? hex, MediaColor fallback)
     {
-        var targetHex = string.IsNullOrWhiteSpace(hex) ? fallback : hex;
-        label.Text = targetHex;
-        try
-        {
-            var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(targetHex)!;
-            swatch.Background = new SolidColorBrush(color);
-        }
-        catch
-        {
-            var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(fallback)!;
-            swatch.Background = new SolidColorBrush(color);
-        }
+        if (string.IsNullOrWhiteSpace(hex)) return fallback;
+        try { return ThemeService.ParseColor(hex); }
+        catch (FormatException) { return fallback; }
+        catch (NotSupportedException) { return fallback; }
+    }
+
+    private static void SetSwatch(System.Windows.Controls.Border swatch, System.Windows.Controls.TextBlock label, MediaColor color)
+    {
+        label.Text = color.A == byte.MaxValue ? ThemeService.ToHex(color) : color.ToString();
+        swatch.Background = new SolidColorBrush(color);
     }
 
     private void ConfirmButton_Click(object sender, RoutedEventArgs e)

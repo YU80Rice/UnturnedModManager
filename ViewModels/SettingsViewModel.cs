@@ -1,12 +1,15 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Input;
+using UnturnedModManager.Windows;
+using Color = System.Windows.Media.Color;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
 
 namespace UnturnedModManager.ViewModels;
 
 public sealed record ThemeChoice(ThemePreference Value, string Label);
+public sealed record WallpaperChoice(string Id, string Label);
 
 public sealed class SettingsViewModel : ViewModelBase, IDisposable
 {
@@ -21,7 +24,9 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     private double _wallpaperDimPercent = 35.0;
     private string _gamePath = "";
     private ThemeChoice? _selectedTheme;
-    private ThemePaletteChoice? _selectedPalette;
+    private Color _accentColor;
+    private double _surfaceTint;
+    private WallpaperChoice? _selectedWallpaperPreset;
     private CustomTheme? _selectedCustomTheme;
     private bool _isHomeWelcomeEnabled;
     private bool _isBusy;
@@ -48,16 +53,15 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
             new(ThemePreference.Dark, "深色"),
             new(ThemePreference.System, "跟随系统")
         ];
-        PaletteChoices =
+        WallpaperPresets =
         [
-            new(ThemePalette.Fluent, "默认 Fluent"),
-            new(ThemePalette.WarmPaper, "暖米白 · UMM 蓝"),
-            new(ThemePalette.MascotOrange, "吉祥物橙"),
-            new(ThemePalette.MistyForest, "松林雾绿"),
-            new(ThemePalette.OceanDusk, "深海雾蓝"),
-            new(ThemePalette.KleinBlue, "克莱因蓝"),
-            new(ThemePalette.Lavender, "夜雾紫")
+            new("solid", "纯净底色"),
+            new("ember", "PEI 篝火夕阳"),
+            new("mist", "雾岚松林"),
+            new("graphite", "极光几何星云")
         ];
+        ChangeThemeCommand = new RelayCommand<string>(parameter =>
+            SelectedTheme = ThemeChoices.First(choice => choice.Value == ThemeService.Parse(parameter)));
         BrowseCommand = new RelayCommand(Browse);
         DetectCommand = new AsyncRelayCommand(DetectAsync, () => !IsBusy);
         SaveCommand = new RelayCommand(Save, () => !IsBusy);
@@ -69,11 +73,21 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         RepairShellAssociationCommand = new RelayCommand(RepairShellAssociation);
         UnregisterShellAssociationCommand = new RelayCommand(UnregisterShellAssociation);
         _authentication.SessionChanged += OnSessionChanged;
+        _themes.ThemeChanged += OnThemeChanged;
         Load();
     }
 
     public ObservableCollection<ThemeChoice> ThemeChoices { get; }
-    public ObservableCollection<ThemePaletteChoice> PaletteChoices { get; }
+    public IReadOnlyList<WallpaperChoice> WallpaperPresets { get; }
+    public WallpaperChoice? SelectedWallpaperPreset
+    {
+        get => _selectedWallpaperPreset;
+        set
+        {
+            if (value is not null && !Equals(value, _selectedWallpaperPreset))
+                ApplyWallpaperPreset(value);
+        }
+    }
     public ObservableCollection<CustomTheme> CustomThemes { get; } = [];
     public CustomTheme? SelectedCustomTheme
     {
@@ -81,13 +95,26 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         set
         {
             if (!SetProperty(ref _selectedCustomTheme, value) || value is null) return;
-            var wallpaper = string.IsNullOrWhiteSpace(value.BackgroundAsset)
+            string? WallpaperPath(string? asset) => string.IsNullOrWhiteSpace(asset)
                 ? null
-                : Path.Combine(AppDataPaths.RootDirectory, "themes", value.Id, value.BackgroundAsset);
-            _themes.ApplyCustomTheme(value, wallpaper);
+                : Path.Combine(AppDataPaths.RootDirectory, "themes", value.Id, asset);
+            _themes.ApplyCustomTheme(value, WallpaperPath(value.BackgroundAsset), WallpaperPath(value.LightBackgroundAsset));
         }
     }
-    public string GamePath { get => _gamePath; set => SetProperty(ref _gamePath, value); }
+    public string GamePath
+    {
+        get => _gamePath;
+        set
+        {
+            if (SetProperty(ref _gamePath, value))
+            {
+                OnPropertyChanged(nameof(IsGamePathValid));
+                OnPropertyChanged(nameof(GamePathHint));
+            }
+        }
+    }
+    public bool IsGamePathValid => _gamePaths.IsValid(GamePath.Trim());
+    public string GamePathHint => IsGamePathValid ? "已验证 Unturned.exe" : "请选择包含 Unturned.exe 的目录";
     public bool IsHomeWelcomeEnabled
     {
         get => _isHomeWelcomeEnabled;
@@ -106,13 +133,29 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
             _themes.Apply(value.Value);
         }
     }
-    public ThemePaletteChoice? SelectedPalette
+    public bool IsLightSelected => SelectedTheme?.Value == ThemePreference.Light;
+    public bool IsDarkSelected => SelectedTheme?.Value == ThemePreference.Dark;
+    public bool IsSystemSelected => SelectedTheme?.Value == ThemePreference.System;
+    public bool IsDarkTheme => _themes.AppliedTheme == ThemePreference.Dark;
+    public string CurrentThemeLabel => _themes.CurrentCustomTheme?.Name ?? "自由调色";
+
+    public Color AccentColor
     {
-        get => _selectedPalette;
+        get => _accentColor;
         set
         {
-            if (!SetProperty(ref _selectedPalette, value) || value is null) return;
-            _themes.ApplyPalette(value.Value);
+            if (SetProperty(ref _accentColor, value))
+                _themes.ApplyAccent(ThemeService.ToHex(value), SurfaceTint);
+        }
+    }
+
+    public double SurfaceTint
+    {
+        get => _surfaceTint;
+        set
+        {
+            if (SetProperty(ref _surfaceTint, AppSettings.NormalizeSurfaceTint(value)))
+                _themes.ApplyAccent(ThemeService.ToHex(AccentColor), _surfaceTint);
         }
     }
 
@@ -193,6 +236,7 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         private set => SetProperty(ref _shellAssociationStatusText, value);
     }
 
+    public ICommand ChangeThemeCommand { get; }
     public ICommand BrowseCommand { get; }
     public ICommand DetectCommand { get; }
     public ICommand SaveCommand { get; }
@@ -210,11 +254,7 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     public void Load()
     {
         GamePath = AppSettings.UnturnedInstallPath;
-        var preference = ThemeService.Parse(AppSettings.CommunityThemeMode);
-        _selectedTheme = ThemeChoices.First(choice => choice.Value == preference);
-        OnPropertyChanged(nameof(SelectedTheme));
-        _selectedPalette = PaletteChoices.First(choice => choice.Value == ThemeService.ParsePalette(AppSettings.CommunityColorPalette));
-        OnPropertyChanged(nameof(SelectedPalette));
+        OnThemeChanged(_themes.CurrentPreference);
         _isHomeWelcomeEnabled = AppSettings.IsHomeWelcomeEnabled;
         OnPropertyChanged(nameof(IsHomeWelcomeEnabled));
         RefreshAccount();
@@ -223,6 +263,11 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
 
         _currentWallpaperPath = AppSettings.LauncherCustomWallpaperPath;
         OnPropertyChanged(nameof(CurrentWallpaperPath));
+        _selectedWallpaperPreset = CurrentWallpaperPath is null
+            ? WallpaperPresets.FirstOrDefault(choice => choice.Id == AppSettings.LauncherWallpaperPreset)
+              ?? (_themes.CustomWallpaperPath is null ? WallpaperPresets[0] : null)
+            : null;
+        OnPropertyChanged(nameof(SelectedWallpaperPreset));
         _wallpaperBlurRadius = AppSettings.LauncherWallpaperBlurRadius;
         OnPropertyChanged(nameof(WallpaperBlurRadius));
         OnPropertyChanged(nameof(WallpaperBlurLabelText));
@@ -247,15 +292,23 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
 
         AppSettings.LauncherCustomWallpaperPath = path;
         CurrentWallpaperPath = path;
+        SetProperty(ref _selectedWallpaperPreset, null, nameof(SelectedWallpaperPreset));
         RaiseNotice("背景壁纸已更新", UserNoticeSeverity.Success);
         NotifyMainWindowWallpaperChanged();
     }
 
     public void ClearCustomWallpaper()
     {
+        ApplyWallpaperPreset(WallpaperPresets[0]);
+        RaiseNotice("已恢复纯净底色", UserNoticeSeverity.Information);
+    }
+
+    private void ApplyWallpaperPreset(WallpaperChoice preset)
+    {
+        AppSettings.LauncherWallpaperPreset = preset.Id;
         AppSettings.LauncherCustomWallpaperPath = null;
         CurrentWallpaperPath = null;
-        RaiseNotice("已恢复纯净纯色外观", UserNoticeSeverity.Information);
+        SetProperty(ref _selectedWallpaperPreset, preset, nameof(SelectedWallpaperPreset));
         NotifyMainWindowWallpaperChanged();
     }
 
@@ -339,6 +392,7 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         CustomThemes.Clear();
         foreach (var theme in _themePackages.GetInstalledThemes())
             CustomThemes.Add(theme);
+        SyncCustomThemeSelection();
     }
 
     private void Browse()
@@ -403,24 +457,44 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         };
         if (dialog.ShowDialog() != true) return;
 
-        var result = await Task.Run(() => _themePackages.ImportPackage(dialog.FileName));
-        RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
-        if (result.Success && result.Theme is not null)
+        var preview = await Task.Run(() => _themePackages.InspectPackagePreview(dialog.FileName));
+        if (preview is null)
+        {
+            RaiseNotice("无法读取主题包，请确认文件完整且格式正确。", UserNoticeSeverity.Warning);
+            return;
+        }
+
+        var window = new ThemePackageImportWindow(preview, _themePackages, _themes);
+        if (System.Windows.Application.Current.Windows.OfType<MainWindow>().FirstOrDefault() is { } owner)
+            window.Owner = owner;
+        if (window.ShowDialog() == true && window.Result is { } result)
         {
             RefreshCustomThemes();
-            SelectedCustomTheme = CustomThemes.FirstOrDefault(t => t.Id == result.Theme.Id);
+            RaiseNotice(result.Message, UserNoticeSeverity.Success);
         }
     }
 
     private async Task ExportThemeAsync()
     {
-        var theme = _themes.CurrentCustomTheme ?? new CustomTheme
+        var current = _themes.CurrentCustomTheme;
+        var dark = ThemeService.DeriveColors(AccentColor, true, SurfaceTint);
+        var light = ThemeService.DeriveColors(AccentColor, false, SurfaceTint);
+        var theme = new CustomTheme
         {
-            Name = "当前配色方案",
+            Name = current?.Name ?? "当前配色方案",
+            Author = current?.Author ?? "",
+            Description = current?.Description ?? "",
+            Version = current?.Version ?? "1.0.0",
             BaseTheme = _themes.AppliedTheme,
-            AccentColor = "#0078D4",
-            BackgroundColor = _themes.AppliedTheme == ThemePreference.Dark ? "#1E1E1E" : "#F3F3F3",
-            CardBackgroundColor = _themes.AppliedTheme == ThemePreference.Dark ? "#2D2D2D" : "#FFFFFF"
+            AccentColor = _themes.CurrentAccentHex,
+            BackgroundColor = ThemeService.ToHex(dark["AppSemanticWindowBackgroundBrush"]),
+            CardBackgroundColor = ThemeService.ToHex(dark["AppSemanticCardSurfaceBrush"]),
+            CardOpacity = current?.CardOpacity ?? .94,
+            CardBorderRadius = current?.CardBorderRadius ?? 12,
+            LightBackgroundColor = ThemeService.ToHex(light["AppSemanticWindowBackgroundBrush"]),
+            LightCardBackgroundColor = ThemeService.ToHex(light["AppSemanticCardSurfaceBrush"]),
+            LightCardOpacity = current?.LightCardOpacity ?? .96,
+            LightCardBorderRadius = current?.LightCardBorderRadius ?? 12
         };
 
         var dialog = new Microsoft.Win32.SaveFileDialog
@@ -431,17 +505,37 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
         };
         if (dialog.ShowDialog() != true) return;
 
-        var result = await Task.Run(() => _themePackages.ExportPackage(theme, _themes.CustomWallpaperPath, dialog.FileName));
+        var usePackageWallpaper = string.IsNullOrEmpty(AppSettings.LauncherWallpaperPreset);
+        var darkWallpaper = CurrentWallpaperPath ?? (usePackageWallpaper ? _themes.CustomWallpaperDarkPath : null);
+        var lightWallpaper = CurrentWallpaperPath is null && usePackageWallpaper ? _themes.CustomWallpaperLightPath : null;
+        var result = await Task.Run(() => _themePackages.ExportDualModePackage(theme, darkWallpaper, lightWallpaper, dialog.FileName));
         RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning);
     }
 
     private void ResetTheme()
     {
         _themes.ResetToDefaultTheme();
-        _selectedCustomTheme = null;
-        OnPropertyChanged(nameof(SelectedCustomTheme));
-        Load();
+        SyncCustomThemeSelection();
         RaiseNotice("已恢复默认主题设置。", UserNoticeSeverity.Success);
+    }
+
+    private void OnThemeChanged(ThemePreference preference)
+    {
+        SetProperty(ref _selectedTheme, ThemeChoices.First(choice => choice.Value == preference), nameof(SelectedTheme));
+        OnPropertyChanged(nameof(IsLightSelected));
+        OnPropertyChanged(nameof(IsDarkSelected));
+        OnPropertyChanged(nameof(IsSystemSelected));
+        OnPropertyChanged(nameof(IsDarkTheme));
+        OnPropertyChanged(nameof(CurrentThemeLabel));
+        SetProperty(ref _accentColor, ThemeService.ParseColor(_themes.CurrentAccentHex), nameof(AccentColor));
+        SetProperty(ref _surfaceTint, _themes.CurrentSurfaceTint, nameof(SurfaceTint));
+        SyncCustomThemeSelection();
+    }
+
+    private void SyncCustomThemeSelection()
+    {
+        var activeId = _themes.CurrentCustomTheme?.Id;
+        SetProperty(ref _selectedCustomTheme, CustomThemes.FirstOrDefault(theme => theme.Id == activeId), nameof(SelectedCustomTheme));
     }
 
     private void OnSessionChanged() => RefreshAccount();
@@ -517,5 +611,9 @@ public sealed class SettingsViewModel : ViewModelBase, IDisposable
     private void RaiseNotice(string message, UserNoticeSeverity severity) =>
         NoticeRaised?.Invoke(new UserNotice(message, severity));
 
-    public void Dispose() => _authentication.SessionChanged -= OnSessionChanged;
+    public void Dispose()
+    {
+        _authentication.SessionChanged -= OnSessionChanged;
+        _themes.ThemeChanged -= OnThemeChanged;
+    }
 }

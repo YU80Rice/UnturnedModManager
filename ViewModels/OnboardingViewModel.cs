@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Color = System.Windows.Media.Color;
 using UnturnedModManager.Services;
 
 namespace UnturnedModManager.ViewModels;
@@ -14,7 +15,12 @@ public sealed class OnboardingViewModel : ViewModelBase
     private readonly ThemeService _themes;
     private string _gamePath = "";
     private ThemeChoice? _selectedTheme;
-    private ThemePaletteChoice? _selectedPalette;
+    private readonly ThemePreference _originalPreference;
+    private readonly string _originalAccent;
+    private readonly double _originalTint;
+    private Color _accentColor;
+    private double _surfaceTint;
+    private bool _finished;
     private int _step;
     private bool _isBusy;
     private string _message = "";
@@ -35,20 +41,15 @@ public sealed class OnboardingViewModel : ViewModelBase
             new(ThemePreference.Light, "浅色"),
             new(ThemePreference.Dark, "深色")
         ];
-        PaletteChoices =
-        [
-            new(ThemePalette.Fluent, "默认 Fluent"),
-            new(ThemePalette.WarmPaper, "暖米白 · UMM 蓝"),
-            new(ThemePalette.MascotOrange, "吉祥物橙"),
-            new(ThemePalette.MistyForest, "松林雾绿"),
-            new(ThemePalette.OceanDusk, "深海雾蓝"),
-            new(ThemePalette.KleinBlue, "克莱因蓝"),
-            new(ThemePalette.Lavender, "夜雾紫")
-        ];
-        var currentTheme = ThemeService.Parse(AppSettings.CommunityThemeMode);
-        _selectedTheme = ThemeChoices.First(choice => choice.Value == currentTheme);
-        _selectedPalette = PaletteChoices.First(choice => choice.Value == ThemeService.ParsePalette(AppSettings.CommunityColorPalette));
+        _originalPreference = _themes.CurrentPreference;
+        _originalAccent = _themes.CurrentAccentHex;
+        _originalTint = _themes.CurrentSurfaceTint;
+        _selectedTheme = ThemeChoices.First(choice => choice.Value == _originalPreference);
+        _accentColor = (Color)System.Windows.Media.ColorConverter.ConvertFromString(AppSettings.AccentHex);
+        _surfaceTint = AppSettings.SurfaceTint;
 
+        ChangeThemeCommand = new RelayCommand<string>(value =>
+            SelectedTheme = ThemeChoices.First(choice => choice.Value == ThemeService.Parse(value)));
         BrowseCommand = new RelayCommand(Browse);
         DetectCommand = new AsyncRelayCommand(DetectAsync, () => !IsBusy);
         NextCommand = new RelayCommand(Next, () => !IsBusy);
@@ -58,21 +59,36 @@ public sealed class OnboardingViewModel : ViewModelBase
     }
 
     public ObservableCollection<ThemeChoice> ThemeChoices { get; }
-    public ObservableCollection<ThemePaletteChoice> PaletteChoices { get; }
     public string GamePath
     {
         get => _gamePath;
         set => SetProperty(ref _gamePath, value);
     }
 
-    public ThemePaletteChoice? SelectedPalette
+    public bool IsLightSelected => SelectedTheme?.Value == ThemePreference.Light;
+    public bool IsDarkSelected => SelectedTheme?.Value == ThemePreference.Dark;
+    public bool IsSystemSelected => SelectedTheme?.Value == ThemePreference.System;
+    public bool IsDarkTheme => _themes.AppliedTheme == ThemePreference.Dark;
+    public Color AccentColor
     {
-        get => _selectedPalette;
-        set
-        {
-            if (!SetProperty(ref _selectedPalette, value) || value is null) return;
-            _themes.ApplyPalette(value.Value, persist: false);
-        }
+        get => _accentColor;
+        set { if (SetProperty(ref _accentColor, value)) ApplyAccent(persist: false); }
+    }
+    public double SurfaceTint
+    {
+        get => _surfaceTint;
+        set { if (SetProperty(ref _surfaceTint, Math.Clamp(value, 0, 40))) ApplyAccent(persist: false); }
+    }
+
+    private void ApplyAccent(bool persist) =>
+        _themes.ApplyAccent($"#{AccentColor.R:X2}{AccentColor.G:X2}{AccentColor.B:X2}", SurfaceTint, persist);
+
+    public void RestorePreview()
+    {
+        if (_finished) return;
+        if (_themes.CurrentPreference != _originalPreference) _themes.Apply(_originalPreference, persist: false);
+        if (_themes.CurrentAccentHex != _originalAccent || _themes.CurrentSurfaceTint != _originalTint)
+            _themes.ApplyAccent(_originalAccent, _originalTint, persist: false);
     }
 
     public ThemeChoice? SelectedTheme
@@ -82,6 +98,10 @@ public sealed class OnboardingViewModel : ViewModelBase
         {
             if (!SetProperty(ref _selectedTheme, value) || value is null) return;
             _themes.Apply(value.Value, persist: false);
+            OnPropertyChanged(nameof(IsDarkTheme));
+            OnPropertyChanged(nameof(IsLightSelected));
+            OnPropertyChanged(nameof(IsDarkSelected));
+            OnPropertyChanged(nameof(IsSystemSelected));
         }
     }
 
@@ -103,7 +123,7 @@ public sealed class OnboardingViewModel : ViewModelBase
     public bool IsWelcomeStep => CurrentStep == 0;
     public bool IsThemeStep => CurrentStep == 1;
     public bool IsFinishStep => CurrentStep == 2;
-    public string StepText => $"第 {CurrentStep + 1} 步，共 3 步";
+    public string StepText => $"步骤 {CurrentStep + 1} / 3";
     public string NextButtonText => IsWelcomeStep ? "下一步" : "继续";
     public bool IsBusy
     {
@@ -131,6 +151,7 @@ public sealed class OnboardingViewModel : ViewModelBase
         private set => SetProperty(ref _messageSeverity, value);
     }
 
+    public ICommand ChangeThemeCommand { get; }
     public ICommand BrowseCommand { get; }
     public ICommand DetectCommand { get; }
     public ICommand NextCommand { get; }
@@ -194,15 +215,10 @@ public sealed class OnboardingViewModel : ViewModelBase
 
         if (SelectedTheme is { } theme)
         {
-            AppSettings.CommunityThemeMode = theme.Value.ToString();
             _themes.Apply(theme.Value);
         }
-        if (SelectedPalette is { } palette)
-        {
-            AppSettings.CommunityColorPalette = palette.Value.ToString();
-            _themes.ApplyPalette(palette.Value);
-        }
-
+        ApplyAccent(persist: true);
+        _finished = true;
         AppSettings.IsOnboardingCompleted = true;
         Completed?.Invoke();
     }

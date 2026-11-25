@@ -1,4 +1,4 @@
-# Unturned Mod Manager v2.2.1
+# Unturned Mod Manager v3.0.0
 
 > 面向 Windows 的 Unturned 启动、BepInEx 插件管理与 [unmod.online](https://unmod.online/) 社区客户端。
 
@@ -6,7 +6,7 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![WPF-UI](https://img.shields.io/badge/WPF--UI-3.0.5-CA1E1E)](https://github.com/lepoco/wpfui)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?logo=windows)](https://www.microsoft.com/windows)
-[![Release](https://img.shields.io/badge/Release-v2.2.1-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
+[![Release](https://img.shields.io/badge/Release-v3.0.0-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
 [![Build and test](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml/badge.svg)](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml)
 
 **仓库：** [github.com/YU80Rice/UnturnedModManager](https://github.com/YU80Rice/UnturnedModManager)
@@ -45,10 +45,18 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 
 ---
 
-## v2.2.1 能做什么
+## v3.0 能做什么
+
+### v3.0 界面：顶部胶囊、底部指挥舱与 Bento 首页
+
+- **顶部 5 槽位分段胶囊导航**：开始游戏、模组工坊、任务中心、游戏设置、关于五个入口收敛为顶部居中的一条分段胶囊，取代 v2.x 的左侧可折叠边栏，页面切换不再推挤主工作区宽度；
+- **底部 70px 全局指挥舱**：左侧常驻显示当前方案、启用模组数、运行模式（模组模式 · `-NoBattlEye` / 纯净模式 · `Unturned_BE.exe`）与 BepInEx、DXVK 底层环境状态，右侧只保留一枚放大版「开始游戏」按钮，停留在任意页面都能一键启动；
+- **首页 2×2 Bento 网格**：运行概要与当前方案、UMM 欢迎区、BepInEx 与 DXVK 运行环境、崩溃诊断与日志分析四张卡片等权排布，信息密度与视觉节奏统一；
+- **五页面与六弹窗双模高对比**：开始游戏、模组工坊、任务中心、游戏设置、关于五个页面，与账户、首次向导、`.ummpk` 审查、`.ummtheme` 审查、安全沙箱拦截、确认提示六类弹窗，在深色与浅色模式下统一语义配色与交互态，保持 WCAG AA（4.5:1）对比度。
 
 ### 游戏与插件环境
 
+- 统一管理 BepInEx 版本与社区插件依赖：安装与更新前执行依赖检查，缺失依赖在任务中心给出失败原因，并可跳转查看依赖条目；
 - 自动探测 Steam Library 中的 Unturned，亦可手动选择游戏目录；
 - 下载、安装、升级、修复或卸载社区统一基线 BepInEx 5.4.23.5（win_x64，Unity Mono / winhttp doorstop）；
 - 通过 `winhttp.dll` / `winhttp.dll.disabled` 切换 BepInEx 注入状态；
@@ -64,15 +72,13 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 - 推出标准 `.ummpk` 模组包规范（标准 ZIP 归档，包含 `manifest.json` 与 `BepInEx/plugins/**`、`BepInEx/config/**`）；
 - 支持一键将当前方案导出为 `.ummpk` 模组包分享给联机好友，支持拖拽或双击一键安全安装。
 
-### 开放式主题、自定义壁纸与高斯模糊
+### HSV 调色环、内置壁纸预设与三层壁纸
 
-- **开放式主题生态 (.ummtheme)**：支持导入、导出与热切换社区创作者分享的 `.ummtheme` 主题包；
-- **官方 13 套调色板矩阵**：内置默认 Fluent、暖米白、吉祥物橙、松林雾绿、深海雾蓝、克莱因蓝、夜雾紫等丰富色彩方案，全方位通过 WCAG 2.1 AA（4.5:1）无障碍对比度合规；
-- **玩家自定义背景壁纸**：支持玩家自主选择本地图片（PNG/JPG/WEBP/BMP）作为全屏壁纸，非阻塞无锁内存流加载，不占用系统文件句柄；
-- **硬件加速双实时滑块**：
-  - **背景高斯模糊程度**：`0 ~ 40 px` 动态无级调节（无模糊 / 柔和 / 毛玻璃 / 重度模糊），GPU 硬件加速渲染；
-  - **动态对比度遮罩浓度**：`10% ~ 80%` 实时可控，自动跟随主题日夜态自适应融合，确保文字与按钮永远清晰锐利；
-  - 支持一键清除壁纸，瞬时丝滑回退至纯净原生 Fluent 纯色底座。
+- **HSV 调色环取代 7 套固定配色**：设置页与首次向导改用 360° 色相环配合饱和度、明度滑块的连续取色，主色与强调色由同一色源实时派生；v2.x 的七套固定配色会在首次启动时自动迁移为对应强调色；
+- **氛围染色滑块**：`0% ~ 40%`（默认 16%）控制主题色向卡片与底色的渗透强度，深浅双模分别重新计算可读性；
+- **三套内置壁纸预设与「纯净底色」**：石墨极光、雾岚松林、PEI 篝火夕阳三套内置壁纸可直接切换，另有「纯净底色」一键回到无壁纸的原生纯色底座；
+- **三层壁纸保持无损**：底座纯色层、壁纸层（含 GPU 高斯模糊）与动态对比度遮罩层继续分层渲染，本地自定义图片（PNG/JPG/WEBP/BMP）与模糊、遮罩调节全部保留；
+- **开放式 `.ummtheme` 主题包**：导入、导出与热切换继续可用，导入时其强调色会直接写入调色环状态，社区主题与调色环并存。
 
 ### Windows 原生关联与安全向导
 
@@ -108,7 +114,7 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 - 主视窗三层底座渲染架构（纯色底座 -> 单层 GPU BlurEffect 宿主 -> 动态主题遮罩层 -> 透明 UI 层），彻底消灭多层重叠渲染（Overdraw）与显存重绘开销；
 - 所有二级页面（主页、设置、插件列表、关于、社区等）背景统一透明化穿透，切页丝滑稳定不闪烁；
 - 全局接入 `ScrollWheelRouter` 滚轮隧道路由（`PreviewMouseWheel`），确保鼠标悬停在卡片、按钮、开关等任意子元素上方时，鼠标滚轮均能 100% 顺畅传递至外层滚动视图；
-- 侧边栏展开状态、窗口尺寸和位置持久化；折叠侧栏显示账户头像和完整主题图标；
+- 窗口尺寸与位置持久化；v3.0 取消左侧可折叠导航后，账户胶囊与深浅主题切换常驻顶部右侧，账号头像与主题图标始终完整可见；
 - 社区账户昵称、头像与登录令牌在本地保存，支持本地缓存离线查看；
 - 首次启动提供三步引导：游戏目录、主题偏好和功能说明；
 - 启动器启用单实例保护：第二次启动会唤醒已有窗口，并将安装意图安全转交给它；

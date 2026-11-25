@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Navigation;
 using UnturnedModManager.Helpers;
@@ -9,6 +10,14 @@ namespace UnturnedModManager.Pages;
 
 public partial class AboutPage : Page
 {
+    public string VersionLabel { get; } = $"v{typeof(AboutPage).Assembly.GetName().Version?.ToString(3)} · Windows";
+
+    private void ContributorsGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is UniformGrid grid)
+            grid.Columns = e.NewSize.Width <= 820 ? 1 : 2;
+    }
+
     public AboutPage()
     {
         InitializeComponent();

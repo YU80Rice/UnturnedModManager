@@ -3,159 +3,223 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
       xmlns:controls="clr-namespace:UnturnedModManager.Controls"
-      Title="设置"
-      Background="Transparent">
+      Title="游戏设置"
+      Background="Transparent"
+      Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <Page.Resources>
+        <Style x:Key="SettingsCard" TargetType="Border">
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="Margin" Value="0,0,0,14" />
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style x:Key="SectionHint" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,4,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        </Style>
+        <Style x:Key="SectionDivider" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+            <Setter Property="Height" Value="1" />
+            <Setter Property="Margin" Value="0,14" />
+        </Style>
+        <Style x:Key="PresetItem" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="3" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Frame" Background="{DynamicResource AppCardBackgroundBrush2}"
+                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="2"
+                                CornerRadius="8" ClipToBounds="True">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource AppAccentBorderBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled"
                   PreviewMouseWheel="CardPanel_PreviewMouseWheel">
-        <Grid Margin="32,24,32,40">
-        <StackPanel HorizontalAlignment="Stretch">
-            <controls:PageHeader Title="设置" Subtitle="配置游戏路径、社区账户与界面外观" Margin="0,0,0,22" />
-            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}">
-                <StackPanel>
-                    <TextBlock Text="Unturned 安装路径" FontSize="16" FontWeight="SemiBold" />
-                    <TextBlock Text="请选择包含 Unturned.exe 的游戏根目录。"
-                               Margin="0,3,0,12"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <ui:TextBox Text="{Binding GamePath, UpdateSourceTrigger=PropertyChanged}"
-                                    PlaceholderText="例如：E:\Steam\steamapps\common\Unturned" />
-                        <ui:Button Grid.Column="1" Content="浏览…" Margin="10,0,0,0"
-                                   Command="{Binding BrowseCommand}" />
-                        <ui:Button Grid.Column="2" Content="自动寻找" Icon="{ui:SymbolIcon Search16}"
-                                   Margin="6,0,0,0" Command="{Binding DetectCommand}" />
-                    </Grid>
-                    <ProgressBar IsIndeterminate="True" Height="3" Margin="0,12,0,0"
-                                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
-                </StackPanel>
-            </Border>
-
-            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}">
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Margin="26,20,26,28">
+            <Grid x:Name="TopCards" SizeChanged="TopCards_SizeChanged">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition x:Name="TopCardGap" Width="14" />
+                    <ColumnDefinition x:Name="AccountColumn" Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <Border Style="{StaticResource SettingsCard}">
                     <StackPanel>
-                        <TextBlock Text="首页欢迎与版本公告" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock Text="在“游戏启动”页显示 Q 版吉祥物和版本更新摘要。升级到新版本后，公告会再次出现；关闭后不会后台联网或执行自动更新。"
-                                   Margin="0,3,0,0"
-                                   TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Style="{StaticResource SectionTitle}" Text="Unturned 安装路径" />
+                        <TextBlock Style="{StaticResource SectionHint}" Text="选择包含 Unturned.exe 的游戏根目录，支持自动检测 Steam 库。" />
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <ui:TextBox Text="{Binding GamePath, UpdateSourceTrigger=PropertyChanged}"
+                                        AutomationProperties.Name="Unturned 游戏根目录"
+                                        PlaceholderText="例如：E:\Steam\steamapps\common\Unturned" />
+                            <ui:Button Grid.Column="1" Content="浏览…" Margin="8,0,0,0" Command="{Binding BrowseCommand}" />
+                            <ui:Button Grid.Column="2" Content="自动寻找" Appearance="Primary"
+                                       Margin="6,0,0,0" Command="{Binding DetectCommand}" />
+                        </Grid>
+                        <TextBlock Text="{Binding GamePathHint}" Margin="0,8,0,0" TextWrapping="Wrap">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsGamePathValid}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource AppSuccessTextBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <ProgressBar IsIndeterminate="True" Height="3" Margin="0,8,0,0"
+                                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
-                    <ui:ToggleSwitch Grid.Column="1"
-                                     IsChecked="{Binding IsHomeWelcomeEnabled}"
-                                     VerticalAlignment="Center"
-                                     Margin="16,0,0,0" />
-                </Grid>
-            </Border>
-
-            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}">
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                </Border>
+                <Border x:Name="WelcomeAccountCard" Grid.Column="2" Style="{StaticResource SettingsCard}">
                     <StackPanel>
-                        <TextBlock Text="社区账户" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding AccountStatus}" Margin="0,3,0,0"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                        <DockPanel>
+                            <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center" Margin="12,0,0,0"
+                                             AutomationProperties.Name="显示首页欢迎与版本公告" IsChecked="{Binding IsHomeWelcomeEnabled}" />
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="首页欢迎与版本公告" />
+                                <TextBlock Style="{StaticResource SectionHint}" Text="在首页展示吉祥物与版本更新摘要，不后台自动联网。" />
+                            </StackPanel>
+                        </DockPanel>
+                        <Border Style="{StaticResource SectionDivider}" />
+                        <DockPanel>
+                            <ui:Button DockPanel.Dock="Right" VerticalAlignment="Center" Margin="12,0,0,0" Appearance="Primary"
+                                       Content="{Binding AccountActionText}" Command="{Binding ManageAccountCommand}" />
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="社区账户 · unmod.online" />
+                                <TextBlock Style="{StaticResource SectionHint}" Text="{Binding AccountStatus}" />
+                            </StackPanel>
+                        </DockPanel>
                     </StackPanel>
-                    <ui:Button Grid.Column="1" Content="{Binding AccountActionText}" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
-                               VerticalAlignment="Center" Command="{Binding ManageAccountCommand}" />
-                </Grid>
-            </Border>
+                </Border>
+            </Grid>
 
-            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+            <Border Style="{StaticResource SettingsCard}">
                 <StackPanel>
-                    <TextBlock Text="主题模式与外观" FontSize="16" FontWeight="SemiBold" />
-                    <TextBlock Text="选择浅色、深色，或跟随 Windows 系统设置。"
-                               Margin="0,3,0,12"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    <ComboBox ItemsSource="{Binding ThemeChoices}"
-                              SelectedItem="{Binding SelectedTheme}"
-                              DisplayMemberPath="Label"
-                              Width="220"
-                              HorizontalAlignment="Left" />
-                    <TextBlock Text="配色方案" FontSize="14" FontWeight="SemiBold" Margin="0,20,0,0" />
-                    <TextBlock Text="按喜好选择低饱和纸张、自然、海洋或夜色配色；切换会立即生效。"
-                               Margin="0,3,0,10"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    <ComboBox ItemsSource="{Binding PaletteChoices}"
-                              SelectedItem="{Binding SelectedPalette}"
-                              DisplayMemberPath="Label"
-                              Width="220"
-                              HorizontalAlignment="Left" />
-                    <TextBlock Text="自定义主题包 (.ummtheme)" FontSize="14" FontWeight="SemiBold" Margin="0,20,0,0" />
-                    <TextBlock Text="导入创作者分享的 .ummtheme 主题包，或将当前外观配置一键打包分享。"
-                               Margin="0,3,0,10"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                    <DockPanel>
+                        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Top" Margin="10,0,0,0">
+                            <ui:Button Content="浅色" Command="{Binding ChangeThemeCommand}" CommandParameter="Light">
+                                <ui:Button.Style><Style TargetType="ui:Button"><Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsLightSelected}" Value="True"><Setter Property="Appearance" Value="Primary" /></DataTrigger>
+                                </Style.Triggers></Style></ui:Button.Style>
+                            </ui:Button>
+                            <ui:Button Content="深色" Margin="5,0" Command="{Binding ChangeThemeCommand}" CommandParameter="Dark">
+                                <ui:Button.Style><Style TargetType="ui:Button"><Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsDarkSelected}" Value="True"><Setter Property="Appearance" Value="Primary" /></DataTrigger>
+                                </Style.Triggers></Style></ui:Button.Style>
+                            </ui:Button>
+                            <ui:Button Content="跟随系统" Command="{Binding ChangeThemeCommand}" CommandParameter="System">
+                                <ui:Button.Style><Style TargetType="ui:Button"><Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSystemSelected}" Value="True"><Setter Property="Appearance" Value="Primary" /></DataTrigger>
+                                </Style.Triggers></Style></ui:Button.Style>
+                            </ui:Button>
+                        </WrapPanel>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="主题模式与自由调色环" />
+                            <TextBlock Style="{StaticResource SectionHint}" Text="拖动圆环选色；展开后可微调色相、饱和度、明度与氛围染色。" />
+                        </StackPanel>
+                    </DockPanel>
+                    <Border Background="{DynamicResource AppCardBackgroundBrush2}" CornerRadius="10" Padding="14" Margin="0,14,0,0">
+                        <controls:ColorWheelControl RingSize="216" AccentColor="{Binding AccentColor, Mode=TwoWay}"
+                                                    SurfaceTint="{Binding SurfaceTint, Mode=TwoWay}"
+                                                    IsDarkTheme="{Binding IsDarkTheme, Mode=OneWay}" />
+                    </Border>
+                    <Border Style="{StaticResource SectionDivider}" />
                     <WrapPanel>
-                        <ComboBox ItemsSource="{Binding CustomThemes}"
-                                  SelectedItem="{Binding SelectedCustomTheme}"
-                                  DisplayMemberPath="Name"
-                                  Width="220"
-                                  Margin="0,0,8,8"
-                                  ToolTip="选择已安装的自定义主题" />
-                        <ui:Button Content="导入主题包"
-                                   Icon="{ui:SymbolIcon ArrowDownload24}"
-                                   Margin="0,0,8,8"
-                                   Command="{Binding ImportThemeCommand}" />
-                        <ui:Button Content="导出当前主题"
-                                   Icon="{ui:SymbolIcon Share24}"
-                                   Margin="0,0,8,8"
-                                   Command="{Binding ExportThemeCommand}" />
-                        <ui:Button Content="恢复默认外观"
-                                   Icon="{ui:SymbolIcon ArrowReset24}"
-                                   Margin="0,0,8,8"
-                                   Command="{Binding ResetThemeCommand}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,12,7" VerticalAlignment="Center">
+                            <TextBlock Text="主题包 (.ummtheme) · 当前：" />
+                            <TextBlock Text="{Binding CurrentThemeLabel}" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <ComboBox ItemsSource="{Binding CustomThemes}" SelectedItem="{Binding SelectedCustomTheme}"
+                                  DisplayMemberPath="Name" Width="166" Margin="0,0,8,7" AutomationProperties.Name="已安装主题" ToolTip="选择已安装主题" />
+                        <ui:Button Content="导入主题包" Margin="0,0,8,7" Command="{Binding ImportThemeCommand}" />
+                        <ui:Button Content="导出当前主题" Margin="0,0,8,7" Command="{Binding ExportThemeCommand}" />
+                        <ui:Button Content="恢复默认 (#0078D4)" Margin="0,0,0,7" Command="{Binding ResetThemeCommand}" />
                     </WrapPanel>
                 </StackPanel>
             </Border>
 
-            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}">
+            <Border Style="{StaticResource SettingsCard}">
                 <StackPanel>
-                    <TextBlock Text="启动器背景壁纸与个性化" FontSize="16" FontWeight="SemiBold" />
-                    <TextBlock Text="选择本地图片作为启动器背景壁纸，支持调节毛玻璃高斯模糊度与自适应对比度遮罩。"
-                               Margin="0,3,0,14"
-                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-
-                    <!-- 壁纸路径与操作按钮行 -->
-                    <Grid Margin="0,0,0,16">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <ui:TextBox x:Name="WallpaperPathTextBox"
-                                    Grid.Column="0"
-                                    IsReadOnly="True"
-                                    Margin="0,0,12,0"
-                                    VerticalAlignment="Center"
-                                    PlaceholderText="未设置壁纸（当前呈现纯净纯色外观）"
-                                    Text="{Binding CurrentWallpaperPath, Mode=OneWay}" />
-                        <ui:Button x:Name="SelectWallpaperButton"
-                                   Grid.Column="1"
-                                   Content="选择壁纸..."
-                                   Appearance="Primary"
-                                   Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
-                                   Icon="{ui:SymbolIcon Image24}"
-                                   Margin="0,0,8,0"
-                                   Click="SelectWallpaperButton_Click" />
-                        <ui:Button x:Name="ClearWallpaperButton"
-                                   Grid.Column="2"
-                                   Content="清除壁纸"
-                                   Appearance="Secondary"
-                                   Icon="{ui:SymbolIcon Dismiss24}"
-                                   Click="ClearWallpaperButton_Click" />
-                    </Grid>
-
+                    <DockPanel>
+                        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Top" Margin="10,0,0,0">
+                            <ui:Button x:Name="SelectWallpaperButton" Content="选择本地图片…" Appearance="Primary"
+                                       Margin="0,0,6,0" Click="SelectWallpaperButton_Click" />
+                            <ui:Button x:Name="ClearWallpaperButton" Content="清除壁纸" Click="ClearWallpaperButton_Click" />
+                        </WrapPanel>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SectionTitle}" Text="三层壁纸与高斯模糊" />
+                            <TextBlock Style="{StaticResource SectionHint}" Text="纯色底层 → 模糊壁纸 → 自适应对比度遮罩。" />
+                        </StackPanel>
+                    </DockPanel>
+                    <ListBox ItemsSource="{Binding WallpaperPresets}" SelectedItem="{Binding SelectedWallpaperPreset}"
+                             Background="Transparent" BorderThickness="0" Margin="-3,10,-3,0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                             ItemContainerStyle="{StaticResource PresetItem}" AutomationProperties.Name="启动器壁纸预设">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate><UniformGrid Columns="{Binding WallpaperColumns, RelativeSource={RelativeSource AncestorType=Page}, FallbackValue=4}" /></ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <Border Height="50">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource ApplicationBackgroundBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Id}" Value="ember">
+                                                        <Setter Property="Background"><Setter.Value>
+                                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#191F37" Offset="0"/><GradientStop Color="#59455E" Offset=".55"/><GradientStop Color="#C27D63" Offset="1"/></LinearGradientBrush>
+                                                        </Setter.Value></Setter>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Id}" Value="mist">
+                                                        <Setter Property="Background"><Setter.Value>
+                                                            <LinearGradientBrush StartPoint="0,1" EndPoint="1,0"><GradientStop Color="#122B2D" Offset="0"/><GradientStop Color="#13576B" Offset=".60"/><GradientStop Color="#222D61" Offset="1"/></LinearGradientBrush>
+                                                        </Setter.Value></Setter>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Id}" Value="graphite">
+                                                        <Setter Property="Background"><Setter.Value>
+                                                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#121820" Offset="0"/><GradientStop Color="#394856" Offset="1"/></LinearGradientBrush>
+                                                        </Setter.Value></Setter>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    </Border>
+                                    <TextBlock Text="{Binding Label}" Margin="8,5,8,6" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock x:Name="WallpaperPathTextBox" Style="{StaticResource SectionHint}" Text="{Binding CurrentWallpaperPath}"
+                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip="{Binding CurrentWallpaperPath}" />
                     <!-- 背景模糊程度调节 -->
-                    <Grid Margin="0,0,0,16">
+                    <Grid Margin="0,10,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
@@ -168,7 +232,7 @@
                                 Maximum="40"
                                 SmallChange="1"
                                 LargeChange="5"
-                                Value="{Binding WallpaperBlurRadius, Mode=TwoWay}"
+                                Value="{Binding WallpaperBlurRadius, Mode=OneWay}"
                                 VerticalAlignment="Center"
                                 Margin="8,0,12,0"
                                 ValueChanged="WallpaperBlurSlider_ValueChanged" />
@@ -193,7 +257,7 @@
                                 Maximum="80"
                                 SmallChange="1"
                                 LargeChange="5"
-                                Value="{Binding WallpaperDimPercent, Mode=TwoWay}"
+                                Value="{Binding WallpaperDimPercent, Mode=OneWay}"
                                 VerticalAlignment="Center"
                                 Margin="8,0,12,0"
                                 ValueChanged="WallpaperDimSlider_ValueChanged" />
@@ -206,49 +270,24 @@
                 </StackPanel>
             </Border>
 
-            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="Windows 文件关联 (.ummpk / .ummtheme)" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding ShellAssociationStatusText}"
-                                   Margin="0,3,0,0"
-                                   TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                        <ui:Button Content="修复/关联" Icon="{ui:SymbolIcon Checkmark24}"
-                                   Margin="0,0,8,0"
-                                   Command="{Binding RepairShellAssociationCommand}" />
-                        <ui:Button Content="解除关联" Icon="{ui:SymbolIcon Dismiss24}"
-                                   Command="{Binding UnregisterShellAssociationCommand}" />
-                    </StackPanel>
-                </Grid>
+            <Border Style="{StaticResource SettingsCard}">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource SectionTitle}" Text="文件关联与首次设置" />
+                    <TextBlock Style="{StaticResource SectionHint}" Text="{Binding ShellAssociationStatusText}" />
+                    <WrapPanel Margin="0,10,0,0">
+                        <ui:Button Content="修复关联" Margin="0,0,8,6" Command="{Binding RepairShellAssociationCommand}" />
+                        <ui:Button Content="解除关联" Margin="0,0,0,6" Command="{Binding UnregisterShellAssociationCommand}" />
+                    </WrapPanel>
+                    <Border Style="{StaticResource SectionDivider}" />
+                    <DockPanel>
+                        <WrapPanel DockPanel.Dock="Right" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <ui:Button Content="重新运行向导" Margin="0,0,8,0" Command="{Binding RestartOnboardingCommand}" />
+                            <ui:Button Content="保存设置" Appearance="Primary" Command="{Binding SaveCommand}" />
+                        </WrapPanel>
+                        <TextBlock Style="{StaticResource SectionHint}" Text="重新运行向导不会删除插件、账户或现有配置。" />
+                    </DockPanel>
+                </StackPanel>
             </Border>
-
-            <Border CornerRadius="10" Padding="20" Margin="0,0,0,16"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}">
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="首次设置" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock Text="可重新选择游戏目录和主题；不会删除插件、账户或现有配置。"
-                                   Margin="0,3,0,0"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-                    <ui:Button Grid.Column="1" Content="重新运行向导" Icon="{ui:SymbolIcon ArrowReset24}"
-                               VerticalAlignment="Center" Command="{Binding RestartOnboardingCommand}" />
-                </Grid>
-            </Border>
-
-            <ui:Button Content="保存设置" Icon="{ui:SymbolIcon Save24}"
-                       Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" HorizontalAlignment="Left"
-                       Command="{Binding SaveCommand}" />
         </StackPanel>
-        </Grid>
     </ScrollViewer>
 </Page>

@@ -17,7 +17,7 @@ namespace UnturnedModManager.Pages;
 /// 通过 Visibility（Visible vs Collapsed）互斥切换保持单活跃视图，隔离焦点命中与可访问性树；
 /// 自治消化社区插件详情展示与返回，精准保全和恢复搜索词、筛选条件与列表滚动位置。
 /// </summary>
-public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
+public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation, ILocalModsRefreshable
 {
     private readonly ModListPage _localPage;
     private readonly CommunityPage _communityPage;
@@ -68,6 +68,8 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
     public PluginWorkshopCoordinator Coordinator => _coordinator;
 
     public ModListPage LocalPage => _localPage;
+
+    public Task RefreshAfterExternalImportAsync() => _localPage.RefreshAfterExternalImportAsync();
 
     public CommunityPage CommunityPage => _communityPage;
 
@@ -148,12 +150,15 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
 
         // 2. 构造详情页实例并挂接自治返回委托
         var origin = new NavigationOrigin(
-            resolvedSource == WorkshopSubDomain.LocalInstalled ? "返回本地插件" : "返回插件社区",
+            resolvedSource == WorkshopSubDomain.LocalInstalled ? "返回本地插件" : "返回社区发现",
             PrimarySlot.Mods,
             resolvedSource,
             sourceContext);
 
-        _detailPage = new CommunityDetailPage(modId, origin, () => CloseDetail());
+        _detailPage = new CommunityDetailPage(modId, origin, () => CloseDetail())
+        {
+            CustomDependencyAction = id => ShowDetail(id, resolvedSource, sourceContext)
+        };
         DetailHost.Content = _detailPage;
 
         // 3. 切换视图状态为详情激活
@@ -245,7 +250,7 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
         if (isLocalActive)
         {
             SubDomainLocalBtn.Appearance = ControlAppearance.Primary;
-            SubDomainLocalBtn.Foreground = (System.Windows.Media.Brush)FindResource("TextOnAccentFillColorPrimaryBrush");
+            SubDomainLocalBtn.SetResourceReference(ForegroundProperty, "TextOnAccentFillColorPrimaryBrush");
 
             SubDomainCommunityBtn.Appearance = ControlAppearance.Secondary;
             SubDomainCommunityBtn.ClearValue(ForegroundProperty);
@@ -256,7 +261,7 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
             SubDomainLocalBtn.ClearValue(ForegroundProperty);
 
             SubDomainCommunityBtn.Appearance = ControlAppearance.Primary;
-            SubDomainCommunityBtn.Foreground = (System.Windows.Media.Brush)FindResource("TextOnAccentFillColorPrimaryBrush");
+            SubDomainCommunityBtn.SetResourceReference(ForegroundProperty, "TextOnAccentFillColorPrimaryBrush");
         }
     }
 
@@ -279,7 +284,7 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
         }
         else
         {
-            var offset = GetScrollViewerOffset(CommunityHost);
+            var offset = _communityPage.ResultsScroll.VerticalOffset;
             var query = _communityPage.ViewModel.SearchText;
             var category = _communityPage.ViewModel.SelectedCategory?.Key;
             var sort = _communityPage.ViewModel.Sort;
@@ -335,7 +340,7 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation
 
                 if (commSnap.ScrollOffset > 0)
                 {
-                    ApplyScrollOffset(CommunityHost, commSnap.ScrollOffset);
+                    ApplyScrollOffset(_communityPage.ResultsScroll, commSnap.ScrollOffset);
                 }
             }
         }

@@ -17,6 +17,7 @@ public partial class CommunityDetailPage : Page
     /// 自定义返回回调 (用于工坊等内嵌宿主自治消化返回流程)
     /// </summary>
     public Action? CustomBackAction { get; set; }
+    public Action<int>? CustomDependencyAction { get; set; }
 
     public CommunityDetailPage(int id, NavigationOrigin? origin = null)
     {
@@ -43,8 +44,12 @@ public partial class CommunityDetailPage : Page
         new AccountWindow { Owner = owner }.ShowDialog();
     }
 
-    private void OpenDependency(int id) =>
-        AppNavigationService.Current.OpenCommunityDetail(new CommunityDetailRequest(id, WorkshopSubDomain.CommunityDiscovery));
+    private void OpenDependency(int id)
+    {
+        if (CustomDependencyAction is { } open) open(id);
+        else AppNavigationService.Current.OpenCommunityDetail(new CommunityDetailRequest(id, WorkshopSubDomain.CommunityDiscovery));
+    }
+
     private void OpenImagePreview(string imageUrl)
     {
         if (!Uri.TryCreate(imageUrl, UriKind.Absolute, out var uri)

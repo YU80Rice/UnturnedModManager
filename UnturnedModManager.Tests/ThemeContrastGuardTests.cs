@@ -44,6 +44,30 @@ public sealed class ThemeContrastGuardTests
     }
 
     [Theory]
+    [InlineData("#0078D4")]
+    [InlineData("#FF0000")]
+    [InlineData("#FFFF00")]
+    [InlineData("#330066")]
+    [InlineData("#000000")]
+    [InlineData("#FFFFFF")]
+    public void AccentDerivation_TokensRetainContrastAcrossModes(string hex)
+    {
+        var accent = (Color)ColorConverter.ConvertFromString(hex)!;
+        foreach (var dark in new[] { true, false })
+        foreach (var tint in new[] { 0.0, 16.0, 40.0 })
+        {
+            var palette = ThemeService.DeriveColors(accent, dark, tint);
+            var card = palette["AppSemanticCardSurfaceBrush"];
+            Assert.Equal(accent, palette["AccentFillColorDefaultBrush"]);
+            Assert.True(ColorContrastHelper.GetContrastRatio(palette["TextOnAccentFillColorPrimaryBrush"], accent) >= 4.5);
+            Assert.True(ColorContrastHelper.GetContrastRatio(palette["AccentTextFillColorPrimaryBrush"], card) >= 4.8);
+            Assert.True(ColorContrastHelper.GetContrastRatio(palette["TextFillColorPrimaryBrush"], card) >= 4.5);
+            Assert.True(ThemeService.DeriveColors(accent, dark, tint, wallpaper: true)["ControlFillColorDefaultBrush"].A
+                < palette["ControlFillColorDefaultBrush"].A);
+        }
+    }
+
+    [Theory]
     [InlineData(ThemePreference.Dark)]
     [InlineData(ThemePreference.Light)]
     public void AllPalettes_ComplyWithWcagAaContrastRequirements(ThemePreference mode)
@@ -147,7 +171,7 @@ public sealed class ThemeContrastGuardTests
             };
 
             // Act: Apply custom pink theme
-            themeService.ApplyCustomTheme(pinkTheme);
+            themeService.ApplyCustomTheme(pinkTheme, null, null, ThemePreference.Dark, persist: false);
 
             var expectedAccent = (Color)ColorConverter.ConvertFromString("#D83B7E")!;
             var defaultBlue = (Color)ColorConverter.ConvertFromString("#0078D4")!;
@@ -219,21 +243,6 @@ public sealed class ThemeContrastGuardTests
                 Assert.True(preview.Theme.HasExplicitLightMode);
                 Assert.NotNull(preview.WallpaperDarkBytes);
                 Assert.NotNull(preview.WallpaperLightBytes);
-
-                // 将该官方双态主题包同步输出至项目根目录与测试包目录
-                var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../"));
-                var targetRootPackage = Path.Combine(repoRoot, "SakuraPink.ummtheme");
-                var targetTestPackage = Path.Combine(repoRoot, "test-packages", "SakuraPink.ummtheme");
-
-                if (Directory.Exists(repoRoot))
-                {
-                    File.Copy(exportedZipPath, targetRootPackage, true);
-                    if (!Directory.Exists(Path.GetDirectoryName(targetTestPackage)!))
-                    {
-                        Directory.CreateDirectory(Path.GetDirectoryName(targetTestPackage)!);
-                    }
-                    File.Copy(exportedZipPath, targetTestPackage, true);
-                }
 
                 // 端到端导入并应用
                 var importResult = pkgService.ImportPackage(exportedZipPath);

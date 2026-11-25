@@ -86,6 +86,14 @@ public sealed class PluginWorkshopPageTests
         }
     }
 
+    [Theory]
+    [InlineData(820, 1)]
+    [InlineData(821, 2)]
+    [InlineData(1100, 2)]
+    [InlineData(1101, 3)]
+    public void CommunityCards_UseSpecifiedViewportBreakpoints(int width, int expectedColumns) =>
+        Assert.Equal(expectedColumns, CommunityPage.GetColumnCount(width));
+
     [Fact]
     public void Page_Instantiation_InitializesWithSingleActiveLocalView()
     {

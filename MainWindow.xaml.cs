@@ -1,6 +1,18 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.ComponentModel;
+using System.Windows.Automation;
+using System.Windows.Input;
+using System.Windows.Navigation;
+using System.Windows.Threading;
+using UnturnedModManager.Controls;
+using UnturnedModManager.Controls.AppShell;
+using UnturnedModManager.Helpers;
+using UnturnedModManager.Pages;
+using Color = System.Windows.Media.Color;
+using ColorConverter = System.Windows.Media.ColorConverter;
+using Page = System.Windows.Controls.Page;
 using System.Collections.ObjectModel;
 using Wpf.Ui.Controls;
 using UnturnedModManager.Navigation;
@@ -19,7 +31,19 @@ public partial class MainWindow : FluentWindow
     private readonly SemaphoreSlim _dropImportGate = new(1, 1);
     private Page? _currentPage;
     private int? _pendingCommunityDetailId;
-    private LegacyNavigationViewHostAdapter? _navigationHost;
+    private readonly LaunchEnvironmentState? _launchEnvironment = App.Services?.LaunchEnvironment;
+    private readonly GameLaunchCoordinator? _launch = App.Services?.Launch;
+    private readonly OperationTaskCenter? _tasks = App.Services?.Tasks;
+    private readonly GamePathService _gamePaths = App.Services?.GamePaths ?? new();
+    private readonly DispatcherTimer _launchStatusTimer = new() { Interval = TimeSpan.FromSeconds(2) };
+    private readonly DispatcherTimer _accentSaveTimer = new() { Interval = TimeSpan.FromMilliseconds(180) };
+    private readonly DependencyPropertyDescriptor _wheelTintProperty = DependencyPropertyDescriptor.FromProperty(
+        ColorWheelControl.SurfaceTintProperty, typeof(ColorWheelControl));
+    private readonly Dictionary<Type, Page> _pages = [];
+    private CapsuleNavigationHost? _navigationHost;
+    private (string? Local, string? Themed, string? AlternateTheme, string Preset)? _wallpaperKey;
+    private bool _syncingAccentWheel;
+    private (string Hex, double Tint)? _pendingAccent;
 
     public Page? CurrentPage => _currentPage;
 
@@ -29,57 +53,71 @@ public partial class MainWindow : FluentWindow
         ToastHost.ItemsSource = _toasts;
         _authService.SessionChanged += UpdateAccountVisual;
         _notifications.NoticePublished += OnNoticePublished;
-        _themeService.ThemeChanged += _ => RefreshCustomWallpaper();
+        _themeService.ThemeChanged += OnThemeChanged;
+        _wheelTintProperty.AddValueChanged(AccentWheel, AccentWheel_SurfaceTintChanged);
+        if (_launchEnvironment is not null) _launchEnvironment.Changed += OnLaunchEnvironmentChanged;
+        if (_launch is not null) _launch.StateChanged += UpdateLaunchButton;
+        if (_tasks is not null) _tasks.TasksChanged += OnTasksChanged;
+        _launchStatusTimer.Tick += (_, _) => UpdateLaunchButton();
+        _accentSaveTimer.Tick += (_, _) => SavePendingAccent();
         Loaded += OnLoaded;
         Closing += OnClosing;
-        Closed += (_, _) =>
-        {
-            _authService.SessionChanged -= UpdateAccountVisual;
-            _notifications.NoticePublished -= OnNoticePublished;
-            if (_navigationHost is not null)
-            {
-                AppNavigationService.Current.DetachHost(_navigationHost);
-                _navigationHost.Dispose();
-                _navigationHost = null;
-            }
-        };
+        Closed += OnClosed;
     }
+
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        _navigationHost = new LegacyNavigationViewHostAdapter(this, NavigationView);
+        Loaded -= OnLoaded;
+        _navigationHost = new CapsuleNavigationHost(GetPage<PluginWorkshopPage>, Dispatcher);
+        _navigationHost.StateChanged += OnNavigationStateChanged;
         AppNavigationService.Current.AttachHost(_navigationHost);
 
         RestoreWindowBounds();
-        _themeService.Initialize(AppSettings.CommunityThemeMode);
-        UpdateThemeButton(_themeService.AppliedTheme);
-        RefreshCustomWallpaper();
-        NavigationView.IsPaneOpen = AppSettings.IsNavigationPaneOpen;
-        ApplyPaneVisualState(NavigationView.IsPaneOpen);
-        _authService?.RestoreCachedUser();
+        ApplyThemeFromSettings();
+        _authService.RestoreCachedUser();
         UpdateAccountVisual();
-        NavigationView.Navigate(typeof(Pages.HomePage));
+        OnTasksChanged(null, EventArgs.Empty);
+        _navigationHost.NavigateTo(new PageNavigationRequest(PrimarySlot.Play));
         ConsumePendingCommunityDetail();
-        if (_authService != null) _ = RestoreAccountAsync();
+        _launchStatusTimer.Start();
+        _ = RestoreAccountAsync();
     }
 
-    public void RefreshCustomWallpaper()
+    private void OnClosed(object? sender, EventArgs e)
     {
-        var path = AppSettings.LauncherCustomWallpaperPath;
-        var bitmap = UnturnedModManager.Helpers.WallpaperHelper.LoadNonBlocking(path);
-        if (bitmap != null)
+        _launchStatusTimer.Stop();
+        SavePendingAccent();
+        _wheelTintProperty.RemoveValueChanged(AccentWheel, AccentWheel_SurfaceTintChanged);
+        _themeService.ThemeChanged -= OnThemeChanged;
+        _authService.SessionChanged -= UpdateAccountVisual;
+        _notifications.NoticePublished -= OnNoticePublished;
+        if (_tasks is not null) _tasks.TasksChanged -= OnTasksChanged;
+        if (_launchEnvironment is not null) _launchEnvironment.Changed -= OnLaunchEnvironmentChanged;
+        if (_launch is not null) _launch.StateChanged -= UpdateLaunchButton;
+        if (_navigationHost is not null)
         {
-            WallpaperImage.Source = bitmap;
-            WallpaperBlurEffect.Radius = AppSettings.LauncherWallpaperBlurRadius;
-            WallpaperDimOverlay.Opacity = AppSettings.LauncherWallpaperDimOpacity;
-            WallpaperImage.Visibility = Visibility.Visible;
-            WallpaperDimOverlay.Visibility = Visibility.Visible;
+            _navigationHost.StateChanged -= OnNavigationStateChanged;
+            AppNavigationService.Current.DetachHost(_navigationHost);
+            _navigationHost = null;
         }
-        else
-        {
-            WallpaperImage.Source = null;
-            WallpaperImage.Visibility = Visibility.Collapsed;
-            WallpaperDimOverlay.Visibility = Visibility.Collapsed;
-        }
+    }
+
+    public void RefreshCustomWallpaper() => RefreshWallpaper(force: true);
+
+    private void RefreshWallpaper(bool force = false)
+    {
+        var light = _themeService.AppliedTheme == ThemePreference.Light;
+        var key = (AppSettings.LauncherCustomWallpaperPath,
+            light ? _themeService.CustomWallpaperLightPath : _themeService.CustomWallpaperDarkPath,
+            light ? _themeService.CustomWallpaperDarkPath : _themeService.CustomWallpaperLightPath,
+            AppSettings.LauncherWallpaperPreset);
+        if (!force && _wallpaperKey == key) return;
+        _wallpaperKey = key;
+        WallpaperImage.Source = WallpaperHelper.ResolveSource(key.Item1, key.Item2, key.Item3, key.Item4);
+        var hasWallpaper = WallpaperImage.Source is not null;
+        WallpaperImage.Visibility = WallpaperDimOverlay.Visibility = hasWallpaper ? Visibility.Visible : Visibility.Collapsed;
+        _themeService.SetWallpaperPresence(hasWallpaper);
+        UpdateWallpaperEffects(AppSettings.LauncherWallpaperBlurRadius, AppSettings.LauncherWallpaperDimOpacity);
     }
 
     public void UpdateWallpaperEffects(double blurRadius, double dimOpacity)
@@ -107,32 +145,170 @@ public partial class MainWindow : FluentWindow
         AppSettings.WindowTop = bounds.Top;
         AppSettings.IsWindowMaximized = WindowState == WindowState.Maximized;
     }
-    private void UpdateThemeButton(ThemePreference preference)
+    private void UpdateThemeButton(ThemePreference applied)
     {
-        var isLight = preference == ThemePreference.Light;
+        var isLight = applied == ThemePreference.Light;
+        var action = isLight ? "切换为深色模式" : "切换为浅色模式";
         ThemeToggleButtonIcon.Symbol = isLight ? SymbolRegular.WeatherMoon24 : SymbolRegular.WeatherSunny24;
-        ThemeToggleText.Text = _themeService.CurrentPreference == ThemePreference.System
-            ? $"跟随系统（{(isLight ? "浅色" : "深色")}）"
-            : isLight ? "浅色模式" : "深色模式";
+        ThemeToggleButton.ToolTip = action;
+        AutomationProperties.SetName(ThemeToggleButton, action);
+        _syncingAccentWheel = true;
+        try
+        {
+            AccentWheel.IsDarkTheme = !isLight;
+            AccentWheel.AccentColor = (Color)ColorConverter.ConvertFromString(_themeService.CurrentAccentHex);
+            AccentWheel.SurfaceTint = _themeService.CurrentSurfaceTint;
+        }
+        finally { _syncingAccentWheel = false; }
     }
-    public void ApplyThemeFromSettings() { _themeService.Initialize(AppSettings.CommunityThemeMode); UpdateThemeButton(_themeService.AppliedTheme); }
-    private void NavigationView_PaneOpened(object sender, RoutedEventArgs e) { AppSettings.IsNavigationPaneOpen = true; ApplyPaneVisualState(true); }
-    private void NavigationView_PaneClosed(object sender, RoutedEventArgs e) { AppSettings.IsNavigationPaneOpen = false; ApplyPaneVisualState(false); }
-    private void NavigationView_Navigated(object sender, NavigatedEventArgs e) => _currentPage = e.Page as Page;
-    private void ApplyPaneVisualState(bool isOpen)
+
+    private void OnThemeChanged(ThemePreference preference)
     {
-        ThemeToggleText.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
-        ThemeToggleButton.Margin = isOpen ? new Thickness(12, 4, 12, 12) : new Thickness(0, 4, 0, 12);
-        ThemeToggleButton.Width = isOpen ? double.NaN : 64;
-        ThemeToggleButton.HorizontalAlignment = isOpen ? System.Windows.HorizontalAlignment.Stretch : System.Windows.HorizontalAlignment.Center;
-        AccountNameText.Visibility = isOpen ? Visibility.Visible : Visibility.Collapsed;
-        AccountContentGrid.Width = isOpen ? double.NaN : 36;
-        AccountContentGrid.HorizontalAlignment = isOpen ? System.Windows.HorizontalAlignment.Stretch : System.Windows.HorizontalAlignment.Center;
-        AccountButton.HorizontalContentAlignment = isOpen ? System.Windows.HorizontalAlignment.Stretch : System.Windows.HorizontalAlignment.Center;
-        AccountButton.Width = isOpen ? double.NaN : 64;
-        AccountButton.Margin = isOpen ? new Thickness(12, 4, 12, 4) : new Thickness(0, 4, 0, 4);
-        AccountButton.HorizontalAlignment = isOpen ? System.Windows.HorizontalAlignment.Stretch : System.Windows.HorizontalAlignment.Center;
+        UpdateThemeButton(_themeService.AppliedTheme);
+        RefreshWallpaper();
     }
+
+    public void ApplyThemeFromSettings()
+    {
+        _themeService.Initialize(AppSettings.CommunityThemeMode);
+    }
+
+    private void AccentWheel_AccentColorChanged(object sender, RoutedPropertyChangedEventArgs<Color> e) => ApplyAccentPreview();
+    private void AccentWheel_SurfaceTintChanged(object? sender, EventArgs e) => ApplyAccentPreview();
+    private void AccentPopup_Closed(object? sender, EventArgs e) => SavePendingAccent();
+
+    private void ApplyAccentPreview()
+    {
+        if (_syncingAccentWheel || !AccentPopup.IsOpen) return;
+        var hex = ThemeService.ToHex(AccentWheel.AccentColor);
+        var tint = AccentWheel.SurfaceTint;
+        if (hex == _themeService.CurrentAccentHex && tint == _themeService.CurrentSurfaceTint) return;
+        _themeService.ApplyAccent(hex, tint, persist: false);
+        _pendingAccent = (hex, tint);
+        _accentSaveTimer.Stop();
+        _accentSaveTimer.Start();
+    }
+
+    private void SavePendingAccent()
+    {
+        _accentSaveTimer.Stop();
+        if (_pendingAccent is not { } pending) return;
+        _pendingAccent = null;
+        if (pending.Hex != _themeService.CurrentAccentHex || pending.Tint != _themeService.CurrentSurfaceTint) return;
+        AppSettings.AccentHex = pending.Hex;
+        AppSettings.SurfaceTint = pending.Tint;
+    }
+
+    private T GetPage<T>() where T : Page, new()
+    {
+        if (!_pages.TryGetValue(typeof(T), out var page)) _pages.Add(typeof(T), page = new T());
+        return (T)page;
+    }
+
+    private void NavigationTab_Click(object sender, RoutedEventArgs e)
+    {
+        var navigation = AppNavigationService.Current;
+        switch ((sender as FrameworkElement)?.Tag as string)
+        {
+            case "Play": navigation.NavigateToPlay(); break;
+            case "Mods": navigation.NavigateToSlot(PrimarySlot.Mods); break;
+            case "TaskCenter": navigation.NavigateToTaskCenter(); break;
+            case "Settings": navigation.NavigateToSettings(); break;
+            case "About": navigation.NavigateToAbout(); break;
+        }
+    }
+
+    private void OnNavigationStateChanged(object? sender, NavigationStateChangedEventArgs e)
+    {
+        if (_navigationHost is not { } host) return;
+        if (host.ActiveSlot == PrimarySlot.Exit) { Close(); return; }
+        var secondary = host.ActiveSecondary;
+        PlayTab.IsChecked = secondary is null && host.ActiveSlot == PrimarySlot.Play;
+        ModsTab.IsChecked = secondary is null && host.ActiveSlot == PrimarySlot.Mods;
+        SettingsTab.IsChecked = secondary is null && host.ActiveSlot == PrimarySlot.Settings;
+        TasksTab.IsChecked = secondary == SecondaryNavigationTarget.TaskCenter;
+        AboutTab.IsChecked = secondary == SecondaryNavigationTarget.About;
+        TaskBadge.SetResourceReference(System.Windows.Controls.Border.BackgroundProperty,
+            TasksTab.IsChecked == true ? "TextOnAccentFillColorPrimaryBrush" : "AccentFillColorDefaultBrush");
+        TaskBadgeText.SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,
+            TasksTab.IsChecked == true ? "AccentFillColorDefaultBrush" : "TextOnAccentFillColorPrimaryBrush");
+
+        Page page = secondary switch
+        {
+            SecondaryNavigationTarget.TaskCenter => GetPage<TaskCenterPage>(),
+            SecondaryNavigationTarget.About => GetPage<AboutPage>(),
+            _ => host.ActiveSlot switch
+            {
+                PrimarySlot.Mods => GetPage<PluginWorkshopPage>(),
+                PrimarySlot.Settings => GetPage<SettingsPage>(),
+                _ => GetPage<HomePage>()
+            }
+        };
+        if (!ReferenceEquals(PageHost.Content, page)) PageHost.Navigate(page);
+        if (_launchEnvironment is not null) _launchEnvironment.Refresh();
+        else OnLaunchEnvironmentChanged(null, EventArgs.Empty);
+    }
+
+    private void PageHost_Navigated(object sender, NavigationEventArgs e)
+    {
+        _currentPage = e.Content as Page;
+        while (PageHost.CanGoBack) PageHost.RemoveBackEntry();
+    }
+
+    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == Key.BrowserBack || (e.Key == Key.System && e.SystemKey == Key.Left && System.Windows.Input.Keyboard.Modifiers == ModifierKeys.Alt))
+            e.Handled = AppNavigationService.Current.NavigateBack() == NavigationResult.Success;
+    }
+
+    private void OnTasksChanged(object? sender, EventArgs e)
+    {
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(new Action(() => OnTasksChanged(sender, e))); return; }
+        var active = _tasks?.Tasks.Count(task => task.IsRunning) ?? 0;
+        TaskBadge.Visibility = active > 0 ? Visibility.Visible : Visibility.Collapsed;
+        TaskBadgeText.Text = active > 99 ? "99+" : active.ToString();
+        AutomationProperties.SetName(TasksTab, active > 0 ? $"任务中心，{active} 项正在处理" : "任务中心");
+    }
+
+    private void OnLaunchEnvironmentChanged(object? sender, EventArgs e)
+    {
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(new Action(() => OnLaunchEnvironmentChanged(sender, e))); return; }
+        if (_launchEnvironment is { } state)
+        {
+            ProfileSummaryText.Text = state.ProfileSummaryText;
+            ProfileSummaryText.ToolTip = state.ProfileSummaryText;
+            ProfileStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty,
+                state.GlobalModsEnabled ? "AppSuccessTextBrush" : "TextFillColorTertiaryBrush");
+            RunModeText.Text = state.RunModeText;
+            EnvironmentText.Text = state.EnvironmentText;
+        }
+        var hasGame = _gamePaths.IsValid(AppSettings.UnturnedInstallPath);
+        SteamStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty,
+            hasGame ? "AppSuccessTextBrush" : "AppWarningTextBrush");
+        SteamStatusText.Text = hasGame ? "Unturned · Steam 304930" : "Unturned · 未设置路径";
+        SteamStatusText.ToolTip = hasGame ? AppSettings.UnturnedInstallPath : "请在游戏设置中选择安装路径";
+        UpdateLaunchButton();
+    }
+
+    private void UpdateLaunchButton()
+    {
+        if (!Dispatcher.CheckAccess()) { Dispatcher.BeginInvoke(new Action(UpdateLaunchButton)); return; }
+        var launching = _launch?.IsLaunching == true;
+        var running = !launching && _launch?.IsGameRunning == true;
+        var text = launching ? "正在启动…" : running ? "游戏运行中" : "开始游戏";
+        if (LaunchButtonText.Text != text)
+        {
+            LaunchButtonText.Text = text;
+            AutomationProperties.SetName(LaunchButton, text);
+        }
+        LaunchButton.IsEnabled = _launch is not null && !running && !launching;
+    }
+
+    private async void LaunchButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_launch is not null) await _launch.LaunchAsync();
+    }
+
     private async Task RestoreAccountAsync()
     {
         var restored = await _authService.RestoreAsync();
@@ -147,7 +323,7 @@ public partial class MainWindow : FluentWindow
         var identity = string.IsNullOrWhiteSpace(username)
             ? "登录社区账户"
             : $"{CommunityUser.DescribeRole(role)} · {username}";
-        AccountNameText.Text = identity;
+        AccountNameText.Text = string.IsNullOrWhiteSpace(username) ? "登录社区账户" : username;
         AccountAvatarText.Text = string.IsNullOrWhiteSpace(username) ? "?" : username[..1].ToUpperInvariant();
         AccountButton.ToolTip = string.IsNullOrWhiteSpace(username) ? "登录社区账户" : $"社区账户：{identity}";
         var avatarUrl = _authService.CurrentUser?.AvatarUrl ?? AppSettings.CommunityAvatarUrl;
@@ -224,50 +400,58 @@ public partial class MainWindow : FluentWindow
             return;
 
         e.Handled = true;
-        if (!files.Any(LocalModService.IsSupportedImportFile))
+        var intents = files.Select(path => ShellAssociationService.TryParseFileIntent(path, out var intent) ? intent : null)
+            .OfType<ShellFileIntent>().ToArray();
+        var plugins = files.Where(path => !RequiresPackageWizard(path) && LocalModService.IsSupportedImportFile(path)).ToArray();
+        if (intents.Length == 0 && plugins.Length == 0)
         {
-            _notifications.Publish(new UserNotice("仅支持拖入 .dll 或包含 BepInEx/plugins 结构的 .zip 插件包。", UserNoticeSeverity.Warning));
+            _notifications.Publish(new UserNotice("仅支持拖入 .ummpk、.ummtheme、.dll 或包含 BepInEx/plugins 结构的 .zip。", UserNoticeSeverity.Warning));
             return;
         }
         if (!_dropImportGate.Wait(0))
         {
-        if (_notifications is not null)
-        {
-            _notifications.Publish(new UserNotice("已有插件导入任务正在进行，请稍候。", UserNoticeSeverity.Information));
+            _notifications.Publish(new UserNotice("已有导入任务正在进行，请稍候。", UserNoticeSeverity.Information));
+            return;
         }
-        return;
-    }
 
-    try
-    {
-        if (_localMods is null) return;
-        var result = await Task.Run(() => _localMods.Import(files));
-        _notifications?.Publish(new UserNotice(
-                result.Message,
+        try
+        {
+            foreach (var intent in intents)
+            {
+                var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                HandleShellFileIntent(intent, () => completion.TrySetResult());
+                await completion.Task;
+            }
+            if (_localMods is null || plugins.Length == 0) return;
+            var result = await Task.Run(() => _localMods.Import(plugins));
+            _notifications.Publish(new UserNotice(result.Message,
                 result.Imported > 0 ? UserNoticeSeverity.Success : UserNoticeSeverity.Warning));
-
-            if (result.Imported > 0 && _currentPage is Pages.ModListPage localModsPage)
-                await localModsPage.RefreshAfterExternalImportAsync();
+            if (result.Imported > 0)
+            {
+                if (_currentPage is ILocalModsRefreshable localModsPage)
+                    await localModsPage.RefreshAfterExternalImportAsync();
+                _launchEnvironment?.Refresh();
+            }
         }
         catch (Exception exception)
         {
             _notifications.Publish(new UserNotice($"拖放导入失败：{exception.Message}", UserNoticeSeverity.Error));
         }
-        finally
-        {
-            _dropImportGate.Release();
-        }
+        finally { _dropImportGate.Release(); }
     }
 
     private static void UpdateDropEffect(System.Windows.DragEventArgs e)
     {
         if (!TryGetDroppedFiles(e, out var files)) return;
-
-        e.Effects = files.Any(LocalModService.IsSupportedImportFile)
-            ? System.Windows.DragDropEffects.Copy
-            : System.Windows.DragDropEffects.None;
+        var supported = files.Any(path => RequiresPackageWizard(path)
+            ? ShellAssociationService.TryParseFileIntent(path, out _) : LocalModService.IsSupportedImportFile(path));
+        e.Effects = supported ? System.Windows.DragDropEffects.Copy : System.Windows.DragDropEffects.None;
         e.Handled = true;
     }
+
+    private static bool RequiresPackageWizard(string path) =>
+        path.EndsWith(ShellAssociationService.ModPackageExtension, StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(ShellAssociationService.ThemePackageExtension, StringComparison.OrdinalIgnoreCase);
 
     private static bool TryGetDroppedFiles(System.Windows.DragEventArgs e, out string[] files)
     {
@@ -288,8 +472,8 @@ public partial class MainWindow : FluentWindow
     }
     private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
     {
-        var mode = _themeService.CurrentPreference == ThemePreference.Light ? ThemePreference.Dark : ThemePreference.Light;
-        _themeService.Apply(mode); UpdateThemeButton(mode);
+        var mode = _themeService.AppliedTheme == ThemePreference.Light ? ThemePreference.Dark : ThemePreference.Light;
+        _themeService.Apply(mode);
     }
 
     /// <summary>
@@ -301,7 +485,7 @@ public partial class MainWindow : FluentWindow
         if (modId <= 0)
             return;
 
-        if (!IsLoaded)
+        if (_navigationHost is null)
         {
             _pendingCommunityDetailId = modId;
             return;
@@ -349,10 +533,11 @@ public partial class MainWindow : FluentWindow
             if (confirmed && wizard.Result?.Success == true)
             {
                 _notifications.Publish(new UserNotice(wizard.Result.Message, UserNoticeSeverity.Success));
-                if (_currentPage is Pages.ModListPage localModsPage)
+                if (_currentPage is ILocalModsRefreshable localModsPage)
                 {
                     _ = localModsPage.RefreshAfterExternalImportAsync();
                 }
+                _launchEnvironment?.Refresh();
             }
 
             onCompleted();

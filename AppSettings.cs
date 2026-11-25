@@ -93,6 +93,68 @@ public static class AppSettings
         set { _data.CommunityColorPalette = value; Save(); }
     }
 
+    public static string AccentHex
+    {
+        get => _data.AccentHex ?? GetLegacyAccentHex(_data.CommunityColorPalette);
+        set
+        {
+            if (NormalizeAccentHex(value) is not { } normalized || _data.AccentHex == normalized) return;
+            _data.AccentHex = normalized;
+            Save();
+        }
+    }
+
+    public static double SurfaceTint
+    {
+        get => NormalizeSurfaceTint(_data.SurfaceTint);
+        set
+        {
+            var normalized = NormalizeSurfaceTint(value);
+            if (_data.SurfaceTint == normalized) return;
+            _data.SurfaceTint = normalized;
+            Save();
+        }
+    }
+
+    public static string LauncherWallpaperPreset
+    {
+        get => NormalizeWallpaperPreset(_data.LauncherWallpaperPreset);
+        set
+        {
+            var normalized = NormalizeWallpaperPreset(value);
+            if (_data.LauncherWallpaperPreset == normalized) return;
+            _data.LauncherWallpaperPreset = normalized;
+            Save();
+        }
+    }
+
+    internal const string DefaultAccentHex = "#0078D4";
+    internal const double DefaultSurfaceTint = 16;
+    internal static string? NormalizeAccentHex(string? value) =>
+        value is { Length: 7 } && value[0] == '#' && value.Skip(1).All(Uri.IsHexDigit)
+            ? value.ToUpperInvariant() : null;
+    internal static double NormalizeSurfaceTint(double value) =>
+        double.IsFinite(value) ? Math.Clamp(value, 0, 40) : DefaultSurfaceTint;
+    internal static string NormalizeWallpaperPreset(string? value) => value?.Trim().ToLowerInvariant() switch
+    {
+        "graphite" => "graphite",
+        "mist" => "mist",
+        "ember" => "ember",
+        "solid" => "solid",
+        _ => ""
+    };
+
+    internal static string GetLegacyAccentHex(string? value) => value?.Trim().ToUpperInvariant() switch
+    {
+        "WARMPAPER" => "#C8A26A",
+        "MASCOTORANGE" => "#E8722C",
+        "MISTYFOREST" => "#4E7A63",
+        "OCEANDUSK" => "#3E6E93",
+        "KLEINBLUE" => "#002FA7",
+        "LAVENDER" => "#8B7FB8",
+        _ => DefaultAccentHex
+    };
+
     public static string? ActiveCustomThemeId
     {
         get => _data.ActiveCustomThemeId;
@@ -249,6 +311,9 @@ public static class AppSettings
             {
                 var json = File.ReadAllText(sourcePath);
                 _data = JsonSerializer.Deserialize<ConfigData>(json) ?? new ConfigData();
+                var accent = NormalizeAccentHex(_data.AccentHex) ?? GetLegacyAccentHex(_data.CommunityColorPalette);
+                var accentMigrated = _data.AccentHex != accent;
+                _data.AccentHex = accent;
                 if (string.IsNullOrWhiteSpace(_data.CommunityAuthTokenProtected)
                     && !string.IsNullOrWhiteSpace(_data.CommunityAuthToken))
                 {
@@ -258,7 +323,7 @@ public static class AppSettings
                         Encoding.UTF8.GetBytes(legacyToken), null, DataProtectionScope.CurrentUser));
                     Save();
                 }
-                else if (!string.Equals(sourcePath, ConfigPath, StringComparison.OrdinalIgnoreCase)) Save();
+                else if (accentMigrated || !string.Equals(sourcePath, ConfigPath, StringComparison.OrdinalIgnoreCase)) Save();
 
                 // Existing UMM installations already have a configured game path;
                 // do not interrupt them with the first-run wizard after upgrading.
@@ -446,6 +511,9 @@ public static class AppSettings
         public string ThemeMode { get; set; } = "Dark";
         public string CommunityThemeMode { get; set; } = "System";
         public string CommunityColorPalette { get; set; } = "Fluent";
+        public string? AccentHex { get; set; }
+        public double SurfaceTint { get; set; } = DefaultSurfaceTint;
+        public string LauncherWallpaperPreset { get; set; } = "";
         public string? ActiveCustomThemeId { get; set; }
         public string? ActiveCustomThemeDarkWallpaper { get; set; }
         public string? ActiveCustomThemeLightWallpaper { get; set; }

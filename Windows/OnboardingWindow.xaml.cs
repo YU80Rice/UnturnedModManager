@@ -25,6 +25,7 @@ public partial class OnboardingWindow : FluentWindow
         if (!AppSettings.IsOnboardingCompleted)
             AppSettings.IsOnboardingCompleted = true;
         _viewModel.Completed -= OnCompleted;
+        _viewModel.RestorePreview();
         base.OnClosed(e);
     }
 }

@@ -2,338 +2,219 @@
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-      Title="游戏启动"
-      Background="Transparent">
-    <ScrollViewer x:Name="RootScrollViewer"
-                  VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled"
-                  PanningMode="VerticalOnly"
-                  PreviewMouseWheel="CardPanel_PreviewMouseWheel">
-        <StackPanel Margin="30,22,30,42" MaxWidth="1040" HorizontalAlignment="Center">
-            <Border CornerRadius="10" Padding="14" Margin="0,0,0,16"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}"
-                    BorderBrush="{DynamicResource SystemFillColorCriticalBrush}"
-                    BorderThickness="0,3,0,0"
+      Title="开始游戏" Background="Transparent"
+      Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <Page.Resources>
+        <Style x:Key="BentoCard" TargetType="Border">
+            <Setter Property="Padding" Value="20,18"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style x:Key="BentoTile" TargetType="Border" BasedOn="{StaticResource BentoCard}">
+            <Setter Property="Padding" Value="12,9"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="{DynamicResource AppCardBackgroundBrush2}"/>
+        </Style>
+        <Style x:Key="Caption" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+        </Style>
+        <Style x:Key="Chip" TargetType="Border">
+            <Setter Property="Padding" Value="9,3"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Background" Value="{DynamicResource AppAccentSoftBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+    </Page.Resources>
+    <ScrollViewer x:Name="RootScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                  PanningMode="VerticalOnly" PreviewMouseWheel="CardPanel_PreviewMouseWheel">
+        <StackPanel Margin="28,20,28,26" MaxWidth="1280">
+            <Border Style="{StaticResource BentoCard}" Margin="0,0,0,14"
+                    Background="{DynamicResource DangerSurfaceBrush}" BorderBrush="{DynamicResource SystemFillColorCriticalBrush}"
                     Visibility="{Binding HasCrashAlert, Converter={StaticResource BoolToVisibility}}">
-                <Grid>
-                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-                    <StackPanel>
-                        <TextBlock Text="检测到上次游戏异常退出" FontWeight="SemiBold" FontSize="15" />
-                        <TextBlock Text="可以一键导出 Unity 与 BepInEx 日志，便于排查插件或运行环境问题。"
-                                   Margin="0,4,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
-                        <ui:Button Content="导出诊断日志" Icon="{ui:SymbolIcon FolderArrowRight24}"
-                                   Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" Command="{Binding ExportLogsCommand}" />
-                        <ui:Button Content="忽略" Margin="8,0,0,0" Command="{Binding IgnoreCrashCommand}" />
-                    </StackPanel>
-                </Grid>
+                <DockPanel LastChildFill="True">
+                    <ui:Button DockPanel.Dock="Right" Content="忽略" Command="{Binding IgnoreCrashCommand}" Margin="12,0,0,0"/>
+                    <TextBlock Text="检测到上次游戏异常退出，可在下方导出脱敏诊断包。" TextWrapping="Wrap"
+                               VerticalAlignment="Center" Foreground="{DynamicResource DangerTextBrush}" FontWeight="SemiBold"/>
+                </DockPanel>
             </Border>
+            <Grid x:Name="BentoGrid">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="1.32*"/><ColumnDefinition x:Name="BentoSecondaryColumn" Width="*"/></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
 
-            <Grid Margin="0,0,0,22">
-                <StackPanel>
-                    <TextBlock Text="游戏启动" FontSize="30" FontWeight="SemiBold" />
-                    <TextBlock Text="管理运行环境、性能优化并安全启动 Unturned"
-                               Margin="0,5,0,0" Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                </StackPanel>
-                <Border HorizontalAlignment="Right" VerticalAlignment="Center" Padding="12,6" CornerRadius="12"
-                        Background="{DynamicResource ControlFillColorSecondaryBrush}">
-                    <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="8" Height="8" Margin="0,0,7,0">
-                            <Ellipse.Style>
-                                <Style TargetType="Ellipse">
-                                    <Setter Property="Fill" Value="#20B468" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsGameRunning}" Value="True">
-                                            <Setter Property="Fill" Value="#F0A020" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Ellipse.Style>
-                        </Ellipse>
-                        <TextBlock Text="{Binding LaunchButtonText}" FontSize="12" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Border x:Name="SummaryCard" Style="{StaticResource BentoCard}" Margin="0,0,14,14" MinHeight="226">
+                    <StackPanel>
+                        <DockPanel LastChildFill="False">
+                            <Border Style="{StaticResource Chip}">
+                                <TextBlock Text="全局启动指挥舱" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            </Border>
+                            <Border DockPanel.Dock="Right" Padding="9,3" CornerRadius="12">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource Chip}">
+                                        <Setter Property="Background" Value="{DynamicResource AppSuccessSurfaceBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsGameRunning}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource AppWarningSurfaceBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding HasValidGamePath}" Value="False">
+                                                <Setter Property="Background" Value="{DynamicResource AppWarningSurfaceBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding RuntimeStatusText}" FontSize="11" FontWeight="SemiBold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{DynamicResource AppSuccessTextBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsGameRunning}" Value="True"><Setter Property="Foreground" Value="{DynamicResource AppWarningTextBrush}"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding HasValidGamePath}" Value="False"><Setter Property="Foreground" Value="{DynamicResource AppWarningTextBrush}"/></DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                        </DockPanel>
+                        <TextBlock Text="运行概要与当前方案" FontSize="23" FontWeight="Bold" Margin="0,13,0,4"/>
+                        <TextBlock Style="{StaticResource Caption}" Text="运行环境与启动入口位于底部指挥舱，在任意页面都可启动。"/>
+                        <UniformGrid Columns="3" Rows="1" Margin="0,14,0,12">
+                            <Border Style="{StaticResource BentoTile}" Margin="0,0,8,0">
+                                <StackPanel><TextBlock Style="{StaticResource Caption}" Text="当前方案"/><TextBlock Text="{Binding ActiveProfileName}" ToolTip="{Binding ActiveProfileName}" TextTrimming="CharacterEllipsis" FontWeight="SemiBold" Margin="0,4,0,0"/></StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource BentoTile}" Margin="0,0,8,0">
+                                <StackPanel><TextBlock Style="{StaticResource Caption}" Text="启用模组"/><TextBlock Text="{Binding EnabledPluginsText}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,4,0,0"/></StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource BentoTile}">
+                                <StackPanel><TextBlock Style="{StaticResource Caption}" Text="当前模式"/><TextBlock Text="{Binding ActiveRunModeText}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,4,0,0"/></StackPanel>
+                            </Border>
+                        </UniformGrid>
+                        <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" Padding="0,7,0,0">
+                            <DockPanel>
+                                <TextBlock Style="{StaticResource Caption}" Text="GAME ROOT" Margin="0,0,10,0" FontFamily="Consolas"/>
+                                <TextBlock Text="{Binding GameRootPath}" ToolTip="{Binding GameRootPath}" TextAlignment="Right"
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" FontFamily="Consolas"/>
+                            </DockPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
-            </Grid>
 
-            <Border CornerRadius="16"
-                    Margin="0,0,0,16"
-                    Padding="24,20,18,18"
-                    ClipToBounds="True"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                    Visibility="{Binding IsHomeWelcomeEnabled, Converter={StaticResource BoolToVisibility}}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="230" />
-                    </Grid.ColumnDefinitions>
-                    <Ellipse Width="340" Height="340"
-                             HorizontalAlignment="Right" VerticalAlignment="Center"
-                             Margin="0,0,-74,0"
-                             Fill="{DynamicResource AccentFillColorDefaultBrush}"
-                             Opacity="0.10"
-                             IsHitTestVisible="False" />
-                    <StackPanel VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <Border Padding="8,3"
-                                    CornerRadius="8"
-                                    Background="{DynamicResource AccentFillColorDefaultBrush}">
-                                <TextBlock Text="UMM 欢迎区" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" FontSize="11" FontWeight="SemiBold" />
-                            </Border>
-                            <TextBlock Text="{Binding WelcomeGreeting}"
-                                       Margin="9,0,0,0"
-                                       VerticalAlignment="Center"
-                                       FontSize="13"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-                        <TextBlock Text="让插件管理更轻松一点"
-                                   FontSize="24"
-                                   FontWeight="SemiBold"
-                                   Margin="0,12,0,0" />
-                        <TextBlock Text="这里会在 UMM 升级后自动展示当前版本的更新摘要；联网时会同步官方 GitHub Release 的要点。你可以在设置中随时重新开启或关闭这个欢迎区。"
-                                   Margin="0,5,0,0"
-                                   TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-
-                        <Border Margin="0,15,0,0"
-                                Padding="13,11"
-                                CornerRadius="10"
-                                Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                Visibility="{Binding HasHomeAnnouncement, Converter={StaticResource BoolToVisibility}}">
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding HomeAnnouncementTitle}" FontWeight="SemiBold" />
-                                    <Border Margin="8,0,0,0"
-                                            Padding="6,2"
-                                            CornerRadius="6"
-                                            Background="{DynamicResource AccentFillColorDefaultBrush}">
-                                        <TextBlock Text="{Binding HomeAnnouncementVersion}" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" FontSize="10" />
+                <Border x:Name="WelcomeCard" Grid.Column="1" Style="{StaticResource BentoCard}" Margin="0,0,0,14" ClipToBounds="True">
+                    <Grid>
+                        <Grid Visibility="{Binding IsHomeWelcomeEnabled, Converter={StaticResource BoolToVisibility}}">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="0.64*" MaxWidth="170"/></Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <WrapPanel>
+                                    <Border Style="{StaticResource Chip}" Margin="0,0,8,0">
+                                        <TextBlock Text="UMM 欢迎区 · v3.0" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
                                     </Border>
-                                </StackPanel>
-                                <ItemsControl ItemsSource="{Binding HomeAnnouncementHighlights}" Margin="0,8,0,0">
+                                    <TextBlock Style="{StaticResource Caption}" VerticalAlignment="Center" Text="{Binding WelcomeGreeting}"/>
+                                </WrapPanel>
+                                <TextBlock Text="让插件管理更轻松一点" FontSize="19" FontWeight="Bold" Margin="0,10,0,6" TextWrapping="Wrap"/>
+                                <ItemsControl ItemsSource="{Binding HomeAnnouncementHighlights}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Grid Margin="0,2">
-                                                <Grid.ColumnDefinitions><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                                <Ellipse Width="5" Height="5"
-                                                         VerticalAlignment="Center"
-                                                         Fill="{DynamicResource AccentFillColorDefaultBrush}" />
-                                                <TextBlock Grid.Column="1"
-                                                           Text="{Binding}"
-                                                           TextWrapping="Wrap"
-                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                            </Grid>
+                                            <DockPanel Margin="0,2">
+                                                <Ellipse Width="5" Height="5" Margin="0,6,7,0" VerticalAlignment="Top" Fill="{DynamicResource AccentFillColorDefaultBrush}"/>
+                                                <TextBlock Style="{StaticResource Caption}" Text="{Binding}"/>
+                                            </DockPanel>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                                <StackPanel Orientation="Horizontal" Margin="0,11,0,0">
-                                    <ui:Button Content="{Binding UpdateDownloadButtonText}"
-                                               Appearance="Primary"
-                                               Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
-                                               Visibility="{Binding HasAvailableLauncherUpdate, Converter={StaticResource BoolToVisibility}}"
-                                               Command="{Binding DownloadLauncherUpdateCommand}" />
-                                    <ui:Button Content="查看完整更新日志"
-                                               Margin="8,0,0,0"
-                                               Appearance="Secondary"
-                                               Command="{Binding OpenReleaseNotesCommand}" />
-                                    <ui:Button Content="本次不再提示"
-                                               Margin="8,0,0,0"
-                                               Appearance="Secondary"
-                                               Command="{Binding AcknowledgeAnnouncementCommand}" />
-                                </StackPanel>
-                                <StackPanel Margin="0,9,0,0"
-                                            Visibility="{Binding HasAvailableLauncherUpdate, Converter={StaticResource BoolToVisibility}}">
-                                    <TextBlock Text="{Binding LauncherUpdateDetail}"
-                                               TextWrapping="Wrap"
-                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                                    <ProgressBar Height="4"
-                                                 Margin="0,7,0,0"
-                                                 Minimum="0"
-                                                 Maximum="100"
-                                                 Value="{Binding LauncherUpdatePercentage, Mode=OneWay}"
-                                                 Visibility="{Binding IsDownloadingLauncherUpdate, Converter={StaticResource BoolToVisibility}}" />
-                                    <TextBlock Text="{Binding LauncherUpdateText}"
-                                               Margin="0,5,0,0"
-                                               TextWrapping="Wrap"
-                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                               Visibility="{Binding IsDownloadingLauncherUpdate, Converter={StaticResource BoolToVisibility}}" />
+                                <WrapPanel Margin="0,10,0,0">
+                                    <ui:Button Content="完整更新日志" Click="ShowChangeLog_Click" Margin="0,0,6,4"/>
+                                    <ui:Button Content="收起欢迎区" Command="{Binding HideHomeWelcomeCommand}" Margin="0,0,6,4"/>
+                                    <ui:Button Content="知道了" Command="{Binding AcknowledgeAnnouncementCommand}" Margin="0,0,0,4"
+                                               Visibility="{Binding HasNewReleaseAnnouncement, Converter={StaticResource BoolToVisibility}}"/>
+                                </WrapPanel>
+                                <StackPanel Margin="0,6,0,0" Visibility="{Binding HasAvailableLauncherUpdate, Converter={StaticResource BoolToVisibility}}">
+                                    <TextBlock Style="{StaticResource Caption}" Text="{Binding LauncherUpdateDetail}"/>
+                                    <ui:Button Content="{Binding UpdateDownloadButtonText}" Appearance="Primary" Command="{Binding DownloadLauncherUpdateCommand}" HorizontalAlignment="Left" Margin="0,5,0,0"/>
+                                    <StackPanel Visibility="{Binding IsDownloadingLauncherUpdate, Converter={StaticResource BoolToVisibility}}">
+                                        <ProgressBar Height="4" Margin="0,7,0,0" Maximum="100" Value="{Binding LauncherUpdatePercentage, Mode=OneWay}"/>
+                                        <TextBlock Style="{StaticResource Caption}" Text="{Binding LauncherUpdateText}" Margin="0,4,0,0"/>
+                                    </StackPanel>
                                 </StackPanel>
                             </StackPanel>
-                        </Border>
-                        <ui:Button Content="关闭首页欢迎区"
-                                   Margin="0,12,0,0"
-                                   HorizontalAlignment="Left"
-                                   Appearance="Secondary"
-                                   Command="{Binding HideHomeWelcomeCommand}" />
-                    </StackPanel>
-                    <Image Grid.Column="1"
-                           Source="/Assets/umm-mascot-chibi-v2.png"
-                           Stretch="Uniform"
-                           HorizontalAlignment="Right"
-                           VerticalAlignment="Center"
-                           MaxHeight="255"
-                           Margin="8,0,-4,-24"
-                           IsHitTestVisible="False" />
-                </Grid>
-            </Border>
-
-            <Border CornerRadius="12" Padding="20" Margin="0,0,0,16"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                    <Ellipse Width="12" Height="12" Margin="0,0,14,0" VerticalAlignment="Center">
-                        <Ellipse.Style>
-                            <Style TargetType="Ellipse">
-                                <Setter Property="Fill" Value="{DynamicResource SystemFillColorCriticalBrush}" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsBepInExInstalled}" Value="True">
-                                        <Setter Property="Fill" Value="{DynamicResource SystemFillColorSuccessBrush}" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Ellipse.Style>
-                    </Ellipse>
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="{Binding BepInExTitle}" FontSize="16" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding BepInExDetail}" Margin="0,4,0,0"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                                    <ui:Button Content="一键安装" Icon="{ui:SymbolIcon ArrowDownload24}" Appearance="Primary" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
-                                   Command="{Binding InstallCommand}"
-                                   Visibility="{Binding CanInstallBepInEx, Converter={StaticResource BoolToVisibility}}" />
-                        <ui:Button Content="{Binding BepInExRepairButtonText}" Icon="{ui:SymbolIcon Wrench24}"
-                                   Command="{Binding RepairCommand}"
-                                   Visibility="{Binding IsBepInExInstalled, Converter={StaticResource BoolToVisibility}}" />
-                        <ui:Button Content="卸载环境" Icon="{ui:SymbolIcon Delete24}"
-                                   Margin="8,0,0,0"
-                                   Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                   Command="{Binding UninstallCommand}"
-                                   Visibility="{Binding IsBepInExInstalled, Converter={StaticResource BoolToVisibility}}" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <Grid Margin="0,0,0,16">
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                <Border Grid.Column="0" CornerRadius="12" Padding="20"
-                        Background="{DynamicResource ControlFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <ui:SymbolIcon Symbol="PlugDisconnected24" FontSize="22" Margin="0,0,12,0" VerticalAlignment="Center" />
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="全局模组环境" FontSize="15" FontWeight="SemiBold" />
-                            <TextBlock Text="启用 BepInEx 插件加载；关闭后以纯净模式运行。"
-                                       Margin="0,3,0,0" TextWrapping="Wrap"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+                            <Grid Grid.Column="1" Height="170" Margin="12,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <Ellipse Width="138" Height="138" Fill="{DynamicResource AppMascotGlowBrush}" Stroke="{DynamicResource AppAccentBorderBrush}"/>
+                                <Image Source="/Assets/umm-mascot-chibi-v2.png" Stretch="Uniform" VerticalAlignment="Stretch" AutomationProperties.Name="UMM 吉祥物"/>
+                            </Grid>
+                        </Grid>
+                        <StackPanel VerticalAlignment="Center" Visibility="{Binding IsHomeWelcomeEnabled, Converter={StaticResource InverseBoolToVisibility}}">
+                            <Border Style="{StaticResource Chip}" HorizontalAlignment="Left"><TextBlock Text="欢迎区已收起" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/></Border>
+                            <TextBlock Text="保持专注的启动工作台" FontSize="19" FontWeight="SemiBold" Margin="0,10,0,5"/>
+                            <TextBlock Style="{StaticResource Caption}" Text="欢迎公告可随时恢复，也可从「游戏设置」重新开启。"/>
+                            <ui:Button Content="重新显示欢迎区" Command="{Binding ShowHomeWelcomeCommand}" Margin="0,10,0,0" HorizontalAlignment="Left"/>
                         </StackPanel>
-                        <ui:ToggleSwitch Grid.Column="2" IsChecked="{Binding GlobalModsEnabled}"
-                                         Command="{Binding ToggleGlobalModsCommand}" Margin="12,0,0,0" />
                     </Grid>
                 </Border>
-                <Border Grid.Column="2" CornerRadius="12" Padding="20"
-                        Background="{DynamicResource ControlFillColorDefaultBrush}"
-                        BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                        <ui:SymbolIcon Symbol="TopSpeed24" FontSize="22" Margin="0,0,12,0" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="DXVK 渲染测试" FontSize="15" FontWeight="SemiBold" />
-                            <TextBlock Text="将 DX11 转换为 Vulkan；适用性取决于显卡、驱动和游戏版本。"
-                                       Margin="0,3,0,0" TextWrapping="Wrap"
-                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+
+                <Border x:Name="EnvironmentCard" Grid.Row="1" Style="{StaticResource BentoCard}" Margin="0,0,14,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding BepInExTitle}" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Style="{StaticResource Caption}" Text="{Binding BepInExDetail}" Margin="0,4,0,0"/>
+                        <WrapPanel Margin="0,8,0,0">
+                            <ui:Button Content="一键安装 BepInEx" Appearance="Primary" Command="{Binding InstallCommand}" Margin="0,0,6,4"
+                                       Visibility="{Binding CanInstallBepInEx, Converter={StaticResource BoolToVisibility}}"/>
+                            <ui:Button Content="{Binding BepInExRepairButtonText}" Command="{Binding RepairCommand}" Margin="0,0,6,4"
+                                       Visibility="{Binding IsBepInExInstalled, Converter={StaticResource BoolToVisibility}}"/>
+                            <ui:Button Content="卸载" Foreground="{DynamicResource DangerTextBrush}" Command="{Binding UninstallCommand}" Margin="0,0,0,4"
+                                       Visibility="{Binding IsBepInExInstalled, Converter={StaticResource BoolToVisibility}}"/>
+                        </WrapPanel>
+                        <UniformGrid Columns="2" Rows="1" Margin="0,6,0,0">
+                            <Border Style="{StaticResource BentoTile}" Margin="0,0,8,0">
+                                <DockPanel>
+                                    <ui:ToggleSwitch DockPanel.Dock="Right" IsChecked="{Binding GlobalModsEnabled, Mode=TwoWay}" Command="{Binding ToggleGlobalModsCommand}"
+                                                     Margin="6,0,0,0" VerticalAlignment="Center" AutomationProperties.Name="全局模组环境"/>
+                                    <StackPanel><TextBlock Text="全局模组环境" FontWeight="SemiBold" TextWrapping="Wrap"/><TextBlock Style="{StaticResource Caption}" Text="开启 BepInEx 加载"/></StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource BentoTile}">
+                                <DockPanel>
+                                    <ui:ToggleSwitch DockPanel.Dock="Right" IsChecked="{Binding DxvkEnabled, Mode=TwoWay}" Command="{Binding ToggleDxvkCommand}"
+                                                     Margin="6,0,0,0" VerticalAlignment="Center" AutomationProperties.Name="DXVK 2.4 渲染"/>
+                                    <StackPanel><TextBlock Text="DXVK 2.4 渲染" FontWeight="SemiBold" TextWrapping="Wrap"/><TextBlock Style="{StaticResource Caption}" Text="DX11 → Vulkan 转换"/></StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </UniformGrid>
+                        <Border Style="{StaticResource BentoTile}" Margin="0,9,0,0">
+                            <DockPanel>
+                                <ui:SymbolIcon Symbol="Desktop24" FontSize="19" Margin="0,0,10,0" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                                <StackPanel><TextBlock Text="{Binding GpuName}" TextWrapping="Wrap" FontWeight="SemiBold"/><TextBlock Style="{StaticResource Caption}" Text="{Binding GpuRecommendation}"/></StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Border x:Name="DiagnosticsCard" Grid.Row="1" Grid.Column="1" Style="{StaticResource BentoCard}">
+                    <DockPanel LastChildFill="True">
+                        <WrapPanel DockPanel.Dock="Bottom" HorizontalAlignment="Right" Margin="0,14,0,0">
+                            <ui:Button Content="分析最近日志" Command="{Binding AnalyzeLogsCommand}" Margin="0,0,6,4"/>
+                            <ui:Button Content="导出脱敏诊断包" Command="{Binding ExportLogsCommand}" Margin="0,0,0,4"/>
+                        </WrapPanel>
+                        <StackPanel>
+                            <TextBlock Text="崩溃诊断与日志分析" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding DiagnosticTitle}" FontWeight="SemiBold" Margin="0,9,0,0" TextWrapping="Wrap"/>
+                            <TextBlock Style="{StaticResource Caption}" Text="{Binding DiagnosticSummary}" Margin="0,4,0,0"/>
+                            <Border Style="{StaticResource BentoTile}" Margin="0,9,0,0" Visibility="{Binding HasDiagnosticRecommendation, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="{Binding DiagnosticRecommendation, StringFormat=排障建议：{0}}" TextWrapping="Wrap"/>
+                            </Border>
+                            <TextBlock Style="{StaticResource Caption}" Text="{Binding DiagnosticDetail}" FontFamily="Consolas" Margin="0,8,0,0"
+                                       Visibility="{Binding HasDiagnosticDetail, Converter={StaticResource BoolToVisibility}}"/>
                         </StackPanel>
-                        <ui:ToggleSwitch Grid.Column="2" IsChecked="{Binding DxvkEnabled}"
-                                         Command="{Binding ToggleDxvkCommand}" Margin="12,0,0,0" />
-                    </Grid>
+                    </DockPanel>
                 </Border>
             </Grid>
-
-            <Border CornerRadius="12" Padding="16" Margin="0,0,0,20"
-                    Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                    Visibility="{Binding HasGpuInfo, Converter={StaticResource BoolToVisibility}}">
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <ui:SymbolIcon Symbol="Desktop24" FontSize="20" Margin="0,0,12,0" VerticalAlignment="Center" />
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="{Binding GpuName}" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding GpuRecommendation}" Margin="0,3,0,0" TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <Border CornerRadius="12" Padding="18" Margin="0,0,0,20"
-                    Background="{DynamicResource ControlFillColorDefaultBrush}"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <ui:SymbolIcon Symbol="DocumentError24" FontSize="22" Margin="0,0,14,0" VerticalAlignment="Top"
-                                   Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="{Binding DiagnosticTitle}" FontSize="15" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding DiagnosticSummary}" Margin="0,4,0,0" TextWrapping="Wrap"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                        <Border Margin="0,8,0,0" Padding="12,8" CornerRadius="8"
-                                Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1"
-                                Visibility="{Binding HasDiagnosticRecommendation, Converter={StaticResource BoolToVisibility}}">
-                            <StackPanel Orientation="Horizontal">
-                                <ui:SymbolIcon Symbol="Lightbulb24" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
-                                <TextBlock Text="{Binding DiagnosticRecommendation}" TextWrapping="Wrap" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                            </StackPanel>
-                        </Border>
-                        <TextBlock Text="{Binding DiagnosticDetail}" Margin="0,10,0,0" TextWrapping="Wrap"
-                                   FontFamily="Cascadia Mono, Consolas, monospace" FontSize="11"
-                                   Visibility="{Binding HasDiagnosticDetail, Converter={StaticResource BoolToVisibility}}"
-                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
-                    </StackPanel>
-                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-                        <ui:Button Content="分析最近日志" Icon="{ui:SymbolIcon Search24}"
-                                   Appearance="Secondary"
-                                   Command="{Binding AnalyzeLogsCommand}" />
-                        <ui:Button Content="导出诊断包" Icon="{ui:SymbolIcon FolderArrowRight24}"
-                                   Appearance="Secondary"
-                                   Margin="8,0,0,0" Command="{Binding ExportLogsCommand}" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <Border CornerRadius="12" Padding="22" Background="{DynamicResource ControlFillColorDefaultBrush}"
-                    BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
-                <StackPanel HorizontalAlignment="Center">
-                    <ui:Button Appearance="Primary" Height="56" MinWidth="300"
-                               FontSize="18" FontWeight="SemiBold"
-                               Command="{Binding LaunchCommand}" IsEnabled="{Binding CanLaunch}">
-                        <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Play24" FontSize="20" Margin="0,0,10,0" />
-                            <TextBlock Text="{Binding LaunchButtonText}" VerticalAlignment="Center" />
-                        </StackPanel>
-                    </ui:Button>
-                    <StackPanel Width="420" Margin="0,18,0,0"
-                                Visibility="{Binding HasOperationProgress, Converter={StaticResource BoolToVisibility}}">
-                        <ProgressBar Minimum="0" Maximum="100" Value="{Binding OperationPercentage, Mode=OneWay}"
-                                     IsIndeterminate="False" Height="7" />
-                        <TextBlock Text="{Binding OperationText}" Margin="0,8,0,0" TextAlignment="Center"
-                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
-                        <ui:Button Content="取消当前操作" Command="{Binding CancelOperationCommand}"
-                                   HorizontalAlignment="Center" Margin="0,10,0,0" />
-                    </StackPanel>
-                </StackPanel>
+            <Border Style="{StaticResource BentoCard}" Margin="0,14,0,0" Visibility="{Binding HasOperationProgress, Converter={StaticResource BoolToVisibility}}">
+                <DockPanel>
+                    <ui:Button DockPanel.Dock="Right" Content="取消当前操作" Command="{Binding CancelOperationCommand}" Margin="12,0,0,0"/>
+                    <StackPanel><TextBlock Style="{StaticResource Caption}" Text="{Binding OperationText}"/><ProgressBar Maximum="100" Height="5" Margin="0,7,0,0" Value="{Binding OperationPercentage, Mode=OneWay}"/></StackPanel>
+                </DockPanel>
             </Border>
         </StackPanel>
     </ScrollViewer>

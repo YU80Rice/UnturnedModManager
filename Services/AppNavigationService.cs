@@ -170,49 +170,16 @@ public sealed class AppNavigationService : INavigationShellHost
         }
     }
 
-    public NavigationResult NavigateTo(PageNavigationRequest request)
-    {
-        if (request is null)
-        {
-            return NavigationResult.Rejected;
-        }
+    // Snapshot under the gate, then release it before calling a host that can marshal to the UI
+    // dispatcher and raise StateChanged on that thread.
+    public NavigationResult NavigateTo(PageNavigationRequest request) => request is null
+        ? NavigationResult.Rejected
+        : Host?.NavigateTo(request) ?? NavigationResult.Rejected;
 
-        lock (_syncLock)
-        {
-            if (_host is null)
-            {
-                return NavigationResult.Rejected;
-            }
+    public NavigationResult NavigateToSecondary(SecondaryNavigationTarget secondaryTarget) =>
+        Host?.NavigateToSecondary(secondaryTarget) ?? NavigationResult.Rejected;
 
-            return _host.NavigateTo(request);
-        }
-    }
-
-    public NavigationResult NavigateToSecondary(SecondaryNavigationTarget secondaryTarget)
-    {
-        lock (_syncLock)
-        {
-            if (_host is null)
-            {
-                return NavigationResult.Rejected;
-            }
-
-            return _host.NavigateToSecondary(secondaryTarget);
-        }
-    }
-
-    public NavigationResult NavigateBack()
-    {
-        lock (_syncLock)
-        {
-            if (_host is null)
-            {
-                return NavigationResult.Rejected;
-            }
-
-            return _host.NavigateBack();
-        }
-    }
+    public NavigationResult NavigateBack() => Host?.NavigateBack() ?? NavigationResult.Rejected;
 
     public event EventHandler<NavigationStateChangedEventArgs>? StateChanged;
 
@@ -254,15 +221,7 @@ public sealed class AppNavigationService : INavigationShellHost
             subDomain,
             new PluginDetailContext(request.ModId.ToString()));
 
-        lock (_syncLock)
-        {
-            if (_host is null)
-            {
-                return NavigationResult.Rejected;
-            }
-
-            return _host.NavigateTo(pageRequest);
-        }
+        return NavigateTo(pageRequest);
     }
 
     /// <summary>
@@ -281,29 +240,11 @@ public sealed class AppNavigationService : INavigationShellHost
     /// </summary>
     public NavigationResult ReturnToOrigin(NavigationOrigin? origin = null)
     {
-        lock (_syncLock)
-        {
-            if (_host is null)
-            {
-                return NavigationResult.Rejected;
-            }
-
-            if (_host.CanNavigateBack)
-            {
-                return _host.NavigateBack();
-            }
-
-            if (origin is not null)
-            {
-                var returnRequest = new PageNavigationRequest(
-                    origin.SourceSlot,
-                    origin.SubDomain,
-                    origin.Context);
-                return _host.NavigateTo(returnRequest);
-            }
-
-            return _host.NavigateTo(new PageNavigationRequest(PrimarySlot.Mods, WorkshopSubDomain.CommunityDiscovery));
-        }
+        if (Host is not { } host) return NavigationResult.Rejected;
+        if (host.CanNavigateBack) return host.NavigateBack();
+        return host.NavigateTo(origin is null
+            ? new PageNavigationRequest(PrimarySlot.Mods, WorkshopSubDomain.CommunityDiscovery)
+            : new PageNavigationRequest(origin.SourceSlot, origin.SubDomain, origin.Context));
     }
 
     #endregion

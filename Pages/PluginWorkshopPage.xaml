@@ -28,7 +28,7 @@
             <!-- 标题与副标题 -->
             <controls:PageHeader Grid.Column="0"
                                  Title="模组工坊"
-                                 Subtitle="聚合本地插件管理与 unmod.online 社区在线发现 · 独立状态隔离 · 沉浸拟真体验"
+                                 Subtitle="管理本地 BepInEx 插件方案，或发现 unmod.online 社区插件。"
                                  VerticalAlignment="Center" />
 
             <!-- 双子域分段式药丸切换器 -->
@@ -49,7 +49,7 @@
                                Padding="14,0"
                                Margin="0,0,4,0"
                                Click="SubDomainLocalBtn_Click"
-                               ToolTip="切换至本地已安装插件管理 (Local Installed)" />
+                               ToolTip="切换到本地插件" />
 
                     <ui:Button x:Name="SubDomainCommunityBtn"
                                Content="社区发现"
@@ -58,7 +58,7 @@
                                Height="36"
                                Padding="14,0"
                                Click="SubDomainCommunityBtn_Click"
-                               ToolTip="切换至社区模组在线发现 (Community Discovery)" />
+                               ToolTip="切换到社区发现" />
                 </StackPanel>
             </Border>
         </Grid>

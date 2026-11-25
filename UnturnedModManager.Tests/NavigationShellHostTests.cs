@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Windows.Threading;
+using UnturnedModManager.Controls.AppShell;
 using UnturnedModManager.Navigation;
+using UnturnedModManager.Services;
 using Xunit;
 
 namespace UnturnedModManager.Tests;
@@ -23,6 +26,30 @@ namespace UnturnedModManager.Tests;
 /// </summary>
 public sealed class NavigationShellHostTests
 {
+    [Fact]
+    public void CapsuleHost_RestoresWorkshopThenClosesItsSingleDetailRoot()
+    {
+        var workshop = new PluginWorkshopCoordinator();
+        var host = new CapsuleNavigationHost(() => workshop, Dispatcher.CurrentDispatcher);
+        var navigation = new AppNavigationService(host);
+
+        Assert.Equal(NavigationResult.Success, navigation.NavigateToMods(WorkshopSubDomain.CommunityDiscovery, new CommunitySearchContext("survival")));
+        Assert.Equal(NavigationResult.Success, navigation.OpenCommunityDetail(42));
+        Assert.Equal(42, workshop.ActiveDetailModId);
+        Assert.Equal(NavigationResult.Success, navigation.NavigateToTaskCenter());
+        Assert.Equal(NavigationResult.Success, navigation.NavigateToAbout());
+        Assert.Equal(NavigationResult.Success, navigation.NavigateBack());
+        Assert.Equal(PrimarySlot.Mods, host.ActiveSlot);
+        Assert.Null(host.ActiveSecondary);
+        Assert.Equal(42, workshop.ActiveDetailModId);
+        Assert.Equal(NavigationResult.Success, navigation.ReturnToOrigin());
+        Assert.False(workshop.IsDetailActive);
+        Assert.Equal(WorkshopSubDomain.CommunityDiscovery, workshop.CurrentSubDomain);
+        Assert.Equal("survival", workshop.CommunitySnapshot?.SearchQuery);
+        Assert.False(navigation.CanNavigateBack);
+        Assert.Equal(NavigationResult.Rejected, navigation.NavigateBack());
+    }
+
     [Fact]
     public void InitialState_DefaultIsPlayAndHighlightedWithoutSecondary()
     {

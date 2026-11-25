@@ -4,6 +4,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using UnturnedModManager;
+using UnturnedModManager.Helpers;
 using Xunit;
 
 namespace UnturnedModManager.Tests;
@@ -77,6 +78,8 @@ public sealed class WallpaperHostTests
             var tempDir = Path.Combine(Path.GetTempPath(), "umm_host_test_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
             var testImagePath = Path.Combine(tempDir, "host_wp.png");
+            var saved = (AppSettings.LauncherCustomWallpaperPath, AppSettings.LauncherWallpaperPreset,
+                AppSettings.LauncherWallpaperBlurRadius, AppSettings.LauncherWallpaperDimOpacity);
 
             try
             {
@@ -91,14 +94,18 @@ public sealed class WallpaperHostTests
 
                 var window = new MainWindow();
 
-                // 1. Initial state (no wallpaper)
+                // 1. Initial state (no explicit local or preset wallpaper)
+                AppSettings.LauncherWallpaperPreset = "";
                 AppSettings.LauncherCustomWallpaperPath = null;
                 window.RefreshCustomWallpaper();
 
                 Assert.Equal(Visibility.Collapsed, window.WallpaperImage.Visibility);
                 Assert.Equal(Visibility.Collapsed, window.WallpaperDimOverlay.Visibility);
 
-                // 2. Set valid wallpaper
+                // 2. The built-in preset appears; a valid explicit local image takes precedence.
+                AppSettings.LauncherWallpaperPreset = "mist";
+                window.RefreshCustomWallpaper();
+                Assert.Same(WallpaperHelper.GetPresetSource("mist"), window.WallpaperImage.Source);
                 AppSettings.LauncherCustomWallpaperPath = testImagePath;
                 AppSettings.LauncherWallpaperBlurRadius = 20.0;
                 AppSettings.LauncherWallpaperDimOpacity = 0.45;
@@ -106,7 +113,7 @@ public sealed class WallpaperHostTests
 
                 Assert.Equal(Visibility.Visible, window.WallpaperImage.Visibility);
                 Assert.Equal(Visibility.Visible, window.WallpaperDimOverlay.Visibility);
-                Assert.NotNull(window.WallpaperImage.Source);
+                Assert.IsType<BitmapImage>(window.WallpaperImage.Source);
                 Assert.Equal(20.0, window.WallpaperBlurEffect.Radius);
                 Assert.Equal(0.45, window.WallpaperDimOverlay.Opacity);
 
@@ -115,8 +122,13 @@ public sealed class WallpaperHostTests
                 Assert.Equal(32.0, window.WallpaperBlurEffect.Radius);
                 Assert.Equal(0.65, window.WallpaperDimOverlay.Opacity);
 
-                // 4. Clear wallpaper
+                // 4. Clearing the local image returns to the preset; clearing both returns to Layer 0.
                 AppSettings.LauncherCustomWallpaperPath = null;
+                window.RefreshCustomWallpaper();
+                Assert.Same(WallpaperHelper.GetPresetSource("mist"), window.WallpaperImage.Source);
+                Assert.Same(WallpaperHelper.GetPresetSource("ember"), WallpaperHelper.ResolveSource(null, testImagePath, null, "ember"));
+                Assert.IsType<BitmapImage>(WallpaperHelper.ResolveSource(null, null, testImagePath, ""));
+                AppSettings.LauncherWallpaperPreset = "";
                 window.RefreshCustomWallpaper();
 
                 Assert.Equal(Visibility.Collapsed, window.WallpaperImage.Visibility);
@@ -127,6 +139,8 @@ public sealed class WallpaperHostTests
             }
             finally
             {
+                (AppSettings.LauncherCustomWallpaperPath, AppSettings.LauncherWallpaperPreset,
+                    AppSettings.LauncherWallpaperBlurRadius, AppSettings.LauncherWallpaperDimOpacity) = saved;
                 try
                 {
                     if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);

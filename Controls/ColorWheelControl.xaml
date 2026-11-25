@@ -1,0 +1,81 @@
+<UserControl x:Class="UnturnedModManager.Controls.ColorWheelControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+    <Border Padding="12" CornerRadius="10" Background="{DynamicResource AppCardBackgroundBrush2}"
+            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Grid x:Name="Wheel" Width="124" Height="124" VerticalAlignment="Top">
+                <Viewbox Stretch="Uniform">
+                    <Canvas Width="216" Height="216">
+                        <Ellipse x:Name="HueRing" Width="216" Height="216" Focusable="True" Cursor="Cross"
+                                 AutomationProperties.Name="色相环：左右方向键调整色相，回车展开或收起"
+                                 MouseLeftButtonDown="HueDown" MouseMove="HueMove" MouseLeftButtonUp="HueUp" KeyDown="HueKeyDown" />
+                        <Ellipse x:Name="HuePuck" Width="17" Height="17" Stroke="White" StrokeThickness="2" IsHitTestVisible="False"/>
+                        <Grid x:Name="SvPad" Canvas.Left="53" Canvas.Top="53" Width="110" Height="110"
+                              Background="White" Cursor="Cross" Visibility="Collapsed" ClipToBounds="True"
+                              MouseLeftButtonDown="SvDown" MouseMove="SvMove" MouseLeftButtonUp="SvUp">
+                            <Rectangle x:Name="SvHue" IsHitTestVisible="False"/>
+                            <Rectangle IsHitTestVisible="False"><Rectangle.Fill><LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="Transparent" Offset="0"/><GradientStop Color="Black" Offset="1"/></LinearGradientBrush></Rectangle.Fill></Rectangle>
+                            <Canvas IsHitTestVisible="False"><Ellipse x:Name="SvPuck" Width="15" Height="15" Stroke="White" StrokeThickness="2"/></Canvas>
+                        </Grid>
+                    </Canvas>
+                </Viewbox>
+                <Button x:Name="CenterButton" Width="58" Height="58" Padding="0" Cursor="Hand"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" Click="ToggleExpanded"
+                        ToolTip="展开完整滑块" AutomationProperties.Name="展开完整滑块">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource AppAccentButtonBorderBrush}"
+                                    BorderThickness="1" CornerRadius="29"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <StackPanel>
+                        <ui:SymbolIcon Symbol="Options24" FontSize="14" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="CenterHex" FontFamily="Consolas" FontWeight="Bold" FontSize="10" TextAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                <WrapPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="CollapsedHex" Margin="0,5,8,5" FontFamily="Consolas" FontWeight="Bold" FontSize="16"/>
+                    <TextBox x:Name="HexBox" Width="105" Margin="0,0,8,0" MaxLength="7" FontFamily="Consolas"
+                             AutomationProperties.Name="十六进制强调色" ToolTip="请输入 #RRGGBB"
+                             Visibility="Collapsed" TextChanged="HexChanged" LostKeyboardFocus="HexLostFocus" />
+                    <Border x:Name="ContrastBadge" CornerRadius="12" Padding="8,3" VerticalAlignment="Center" Margin="0,2,8,2">
+                        <TextBlock x:Name="ContrastText" FontWeight="SemiBold" FontSize="11"/>
+                    </Border>
+                </WrapPanel>
+                <TextBlock x:Name="ColorSummary" FontSize="11" Margin="0,3,0,0" TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                <TextBlock x:Name="RingHint" Text="拖动圆环滑块选色，或点击中心展开。" FontSize="11" Margin="0,3,0,8" TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                <StackPanel x:Name="Advanced" Margin="0,5,0,6" Visibility="Collapsed">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="68"/><ColumnDefinition Width="*"/><ColumnDefinition Width="40"/></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+                        <TextBlock Text="色相 H" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="1" Text="饱和度 S" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="2" Text="明度 V" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="3" Text="氛围染色" VerticalAlignment="Center"/>
+                        <Slider x:Name="HueSlider" Grid.Column="1" Maximum="359" ValueChanged="HsvSliderChanged" AutomationProperties.Name="色相 H" />
+                        <Slider x:Name="SaturationSlider" Grid.Row="1" Grid.Column="1" Maximum="100" ValueChanged="HsvSliderChanged" AutomationProperties.Name="饱和度 S" />
+                        <Slider x:Name="ValueSlider" Grid.Row="2" Grid.Column="1" Maximum="100" ValueChanged="HsvSliderChanged" AutomationProperties.Name="明度 V" />
+                        <Slider x:Name="TintSlider" Grid.Row="3" Grid.Column="1" Maximum="40" ValueChanged="TintSliderChanged" AutomationProperties.Name="氛围染色" />
+                        <TextBlock Grid.Column="2" Text="{Binding Value, ElementName=HueSlider, StringFormat={}{0:0}°}" TextAlignment="Right" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Value, ElementName=SaturationSlider, StringFormat={}{0:0}%}" TextAlignment="Right" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding Value, ElementName=ValueSlider, StringFormat={}{0:0}%}" TextAlignment="Right" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding Value, ElementName=TintSlider, StringFormat={}{0:0}%}" TextAlignment="Right" VerticalAlignment="Center"/>
+                    </Grid>
+                    <WrapPanel x:Name="Swatches" Margin="0,6,0,0"/>
+                </StackPanel>
+                <WrapPanel>
+                    <ui:Button x:Name="ExpandButton" Content="展开完整滑块" Click="ToggleExpanded" Margin="0,0,6,4" Padding="8,4"/>
+                    <ui:Button Content="恢复默认 (#0078D4)" Click="Reset" Margin="0,0,0,4" Padding="8,4"/>
+                </WrapPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

@@ -69,7 +69,8 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         AnalyzeLogsCommand = new AsyncRelayCommand(AnalyzeLogsAsync, () => !IsBusy);
         IgnoreCrashCommand = new RelayCommand(IgnoreCrash);
         AcknowledgeAnnouncementCommand = new RelayCommand(AcknowledgeAnnouncement);
-        HideHomeWelcomeCommand = new RelayCommand(HideHomeWelcome);
+        HideHomeWelcomeCommand = new RelayCommand(() => SetHomeWelcome(false));
+        ShowHomeWelcomeCommand = new RelayCommand(() => SetHomeWelcome(true));
         OpenReleaseNotesCommand = new RelayCommand(OpenReleaseNotes);
         DownloadLauncherUpdateCommand = new AsyncRelayCommand(DownloadAndInstallLauncherUpdateAsync, () => HasAvailableLauncherUpdate && !IsBusy);
         _authentication.SessionChanged += OnAccountSessionChanged;
@@ -78,6 +79,15 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         _runtimeTimer.Start();
     }
 
+    public string GameRootPath => string.IsNullOrWhiteSpace(AppSettings.UnturnedInstallPath) ? "尚未配置" : AppSettings.UnturnedInstallPath;
+    public bool HasValidGamePath => _bepStatus.HasValidGamePath;
+    public string RuntimeStatusText => IsGameRunning ? "游戏正在运行" : HasValidGamePath ? "就绪待命" : "待配置游戏路径";
+    public string ActiveProfileName { get; private set; } = "未选择方案";
+    public string EnabledPluginsText { get; private set; } = "0 / 0 插件";
+    public string ActiveRunModeText => GlobalModsEnabled ? "模组 (-NoBattlEye)" : "原版 BattlEye";
+    public string ReleaseNotesText => _latestReleaseNotes is { ReleaseNotes.Length: > 0 } notes
+        ? notes.ReleaseNotes
+        : string.Join(Environment.NewLine, HomeAnnouncementHighlights.Select(line => "• " + line));
     public string BepInExTitle => _bepStatus.Title;
     public string BepInExDetail => _bepStatus.Detail;
     public bool IsBepInExInstalled => _bepStatus.IsInstalled;
@@ -85,11 +95,20 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public string BepInExRepairButtonText => _bepStatus.IsCurrentVersion
         ? "检查并修复"
         : $"升级到 {BepInExService.SupportedVersion}";
-    public bool GlobalModsEnabled { get => _globalModsEnabled; set => SetProperty(ref _globalModsEnabled, value); }
+    public bool GlobalModsEnabled
+    {
+        get => _globalModsEnabled;
+        set
+        {
+            if (!SetProperty(ref _globalModsEnabled, value)) return;
+            if (App.Services is { } services) services.LaunchEnvironment.GlobalModsEnabled = value;
+            OnPropertyChanged(nameof(ActiveRunModeText));
+        }
+    }
     public bool DxvkEnabled { get => _dxvkEnabled; set => SetProperty(ref _dxvkEnabled, value); }
     public bool HasGpuInfo => _gpu is not null && !string.IsNullOrWhiteSpace(_gpu.Name);
-    public string GpuName => _gpu is null ? "" : $"{_gpu.Name} · {_gpu.VendorName} {_gpu.ArchitectureName}";
-    public string GpuRecommendation => _gpu is null ? "" : $"{_gpu.RecommendationText} — {_gpu.RecommendationDetail}";
+    public string GpuName => !HasGpuInfo || _gpu is null ? "未识别到显卡型号" : $"{_gpu.Name} · {_gpu.VendorName} {_gpu.ArchitectureName}";
+    public string GpuRecommendation => !HasGpuInfo || _gpu is null ? "DXVK 兼容性取决于显卡与驱动，可与原生 D3D11 对照测试。" : $"{_gpu.RecommendationText} — {_gpu.RecommendationDetail}";
     public bool HasCrashAlert => AppSettings.LastSessionCrashed;
     public bool IsHomeWelcomeEnabled => AppSettings.IsHomeWelcomeEnabled;
     public string WelcomeGreeting => _authentication.IsSignedIn && _authentication.CurrentUser is { } user
@@ -160,6 +179,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
             if (!SetProperty(ref _isGameRunning, value)) return;
             OnPropertyChanged(nameof(CanLaunch));
             OnPropertyChanged(nameof(LaunchButtonText));
+            OnPropertyChanged(nameof(RuntimeStatusText));
             RaiseCommandStates();
         }
     }
@@ -181,6 +201,7 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
     public ICommand IgnoreCrashCommand { get; }
     public ICommand AcknowledgeAnnouncementCommand { get; }
     public ICommand HideHomeWelcomeCommand { get; }
+    public ICommand ShowHomeWelcomeCommand { get; }
     public ICommand OpenReleaseNotesCommand { get; }
     public ICommand DownloadLauncherUpdateCommand { get; }
     public event Action<UserNotice>? NoticeRaised;
@@ -205,6 +226,9 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         _bepStatus = _bepInEx.GetStatus(AppSettings.UnturnedInstallPath);
         GlobalModsEnabled = _bepInEx.IsGlobalModsEnabled(AppSettings.UnturnedInstallPath);
         DxvkEnabled = _dxvk.IsEnabled(AppSettings.UnturnedInstallPath);
+        OnPropertyChanged(nameof(GameRootPath));
+        OnPropertyChanged(nameof(HasValidGamePath));
+        OnPropertyChanged(nameof(RuntimeStatusText));
         OnPropertyChanged(nameof(BepInExTitle));
         OnPropertyChanged(nameof(BepInExDetail));
         OnPropertyChanged(nameof(IsBepInExInstalled));
@@ -224,6 +248,15 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         RefreshDiagnosticProperties();
         RefreshRuntimeState();
         RaiseCommandStates();
+        if (App.Services is { } services)
+        {
+            var environment = services.LaunchEnvironment;
+            environment.Refresh();
+            ActiveProfileName = string.IsNullOrWhiteSpace(environment.ProfileName) ? "未选择方案" : environment.ProfileName;
+            EnabledPluginsText = $"{environment.EnabledPluginCount} / {environment.TotalPluginCount} 插件";
+            OnPropertyChanged(nameof(ActiveProfileName));
+            OnPropertyChanged(nameof(EnabledPluginsText));
+        }
     }
 
     private async Task TryDetectGamePathAsync()
@@ -352,32 +385,8 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
 
     private async Task LaunchAsync()
     {
-        var gamePath = AppSettings.UnturnedInstallPath;
-        if (!_gamePaths.IsValid(gamePath))
-        {
-            RaiseNotice("请先在设置中配置有效的 Unturned 安装路径。", UserNoticeSeverity.Warning);
-            return;
-        }
-        var modsEnabled = GlobalModsEnabled;
-        if (!_bepInEx.GetStatus(gamePath).IsInstalled && modsEnabled)
-        {
-            if (await _dialogs.ConfirmAsync("模组环境未安装", "是否现在安装 BepInEx，然后继续启动模组模式？"))
-            {
-                await DeployBepInExAsync("安装", requireConfirmation: false);
-                if (!_bepInEx.GetStatus(gamePath).IsInstalled) return;
-                modsEnabled = true;
-            }
-            else
-            {
-                if (!await _dialogs.ConfirmAsync("以纯净模式启动", "是否改为使用 BattlEye 的纯净模式启动？")) return;
-                modsEnabled = false;
-                _bepInEx.SetGlobalModsEnabled(gamePath, false);
-                GlobalModsEnabled = false;
-            }
-        }
-        var result = _launcher.Launch(gamePath, modsEnabled);
-        RaiseNotice(result.Message, result.Success ? UserNoticeSeverity.Information : UserNoticeSeverity.Error);
-        RefreshRuntimeState();
+        await App.Services.Launch.LaunchAsync();
+        RefreshAll();
     }
 
     private async Task ExportLogsAsync()
@@ -431,9 +440,9 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(HasHomeAnnouncement));
     }
 
-    private void HideHomeWelcome()
+    private void SetHomeWelcome(bool enabled)
     {
-        AppSettings.IsHomeWelcomeEnabled = false;
+        AppSettings.IsHomeWelcomeEnabled = enabled;
         OnPropertyChanged(nameof(IsHomeWelcomeEnabled));
         OnPropertyChanged(nameof(HasNewReleaseAnnouncement));
         OnPropertyChanged(nameof(HasHomeAnnouncement));
@@ -559,9 +568,9 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
 
     private static readonly IReadOnlyList<string> CurrentVersionFallbackHighlights =
     [
-        "社区插件可从作者声明的 GitHub latest Release 自动获取唯一的 ZIP 更新包。",
-        "GitHub 下载会校验资产归属、文件大小与 SHA-256；临时故障时才回退已登录社区包。",
-        "详情页、本地插件列表与安装清单会区分远端最新版本和实际安装版本，更新状态保持一致。"
+        "顶部胶囊用于切换页面，底部指挥舱始终显示当前方案与启动环境。",
+        "自由调色环支持浅色、深色和氛围染色，主题可以打包分享。",
+        "保留三层壁纸、可调模糊与遮罩，以及本地插件与社区发现。"
     ];
 
     private void BeginOperation(string text)

@@ -11,6 +11,13 @@ public partial class SettingsPage : Page
 {
     private readonly SettingsViewModel _viewModel = App.Services.CreateSettingsViewModel();
 
+    private bool _loadingSettings;
+
+    public static readonly DependencyProperty WallpaperColumnsProperty = DependencyProperty.Register(
+        nameof(WallpaperColumns), typeof(int), typeof(SettingsPage), new PropertyMetadata(4));
+
+    public int WallpaperColumns => (int)GetValue(WallpaperColumnsProperty);
+
     public SettingsPage()
     {
         InitializeComponent();
@@ -18,7 +25,12 @@ public partial class SettingsPage : Page
         _viewModel.NoticeRaised += OnNoticeRaised;
         _viewModel.AccountManagementRequested += OpenAccountManagement;
         _viewModel.OnboardingRequested += RestartOnboarding;
-        Loaded += (_, _) => _viewModel.Load();
+        Loaded += (_, _) =>
+        {
+            _loadingSettings = true;
+            try { _viewModel.Load(); }
+            finally { _loadingSettings = false; }
+        };
     }
 
     private void OpenAccountManagement()
@@ -44,6 +56,18 @@ public partial class SettingsPage : Page
     private void CardPanel_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         => ScrollWheelRouter.RouteToNearestScrollViewer(sender, e);
 
+    private void TopCards_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (WelcomeAccountCard is null) return;
+        var viewport = ActualWidth > 0 ? ActualWidth : e.NewSize.Width + 52;
+        var stacked = viewport <= 1100;
+        TopCardGap.Width = new GridLength(stacked ? 0 : 14);
+        AccountColumn.Width = new GridLength(stacked ? 0 : 1, GridUnitType.Star);
+        Grid.SetRow(WelcomeAccountCard, stacked ? 1 : 0);
+        Grid.SetColumn(WelcomeAccountCard, stacked ? 0 : 2);
+        SetCurrentValue(WallpaperColumnsProperty, viewport <= 820 ? 1 : 4);
+    }
+
     private void SelectWallpaperButton_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new Microsoft.Win32.OpenFileDialog
@@ -64,11 +88,11 @@ public partial class SettingsPage : Page
 
     private void WallpaperBlurSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        _viewModel?.UpdateWallpaperBlur(e.NewValue);
+        if (IsLoaded && !_loadingSettings) _viewModel.UpdateWallpaperBlur(e.NewValue);
     }
 
     private void WallpaperDimSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        _viewModel?.UpdateWallpaperDimPercent(e.NewValue);
+        if (IsLoaded && !_loadingSettings) _viewModel.UpdateWallpaperDimPercent(e.NewValue);
     }
 }

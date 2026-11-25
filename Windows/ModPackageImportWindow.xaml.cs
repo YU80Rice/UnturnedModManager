@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using UnturnedModManager.Models;
 using UnturnedModManager.Services;
 
@@ -31,7 +31,7 @@ public partial class ModPackageImportWindow : Window
         PackageDateText.Text = $"导出时间: {plan.Manifest.ExportedAt:yyyy-MM-dd HH:mm}";
         PackageDescriptionText.Text = string.IsNullOrWhiteSpace(plan.Manifest.Description) ? "暂无说明信息。" : plan.Manifest.Description;
 
-        FilesSummaryText.Text = $"将导入的文件清单（共 {plan.Entries.Count} 项，含 {plan.ConflictingDllCount} 个覆盖备份，{plan.ConflictingConfigCount} 个配置保护）：";
+        FilesSummaryText.Text = $"将导入的文件清单（共 {plan.Entries.Count} 项，含 {plan.ConflictingDllCount} 个覆盖备份，{plan.ConflictingConfigCount} 个配置冲突）：";
         EntriesListView.ItemsSource = plan.Entries;
 
         PopulateProfileOptions();

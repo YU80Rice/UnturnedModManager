@@ -25,6 +25,9 @@ public partial class ImagePreviewWindow : Window
     private void ZoomOut_Click(object sender, RoutedEventArgs e) =>
         ZoomSlider.Value = Math.Max(ZoomSlider.Minimum, ZoomSlider.Value - 0.25);
 
+    private void ZoomIn_Click(object sender, RoutedEventArgs e) =>
+        ZoomSlider.Value = Math.Min(ZoomSlider.Maximum, ZoomSlider.Value + 0.25);
+
     private void ResetZoom_Click(object sender, RoutedEventArgs e) => ZoomSlider.Value = 1;
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
@@ -40,7 +43,6 @@ public partial class ImagePreviewWindow : Window
 
     private void Window_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if ((Keyboard.Modifiers & ModifierKeys.Control) == 0) return;
         ZoomSlider.Value = Math.Clamp(
             ZoomSlider.Value + (e.Delta > 0 ? 0.1 : -0.1),
             ZoomSlider.Minimum,

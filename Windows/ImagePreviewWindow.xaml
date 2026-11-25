@@ -5,36 +5,38 @@
         Title="图片预览"
         Width="1040"
         Height="760"
-        MinWidth="520"
+        MinWidth="460"
         MinHeight="420"
         WindowStartupLocation="CenterOwner"
-        Background="#FF181818"
-        PreviewKeyDown="Window_PreviewKeyDown"
-        PreviewMouseWheel="Window_PreviewMouseWheel">
+        Background="{DynamicResource ApplicationBackgroundBrush}"
+        PreviewKeyDown="Window_PreviewKeyDown">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Border Padding="14,10" Background="#E6171717">
-            <Grid>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="图片预览" FontSize="16" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center" />
-                    <TextBlock Text="滚轮浏览 · Ctrl + 滚轮缩放 · Esc 关闭" Margin="14,0,0,0" FontSize="12" Foreground="#CFFFFFFF" VerticalAlignment="Center" />
+        <Border Padding="16,10" Background="{DynamicResource ControlFillColorDefaultBrush}" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}">
+            <DockPanel LastChildFill="True">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:Button Content="−" MinWidth="32" Click="ZoomOut_Click" AutomationProperties.Name="缩小图片" ToolTip="缩小" />
+                    <Slider x:Name="ZoomSlider" Width="84" Minimum="0.5" Maximum="2.5" Value="1" SmallChange="0.1" LargeChange="0.25" Margin="6,0" ValueChanged="ZoomSlider_ValueChanged" VerticalAlignment="Center" AutomationProperties.Name="图片缩放比例" />
+                    <ui:Button Content="+" MinWidth="32" Click="ZoomIn_Click" AutomationProperties.Name="放大图片" ToolTip="放大" />
+                    <ui:Button Margin="6,0,0,0" MinWidth="64" Click="ResetZoom_Click" AutomationProperties.Name="重置图片缩放" ToolTip="重置为 100%">
+                        <TextBlock Text="{Binding Value, ElementName=ZoomSlider, StringFormat={}{0:P0}}" />
+                    </ui:Button>
+                    <ui:Button Content="关闭" Margin="6,0,0,0" Click="Close_Click" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <ui:Button Content="−" Width="36" Height="32" Click="ZoomOut_Click" ToolTip="缩小" />
-                    <Slider x:Name="ZoomSlider" Width="160" Minimum="0.25" Maximum="3" Value="1" SmallChange="0.1" LargeChange="0.25" TickFrequency="0.25" Margin="8,0" ValueChanged="ZoomSlider_ValueChanged" VerticalAlignment="Center" />
-                    <ui:Button Content="100%" MinWidth="58" Height="32" Click="ResetZoom_Click" ToolTip="恢复原始比例" />
-                    <ui:Button Content="关闭" MinWidth="64" Height="32" Margin="8,0,0,0" Click="Close_Click" />
+                <StackPanel Margin="0,0,12,0" VerticalAlignment="Center">
+                    <TextBlock Text="封面与图片预览" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="滚轮缩放 · Esc 关闭" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-            </Grid>
+            </DockPanel>
         </Border>
         <ScrollViewer x:Name="ImageScrollViewer"
                       Grid.Row="1"
                       HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Auto"
-                      PanningMode="Both"
+                      PanningMode="Both" PreviewMouseWheel="Window_PreviewMouseWheel"
                       Background="#FF101010">
             <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="26">
                 <Image x:Name="PreviewImage"
