@@ -224,21 +224,30 @@ public sealed class PluginWorkshopPageTests
     }
 
     [Fact]
-    public void Page_ContentHostStructure_UsesContentControlWithoutFrames()
+    public void Page_ContentHostStructure_UsesFrameHostsRequiredByPageParentRule()
     {
         RunOnSta(() =>
         {
             var page = new PluginWorkshopPage();
 
-            // 契约断言 [P1]：消除多 Frame 嵌套历史栈与 Journal 结构，使用纯净 ContentControl 承载
-            Assert.IsType<ContentControl>(page.LocalHost);
-            Assert.False(page.LocalHost is Frame, "LocalHost must not be a WPF Frame");
+            // 契约断言 [P1]：WPF 规定 Page 只能以 Window 或 Frame 为父级，违规时在真实布局期抛
+            // InvalidOperationException("Page 只能具有 Window 或 Frame 父级")（栈经 ContentPresenter.BuildVisualTree）。
+            // ModListPage / CommunityPage / CommunityDetailPage 都是 Page，因此宿主必须是 Frame；
+            // 历史实现用 ContentControl 承载，发布版一进模组工坊即崩溃。
+            var localHost = Assert.IsType<Frame>(page.LocalHost);
+            var communityHost = Assert.IsType<Frame>(page.CommunityHost);
+            var detailHost = Assert.IsType<Frame>(page.DetailHost);
 
-            Assert.IsType<ContentControl>(page.CommunityHost);
-            Assert.False(page.CommunityHost is Frame, "CommunityHost must not be a WPF Frame");
+            // 仍然不产生多 Journal：只赋 Content、从不调用 Navigate，导航 UI 也隐藏。
+            Assert.Equal(System.Windows.Navigation.NavigationUIVisibility.Hidden, localHost.NavigationUIVisibility);
+            Assert.Equal(System.Windows.Navigation.NavigationUIVisibility.Hidden, communityHost.NavigationUIVisibility);
+            Assert.Equal(System.Windows.Navigation.NavigationUIVisibility.Hidden, detailHost.NavigationUIVisibility);
 
-            Assert.IsType<ContentControl>(page.DetailHost);
-            Assert.False(page.DetailHost is Frame, "DetailHost must not be a WPF Frame");
+            // 子页面内容在首次激活时才挂载，因此这里只断言详情宿主初始为空，
+            // 不强制 LocalHost/CommunityHost 在构造后立即带内容。
+            Assert.Null(detailHost.Content);
+            Assert.True(localHost.Content is null || ReferenceEquals(localHost.Content, page.LocalPage));
+            Assert.True(communityHost.Content is null || ReferenceEquals(communityHost.Content, page.CommunityPage));
         });
     }
 
@@ -279,4 +288,3 @@ public sealed class PluginWorkshopPageTests
         });
     }
 }
-

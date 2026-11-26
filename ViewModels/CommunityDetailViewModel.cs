@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http;
 using System.Windows.Input;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
@@ -162,9 +164,32 @@ public sealed class CommunityDetailViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"加载插件详情失败：{ex.Message}";
+            ErrorMessage = DescribeLoadFailure(ex);
             State = ViewState.Error;
         }
+    }
+
+    /// <summary>
+    /// 把底层异常翻译成可读的中文提示：未登录/无权限、网络超时与离线是社区详情最常见的失败，
+    /// 直接抛 HttpRequestException 的英文原文（Response status code does not indicate success: 401 (Unauthorized).）
+    /// 会让用户无从下手，因此这里按状态码给出下一步动作。
+    /// </summary>
+    private static string DescribeLoadFailure(Exception ex)
+    {
+        if (ex is HttpRequestException http)
+        {
+            if (http.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                return "加载插件详情失败：社区接口需要登录后才能读取该插件。请先用顶部右侧的社区账户登录，再点“重新加载”。";
+            if ((int?)http.StatusCode == 404)
+                return "加载插件详情失败：该插件在社区已不存在或已下架。";
+            if ((int?)http.StatusCode >= 500)
+                return "加载插件详情失败：社区服务暂时不可用，请稍后点“重新加载”。";
+        }
+
+        if (ex is TaskCanceledException or TimeoutException)
+            return "加载插件详情失败：连接社区服务超时，请检查网络后点“重新加载”。";
+
+        return $"加载插件详情失败：{ex.Message}";
     }
 
     private async Task InstallAsync()

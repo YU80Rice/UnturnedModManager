@@ -65,26 +65,35 @@
 
         <!-- ========================================================= -->
         <!-- 2. 单一容器内容宿主 (Single Container Content Host)          -->
-        <!-- 消除多 Frame Journal 结构，双视图驻留由 Visibility 互斥控制 -->
+        <!-- 双视图驻留由 Visibility 互斥控制。宿主必须是 Frame：          -->
+        <!-- WPF 规定 Page 只能以 Window/Frame 为父级，把 Page 直接塞进   -->
+        <!-- ContentControl 会在真实布局期抛 InvalidOperationException   -->
+        <!-- "Page 只能具有 Window 或 Frame 父级"（离屏测量发现不了，      -->
+        <!-- 因为 ContentPresenter 直到 Loaded 才 BuildVisualTree）。     -->
+        <!-- Frame 派生于 ContentControl，故代码里的 .Content 赋值不变；  -->
+        <!-- 只赋 Content 不调 Navigate，因此不会产生 Journal 条目。       -->
         <!-- ========================================================= -->
         <Grid x:Name="WorkshopContentHost" Grid.Row="1">
             <!-- 子视图 1: 本地插件管理页面宿主 (默认激活) -->
-            <ContentControl x:Name="LocalHost"
-                            Focusable="False"
-                            Background="Transparent"
-                            Visibility="Visible" />
+            <Frame x:Name="LocalHost"
+                   NavigationUIVisibility="Hidden"
+                   Focusable="False"
+                   Background="Transparent"
+                   Visibility="Visible" />
 
             <!-- 子视图 2: 社区模组发现页面宿主 (默认隐藏隔离) -->
-            <ContentControl x:Name="CommunityHost"
-                            Focusable="False"
-                            Background="Transparent"
-                            Visibility="Collapsed" />
+            <Frame x:Name="CommunityHost"
+                   NavigationUIVisibility="Hidden"
+                   Focusable="False"
+                   Background="Transparent"
+                   Visibility="Collapsed" />
 
             <!-- 详情视图宿主: 由 Slot 3 自治适配器挂载展示 (默认隐藏) -->
-            <ContentControl x:Name="DetailHost"
-                            Focusable="False"
-                            Background="Transparent"
-                            Visibility="Collapsed" />
+            <Frame x:Name="DetailHost"
+                   NavigationUIVisibility="Hidden"
+                   Focusable="False"
+                   Background="Transparent"
+                   Visibility="Collapsed" />
         </Grid>
     </Grid>
 </Page>
