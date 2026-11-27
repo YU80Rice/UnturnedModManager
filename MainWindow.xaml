@@ -3,6 +3,7 @@
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
  xmlns:controls="clr-namespace:UnturnedModManager.Controls"
+ xmlns:motion="clr-namespace:UnturnedModManager.Controls.Motion"
  Title="Unturned Mod Manager" Height="820" Width="1280" MinHeight="620" MinWidth="1000"
  WindowBackdropType="None" WindowCornerPreference="Round" ExtendsContentIntoTitleBar="True"
  WindowStartupLocation="CenterScreen" AllowDrop="True" PreviewDragEnter="Window_PreviewDragEnter"
@@ -25,7 +26,7 @@
       <ControlTemplate.Triggers>
        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource AppCardBackgroundBrush2}" /></Trigger>
        <Trigger Property="IsChecked" Value="True">
-        <Setter TargetName="Surface" Property="Background" Value="{DynamicResource AppPillSelectedBrush}" />
+        <Setter TargetName="Surface" Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{DynamicResource AppPillSelectedForegroundBrush}" />
         <Setter Property="FontWeight" Value="SemiBold" />
        </Trigger>
@@ -91,7 +92,7 @@
       <ToggleButton x:Name="AccentButton" Margin="8,0,0,0" Width="30" Height="30" Background="{DynamicResource AppPillBackgroundBrush}" BorderBrush="{DynamicResource AppPillBorderBrush}" ToolTip="主题调色" AutomationProperties.Name="主题调色">
        <Ellipse Width="14" Height="14" Fill="{DynamicResource AccentFillColorDefaultBrush}" Stroke="{DynamicResource AppAccentBorderBrush}" />
       </ToggleButton>
-      <Popup x:Name="AccentPopup" IsOpen="{Binding IsChecked, ElementName=AccentButton, Mode=TwoWay}" PlacementTarget="{Binding ElementName=AccentButton}" Placement="Bottom" VerticalOffset="8" AllowsTransparency="True" StaysOpen="False" Closed="AccentPopup_Closed">
+      <Popup x:Name="AccentPopup" IsOpen="{Binding IsChecked, ElementName=AccentButton, Mode=TwoWay}" PlacementTarget="{Binding ElementName=AccentButton}" Placement="Bottom" VerticalOffset="8" AllowsTransparency="True" StaysOpen="False" Opened="AccentPopup_Opened" Closed="AccentPopup_Closed">
        <Border MinWidth="260" Padding="12" CornerRadius="12" Background="{DynamicResource ControlFillColorDefaultBrush}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
         <StackPanel>
          <TextBlock Text="色环快速选色" FontWeight="SemiBold" Margin="0,0,0,8" />
@@ -101,27 +102,31 @@
       </Popup>
      </StackPanel>
      <Border Grid.Column="1" Style="{StaticResource ShellPill}" Padding="3">
-      <StackPanel Orientation="Horizontal" KeyboardNavigation.DirectionalNavigation="Cycle">
-     <RadioButton x:Name="PlayTab" GroupName="ShellSlots" Tag="Play" Style="{StaticResource ShellTab}" Click="NavigationTab_Click" AutomationProperties.Name="开始游戏">
-      <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Home24" FontSize="16" /><TextBlock Margin="6,0,0,0" Text="开始游戏" /></StackPanel>
-     </RadioButton>
-     <RadioButton x:Name="ModsTab" GroupName="ShellSlots" Tag="Mods" Style="{StaticResource ShellTab}" Click="NavigationTab_Click" AutomationProperties.Name="模组工坊">
-      <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Box24" FontSize="16" /><TextBlock Margin="6,0,0,0" Text="模组工坊" /></StackPanel>
-     </RadioButton>
-     <RadioButton x:Name="TasksTab" GroupName="ShellSlots" Tag="TaskCenter" Style="{StaticResource ShellTab}" Click="NavigationTab_Click" AutomationProperties.Name="任务中心">
-      <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="ArrowDownload24" FontSize="16" /><TextBlock Margin="6,0,0,0" Text="任务中心" /><Border x:Name="TaskBadge" Margin="5,0,0,0" MinWidth="18" Padding="3,0" CornerRadius="7" Background="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Collapsed"><TextBlock x:Name="TaskBadgeText" FontSize="10" TextAlignment="Center" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" /></Border></StackPanel>
-     </RadioButton>
-     <RadioButton x:Name="SettingsTab" GroupName="ShellSlots" Tag="Settings" Style="{StaticResource ShellTab}" Click="NavigationTab_Click" AutomationProperties.Name="游戏设置">
-      <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Settings24" FontSize="16" /><TextBlock Margin="6,0,0,0" Text="游戏设置" /></StackPanel>
-     </RadioButton>
-     <RadioButton x:Name="AboutTab" GroupName="ShellSlots" Tag="About" Style="{StaticResource ShellTab}" Click="NavigationTab_Click" AutomationProperties.Name="关于">
-      <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Info24" FontSize="16" /><TextBlock Margin="6,0,0,0" Text="关于" /></StackPanel>
-     </RadioButton>
-      </StackPanel>
+      <Grid motion:SegmentedIndicator.IsEnabled="True">
+       <StackPanel Orientation="Horizontal" KeyboardNavigation.DirectionalNavigation="Cycle">
+        <RadioButton x:Name="PlayTab" GroupName="ShellSlots" Tag="Play" Style="{StaticResource ShellTab}" Click="NavigationTab_Click" AutomationProperties.Name="开始游戏">
+         <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Home24" FontSize="16" /><TextBlock Margin="6,0,0,0" Text="开始游戏" /></StackPanel>
+        </RadioButton>
+        <RadioButton x:Name="ModsTab" GroupName="ShellSlots" Tag="Mods" Style="{StaticResource ShellTab}" Click="NavigationTab_Click" AutomationProperties.Name="模组工坊">
+         <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Box24" FontSize="16" /><TextBlock Margin="6,0,0,0" Text="模组工坊" /></StackPanel>
+        </RadioButton>
+        <RadioButton x:Name="TasksTab" GroupName="ShellSlots" Tag="TaskCenter" Style="{StaticResource ShellTab}" Click="NavigationTab_Click" AutomationProperties.Name="任务中心">
+         <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="ArrowDownload24" FontSize="16" /><TextBlock Margin="6,0,0,0" Text="任务中心" /><Border x:Name="TaskBadge" Margin="5,0,0,0" MinWidth="18" Padding="3,0" CornerRadius="7" Background="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Collapsed"><TextBlock x:Name="TaskBadgeText" FontSize="10" TextAlignment="Center" Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" /></Border></StackPanel>
+        </RadioButton>
+        <RadioButton x:Name="SettingsTab" GroupName="ShellSlots" Tag="Settings" Style="{StaticResource ShellTab}" Click="NavigationTab_Click" AutomationProperties.Name="游戏设置">
+         <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Settings24" FontSize="16" /><TextBlock Margin="6,0,0,0" Text="游戏设置" /></StackPanel>
+        </RadioButton>
+        <RadioButton x:Name="AboutTab" GroupName="ShellSlots" Tag="About" Style="{StaticResource ShellTab}" Click="NavigationTab_Click" AutomationProperties.Name="关于">
+         <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Info24" FontSize="16" /><TextBlock Margin="6,0,0,0" Text="关于" /></StackPanel>
+        </RadioButton>
+       </StackPanel>
+      </Grid>
      </Border>
      <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
       <ui:Button x:Name="ThemeToggleButton" Width="34" Height="32" Padding="0" Appearance="Transparent" Click="ThemeToggleButton_Click" AutomationProperties.Name="切换深色或浅色" ToolTip="切换深色/浅色主题">
-       <ui:SymbolIcon x:Name="ThemeToggleButtonIcon" Symbol="WeatherMoon24" FontSize="16" />
+       <ui:SymbolIcon x:Name="ThemeToggleButtonIcon" Symbol="WeatherMoon24" FontSize="16" RenderTransformOrigin="0.5,0.5">
+        <ui:SymbolIcon.RenderTransform><RotateTransform x:Name="ThemeToggleButtonRotation" /></ui:SymbolIcon.RenderTransform>
+       </ui:SymbolIcon>
       </ui:Button>
       <ui:Button x:Name="AccountButton" Margin="8,0,0,0" Height="32" Padding="4,2,10,2" CornerRadius="16" Background="{DynamicResource AppPillBackgroundBrush}" BorderBrush="{DynamicResource AppPillBorderBrush}" Click="AccountButton_Click" AutomationProperties.Name="社区账户" ToolTip="社区账户">
        <StackPanel Orientation="Horizontal">
@@ -165,23 +170,12 @@
              Margin="0,0,0,10"
              Padding="16,13"
              CornerRadius="12"
-             Opacity="0"
              Background="{DynamicResource ControlFillColorDefaultBrush}"
              BorderBrush="{DynamicResource ToastNotificationBorderBrush}"
              BorderThickness="4,1,1,1"
              Cursor="Hand"
+             Loaded="ToastBorder_Loaded"
              MouseLeftButtonUp="ToastBorder_MouseLeftButtonUp">
-      <Border.RenderTransform><TranslateTransform X="28" /></Border.RenderTransform>
-      <Border.Triggers>
-       <EventTrigger RoutedEvent="FrameworkElement.Loaded">
-        <BeginStoryboard>
-         <Storyboard>
-          <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.18" />
-          <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.X)" From="28" To="0" Duration="0:0:0.18" />
-         </Storyboard>
-        </BeginStoryboard>
-       </EventTrigger>
-      </Border.Triggers>
       <StackPanel>
        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="13" />
        <TextBlock Text="{Binding Message}"

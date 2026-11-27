@@ -120,6 +120,7 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation, ILoca
         CaptureCurrentViewSnapshot();
 
         // 2. 调用状态机执行子域转换
+        var previousSubDomain = _coordinator.CurrentSubDomain;
         var result = _coordinator.NavigateTo(target, context);
 
         // 3. 同步更新宿主可见性与按钮状态
@@ -127,6 +128,14 @@ public partial class PluginWorkshopPage : Page, IPluginWorkshopNavigation, ILoca
 
         // 4. 恢复进入目标子域的交互快照
         RestoreTargetViewSnapshot(target);
+
+        // 只为实际切换后显示的子域入场，详情和隐藏宿主不参与。
+        var currentSubDomain = _coordinator.CurrentSubDomain;
+        if (previousSubDomain != currentSubDomain && !_coordinator.IsDetailActive && Motion.Enabled)
+        {
+            var host = currentSubDomain == WorkshopSubDomain.LocalInstalled ? LocalHost : CommunityHost;
+            Motion.SlideFadeIn(host, fromY: 6, speed: MotionSpeed.Standard);
+        }
 
         return result;
     }

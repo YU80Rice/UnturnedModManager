@@ -1,0 +1,92 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                    xmlns:motion="clr-namespace:UnturnedModManager.Controls.Motion">
+    <Style TargetType="{x:Type ui:ToggleSwitch}">
+        <Setter Property="motion:ToggleSwitchMotion.IsEnabled" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ui:ToggleSwitch}">
+                    <Grid x:Name="RootGrid" Background="Transparent" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                        </Grid.RenderTransform>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid x:Name="SwitchTrack" Width="40" Height="20" Tag="-9" VerticalAlignment="Center">
+                            <Rectangle x:Name="ToggleRectangle" Width="40" Height="20" RadiusX="10" RadiusY="10"
+                                       Fill="#19000000" Stroke="#8BFFFFFF" StrokeThickness="1" Opacity="1" />
+                            <Rectangle x:Name="ActiveToggleRectangle" Width="40" Height="20" RadiusX="10" RadiusY="10"
+                                       Fill="{DynamicResource AccentFillColorDefaultBrush}" Opacity="0" />
+                            <Ellipse x:Name="ToggleEllipse" Width="12" Height="12" Fill="White">
+                                <Ellipse.RenderTransform>
+                                    <TranslateTransform X="-9" />
+                                </Ellipse.RenderTransform>
+                            </Ellipse>
+                            <Ellipse x:Name="ActiveToggleEllipse" Width="12" Height="12" Fill="White" Opacity="0">
+                                <Ellipse.RenderTransform>
+                                    <TranslateTransform X="-9" />
+                                </Ellipse.RenderTransform>
+                            </Ellipse>
+                        </Grid>
+                        <ContentPresenter x:Name="ContentPresenter" Grid.Column="1" Margin="8,0,0,0"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          Content="{TemplateBinding Content}"
+                                          TextElement.Foreground="{TemplateBinding Foreground}"
+                                          RecognizesAccessKey="True" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="Content" Value="{x:Null}" />
+                                <Condition Property="IsChecked" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="ContentPresenter" Property="Content" Value="{Binding OnContent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:ToggleSwitch}}}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="Content" Value="{x:Null}" />
+                                <Condition Property="IsChecked" Value="False" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="ContentPresenter" Property="Content" Value="{Binding OffContent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:ToggleSwitch}}}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="Content" Value="" />
+                                <Condition Property="IsChecked" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="ContentPresenter" Property="Content" Value="{Binding OnContent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:ToggleSwitch}}}" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="Content" Value="" />
+                                <Condition Property="IsChecked" Value="False" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="ContentPresenter" Property="Content" Value="{Binding OffContent, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ui:ToggleSwitch}}}" />
+                        </MultiTrigger>
+                        <Trigger SourceName="ContentPresenter" Property="Content" Value="{x:Null}">
+                            <Setter TargetName="ContentPresenter" Property="Margin" Value="0" />
+                        </Trigger>
+                        <Trigger SourceName="ContentPresenter" Property="Content" Value="">
+                            <Setter TargetName="ContentPresenter" Property="Margin" Value="0" />
+                        </Trigger>
+                        <!-- 保留静态轨道与滑块透明度；位移动效由附加行为接管。 -->
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="ToggleRectangle" Property="Opacity" Value="0" />
+                            <Setter TargetName="ActiveToggleRectangle" Property="Opacity" Value="1" />
+                            <Setter TargetName="SwitchTrack" Property="Tag" Value="9" />
+                            <Setter TargetName="ToggleEllipse" Property="Opacity" Value="0" />
+                            <Setter TargetName="ActiveToggleEllipse" Property="Opacity" Value="1" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="RootGrid" Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

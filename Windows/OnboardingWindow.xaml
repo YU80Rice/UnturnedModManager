@@ -3,6 +3,7 @@
                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                   xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                   xmlns:controls="clr-namespace:UnturnedModManager.Controls"
+                  xmlns:motion="clr-namespace:UnturnedModManager.Controls.Motion"
                   Background="{DynamicResource ApplicationBackgroundBrush}"
                   Title="Unturned Mod Manager · 首次设置"
                   Width="660"
@@ -30,8 +31,7 @@
                                 <Setter TargetName="Segment" Property="Background" Value="{DynamicResource AppCardBackgroundBrush2}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Segment" Property="Background" Value="{DynamicResource AppAccentSoftBrush}" />
-                                <Setter TargetName="Segment" Property="BorderBrush" Value="{DynamicResource AppAccentBorderBrush}" />
+                                <Setter TargetName="Segment" Property="Background" Value="Transparent" />
                                 <Setter Property="Foreground" Value="{DynamicResource AccentTextFillColorPrimaryBrush}" />
                                 <Setter Property="FontWeight" Value="SemiBold" />
                             </Trigger>
@@ -44,7 +44,7 @@
             </Setter>
         </Style>
     </ui:FluentWindow.Resources>
-    <Grid Margin="18">
+    <Grid Margin="18" motion:DialogEnter.IsEnabled="True">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -106,14 +106,23 @@
                 <Border HorizontalAlignment="Left" CornerRadius="15" Padding="3"
                         Background="{DynamicResource AppPillBackgroundBrush}" BorderBrush="{DynamicResource AppPillBorderBrush}" BorderThickness="1"
                         AutomationProperties.Name="明暗模式">
-                    <StackPanel Orientation="Horizontal">
-                        <RadioButton Style="{StaticResource ThemeModeSegment}" GroupName="OnboardingThemeMode" Content="浅色"
+                    <Grid motion:SegmentedIndicator.IsEnabled="True"
+                          motion:SegmentedIndicator.PillBrush="{DynamicResource AppAccentSoftBrush}"
+                          motion:SegmentedIndicator.PillBorderBrush="{DynamicResource AppAccentBorderBrush}"
+                          motion:SegmentedIndicator.PillBorderThickness="1"
+                          motion:SegmentedIndicator.PillCornerRadius="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <RadioButton Grid.Column="0" Style="{StaticResource ThemeModeSegment}" GroupName="OnboardingThemeMode" Content="浅色"
                                      IsChecked="{Binding IsLightSelected, Mode=OneWay}" Command="{Binding ChangeThemeCommand}" CommandParameter="Light" />
-                        <RadioButton Style="{StaticResource ThemeModeSegment}" GroupName="OnboardingThemeMode" Content="深色"
+                        <RadioButton Grid.Column="1" Style="{StaticResource ThemeModeSegment}" GroupName="OnboardingThemeMode" Content="深色"
                                      IsChecked="{Binding IsDarkSelected, Mode=OneWay}" Command="{Binding ChangeThemeCommand}" CommandParameter="Dark" />
-                        <RadioButton Style="{StaticResource ThemeModeSegment}" GroupName="OnboardingThemeMode" Content="跟随系统"
+                        <RadioButton Grid.Column="2" Style="{StaticResource ThemeModeSegment}" GroupName="OnboardingThemeMode" Content="跟随系统"
                                      IsChecked="{Binding IsSystemSelected, Mode=OneWay}" Command="{Binding ChangeThemeCommand}" CommandParameter="System" />
-                    </StackPanel>
+                    </Grid>
                 </Border>
                 <Border Margin="0,10,0,8" Padding="12" CornerRadius="10" Background="{DynamicResource AppCardBackgroundBrush2}" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1">
                     <controls:ColorWheelControl RingSize="176" AccentColor="{Binding AccentColor, Mode=TwoWay}" SurfaceTint="{Binding SurfaceTint, Mode=TwoWay}" IsDarkTheme="{Binding IsDarkTheme}" />

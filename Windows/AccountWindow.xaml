@@ -2,13 +2,14 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:motion="clr-namespace:UnturnedModManager.Controls.Motion"
         Title="社区账户"
         Width="480" Height="460"
         MinWidth="440" MinHeight="390"
         ResizeMode="CanMinimize"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource ApplicationBackgroundBrush}">
-    <Grid Margin="24">
+    <Grid Margin="24" motion:DialogEnter.IsEnabled="True">
         <Border Padding="20" CornerRadius="12" BorderThickness="1" BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" Background="{DynamicResource ControlFillColorDefaultBrush}">
             <Grid>
                 <Grid.RowDefinitions>

@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Animation;
 using System.ComponentModel;
 using System.Windows.Automation;
 using System.Windows.Input;
@@ -51,6 +52,7 @@ public partial class MainWindow : FluentWindow
     {
         InitializeComponent();
         ToastHost.ItemsSource = _toasts;
+        Motion.PressFeedback(LaunchButton);
         _authService.SessionChanged += UpdateAccountVisual;
         _notifications.NoticePublished += OnNoticePublished;
         _themeService.ThemeChanged += OnThemeChanged;
@@ -175,6 +177,12 @@ public partial class MainWindow : FluentWindow
 
     private void AccentWheel_AccentColorChanged(object sender, RoutedPropertyChangedEventArgs<Color> e) => ApplyAccentPreview();
     private void AccentWheel_SurfaceTintChanged(object? sender, EventArgs e) => ApplyAccentPreview();
+    private void AccentPopup_Opened(object? sender, EventArgs e)
+    {
+        if (AccentPopup.Child is { } content)
+            Motion.ScaleFadeIn(content, 0.94, 0.5, 1.0, MotionSpeed.Standard);
+    }
+
     private void AccentPopup_Closed(object? sender, EventArgs e) => SavePendingAccent();
 
     private void ApplyAccentPreview()
@@ -251,9 +259,23 @@ public partial class MainWindow : FluentWindow
 
     private void PageHost_Navigated(object sender, NavigationEventArgs e)
     {
+        var previousSlot = GetPageSlotIndex(_currentPage);
         _currentPage = e.Content as Page;
+        var nextSlot = GetPageSlotIndex(_currentPage);
+        var direction = previousSlot is { } previous && nextSlot is { } next && next <= previous ? -12 : 12;
+        Motion.SlideFadeIn(PageHost, fromX: direction);
         while (PageHost.CanGoBack) PageHost.RemoveBackEntry();
     }
+
+    private static int? GetPageSlotIndex(Page? page) => page switch
+    {
+        HomePage => 0,
+        PluginWorkshopPage { IsDetailActive: false } => 1,
+        TaskCenterPage => 2,
+        SettingsPage => 3,
+        AboutPage => 4,
+        _ => null
+    };
 
     private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
@@ -373,6 +395,9 @@ public partial class MainWindow : FluentWindow
         catch { }
     }
 
+    private void ToastBorder_Loaded(object sender, RoutedEventArgs e) =>
+        Motion.SlideFadeIn((UIElement)sender, fromX: 28, fromY: 0, speed: MotionSpeed.Standard);
+
     private void ToastBorder_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: ToastNotification toast } || !toast.HasAction)
@@ -474,6 +499,25 @@ public partial class MainWindow : FluentWindow
     {
         var mode = _themeService.AppliedTheme == ThemePreference.Light ? ThemePreference.Dark : ThemePreference.Light;
         _themeService.Apply(mode);
+        if (_themeService.AppliedTheme != mode || !Motion.Enabled) return;
+
+        ThemeToggleButtonIcon.BeginAnimation(UIElement.OpacityProperty, ThemeIconAnimation(1, 0.2, 1));
+        ThemeToggleButtonRotation.BeginAnimation(System.Windows.Media.RotateTransform.AngleProperty, ThemeIconAnimation(0, 180, 360));
+    }
+
+    private static DoubleAnimationUsingKeyFrames ThemeIconAnimation(double start, double middle, double end)
+    {
+        var ease = new CubicEase { EasingMode = EasingMode.EaseOut };
+        return new DoubleAnimationUsingKeyFrames
+        {
+            FillBehavior = FillBehavior.Stop,
+            KeyFrames =
+            {
+                new DiscreteDoubleKeyFrame(start, KeyTime.FromTimeSpan(TimeSpan.Zero)),
+                new EasingDoubleKeyFrame(middle, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(120)), ease),
+                new EasingDoubleKeyFrame(end, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(240)), ease)
+            }
+        };
     }
 
     /// <summary>

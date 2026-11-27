@@ -1,4 +1,4 @@
-# Unturned Mod Manager v3.0.0
+# Unturned Mod Manager v3.1.0
 
 > 面向 Windows 的 Unturned 启动、BepInEx 插件管理与 [unmod.online](https://unmod.online/) 社区客户端。
 
@@ -6,7 +6,7 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
 [![WPF-UI](https://img.shields.io/badge/WPF--UI-3.0.5-CA1E1E)](https://github.com/lepoco/wpfui)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?logo=windows)](https://www.microsoft.com/windows)
-[![Release](https://img.shields.io/badge/Release-v3.0.0-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
+[![Release](https://img.shields.io/badge/Release-v3.1.0-brightgreen?logo=github)](https://github.com/YU80Rice/UnturnedModManager/releases)
 [![Build and test](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml/badge.svg)](https://github.com/YU80Rice/UnturnedModManager/actions/workflows/ci.yml)
 
 **仓库：** [github.com/YU80Rice/UnturnedModManager](https://github.com/YU80Rice/UnturnedModManager)
@@ -53,6 +53,13 @@ UMM v2.0 不是 UML 的官方分支或继任版本。UMM 保留 .NET 8 + WPF 技
 - **底部 70px 全局指挥舱**：左侧常驻显示当前方案、启用模组数、运行模式（模组模式 · `-NoBattlEye` / 纯净模式 · `Unturned_BE.exe`）与 BepInEx、DXVK 底层环境状态，右侧只保留一枚放大版「开始游戏」按钮，停留在任意页面都能一键启动；
 - **首页 2×2 Bento 网格**：运行概要与当前方案、UMM 欢迎区、BepInEx 与 DXVK 运行环境、崩溃诊断与日志分析四张卡片等权排布，信息密度与视觉节奏统一；
 - **五页面与六弹窗双模高对比**：开始游戏、模组工坊、任务中心、游戏设置、关于五个页面，与账户、首次向导、`.ummpk` 审查、`.ummtheme` 审查、安全沙箱拦截、确认提示六类弹窗，在深色与浅色模式下统一语义配色与交互态，保持 WCAG AA（4.5:1）对比度。
+
+### v3.1 过渡与动效
+
+- **主视图切面切换过渡**：五个一级页面切换时新切面淡入、旧切面淡出交接，不再瞬时闪断；
+- **胶囊与开关过渡**：顶栏 5 槽位选中指示块平滑滑动，开关滑块与轨道、设置页与入门向导的主题分段胶囊共用同一套过渡曲线；
+- **弹窗与浮层入场**：六个弹窗缩放淡入、强调色弹层轻微上浮、主题切换图标微反馈、工坊子域切换与 Toast 时长对齐；
+- **尊重系统「减少动效」**：Windows 关闭动画效果时，所有过渡直接跳到终态，不做任何动画。
 
 ### 游戏与插件环境
 
